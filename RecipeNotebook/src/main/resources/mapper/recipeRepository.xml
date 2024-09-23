@@ -26,10 +26,9 @@
 
   <!--  レシピの新規登録  -->
   <insert id="registerRecipe" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO recipes(name, image_path, recipe_source, servings, remark, created_at, updated_at,
-    favorite)
-    values(#{name}, #{imagePath}, #{recipeSource}, #{servings}, #{remark}, #{createdAt},
-    #{updatedAt}, #{favorite})
+    INSERT INTO recipes(name, image_path, recipe_source, servings, remark, favorite, created_at)
+    values(#{name}, #{imagePath}, #{recipeSource}, #{servings}, #{remark}, #{favorite},
+    #{createdAt})
   </insert>
 
   <!--  レシピの材料の新規登録  -->
@@ -43,5 +42,26 @@
     INSERT INTO instructions(recipe_id, step_number, instruction, arrange)
     values(#{recipeId}, #{stepNumber}, #{instruction}, #{arrange})
   </insert>
+
+  <!--  レシピの更新  -->
+  <update id="updateRecipe">
+    UPDATE recipes SET name=#{name}, image_path=#{imagePath}, recipe_source=#{recipeSource},
+    servings=#{servings}, remark=#{remark}, favorite=#{favorite}, updatedAt=#{gender}
+    WHERE id=#{id}
+  </update>
+
+  <!--  レシピの材料の更新  -->
+  <update id="updateIngredient">
+    UPDATE ingredients SET name=#{name}, quantity=#{quantity}, unit=#{unit}, arrange=#{arrange}
+    WHERE recipe_id=#{recipeId}
+  </update>
+
+  <!--  レシピの作成手順の更新  -->
+  <update id="updateInstruction">
+    UPDATE instructions SET step_number=#{stepNumber}, instruction=#{instruction},
+    arrange=#{arrange}
+    WHERE recipe_id=#{recipeId}
+  </update>
+
 
 </mapper>

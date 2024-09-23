@@ -46,7 +46,7 @@ public interface RecipeRepository {
   /**
    * レシピの新規登録です。新規レシピをレシピテーブルに追加します。
    *
-   * @param recipe レシピ情報
+   * @param recipe レシピ
    */
   void registerRecipe(Recipe recipe);
 
@@ -63,4 +63,26 @@ public interface RecipeRepository {
    * @param instruction レシピの作成手順
    */
   void registerInstruction(Instruction instruction);
+
+  /**
+   * レシピの更新です。レシピ情報の中にあるIDを参照して、レシピテーブルで該当するレコードを更新します。
+   *
+   * @param recipe レシピ
+   */
+  void updateRecipe(Recipe recipe);
+
+  /**
+   * レシピの材料の更新です。レシピの材料情報の中にあるレシピIDを参照して、材料テーブルで該当するレコードを更新します。
+   *
+   * @param ingredient レシピの材料
+   */
+  void updateIngredient(Ingredient ingredient);
+
+  /**
+   * レシピの作成手順の更新です。レシピの作成手順情報の中にあるレシピIDを参照して、作成手順テーブルで該当するレコードを更新します。
+   *
+   * @param instruction レシピの作成手順
+   */
+  void updateInstruction(Instruction instruction);
+
 }
