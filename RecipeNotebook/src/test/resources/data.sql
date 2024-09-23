@@ -8,7 +8,7 @@ VALUES
 (1, '卵', 3, '個', FALSE), (1, 'サラダ油', NULL, NULL, FALSE), (1, '醤油', 0.5, '大さじ', FALSE), (1, '砂糖', 1, '大さじ', FALSE),
 (2, '卵', 1, '個', FALSE), (2, 'サラダ油', NULL, NULL, FALSE), (2, '水', NULL, NULL, FALSE);
 
-INSERT INTO instructions (recipe_id, step_number, instruction, arrange)
+INSERT INTO instructions (recipe_id, step_number, content, arrange)
 VALUES
 (1, 1, '卵を溶いて調味料を混ぜ、卵液を作る', FALSE), (1, 2, 'フライパンに油をたらし、火にかける', FALSE),
 (1, 3, '卵液を1/3くらいフライパンに入れて焼き、巻く', TRUE), (1, 4, '3の手順を繰り返して完成', FALSE),

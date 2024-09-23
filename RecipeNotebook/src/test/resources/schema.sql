@@ -26,7 +26,7 @@ CREATE TABLE instructions (
   id INT NOT NULL AUTO_INCREMENT,
   recipe_id INT NOT NULL,
   step_number INT NOT NULL,
-  instruction TEXT NOT NULL,
+  content TEXT NOT NULL,
   arrange BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE

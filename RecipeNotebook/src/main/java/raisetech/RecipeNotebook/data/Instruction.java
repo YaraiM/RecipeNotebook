@@ -22,7 +22,7 @@ public class Instruction {
   private int stepNumber;
 
   @NotBlank
-  private String instruction;
+  private String content;
 
   private Boolean arrange;
 

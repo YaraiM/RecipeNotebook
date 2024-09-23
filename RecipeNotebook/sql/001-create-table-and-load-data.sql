@@ -44,13 +44,13 @@ CREATE TABLE instructions (
   id INT NOT NULL AUTO_INCREMENT,
   recipe_id INT NOT NULL,
   step_number INT NOT NULL,
-  instruction TEXT NOT NULL,
+  content TEXT NOT NULL,
   arrange BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 );
 
-INSERT INTO instructions (recipe_id, step_number, instruction, arrange)
+INSERT INTO instructions (recipe_id, step_number, content, arrange)
 VALUES
 (1, 1, '卵を溶いて調味料を混ぜ、卵液を作る', FALSE), (1, 2, 'フライパンに油をたらし、火にかける', FALSE),
 (1, 3, '卵液を1/3くらいフライパンに入れて焼き、巻く', TRUE), (1, 4, '3の手順を繰り返して完成', FALSE),
