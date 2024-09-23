@@ -50,18 +50,17 @@
     WHERE id=#{id}
   </update>
 
-  <!--  TODO: 更新の際は、特定の手順を変更することになるので、WHERE　IDではないか？-->
   <!--  レシピの材料の更新  -->
   <update id="updateIngredient">
     UPDATE ingredients SET name=#{name}, quantity=#{quantity}, unit=#{unit}, arrange=#{arrange}
-    WHERE recipe_id=#{recipeId}
+    WHERE id=#{id}
   </update>
 
   <!--  レシピの作成手順の更新  -->
   <update id="updateInstruction">
     UPDATE instructions SET step_number=#{stepNumber}, instruction=#{instruction},
     arrange=#{arrange}
-    WHERE recipe_id=#{recipeId}
+    WHERE id=#{id}
   </update>
 
   <!--  レシピの削除  -->
