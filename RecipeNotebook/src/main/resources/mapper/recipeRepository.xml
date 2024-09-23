@@ -49,8 +49,8 @@
 
   <!--  レシピの調理手順の新規登録  -->
   <insert id="registerInstruction" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO instructions(recipe_id, step_number, instruction, arrange)
-    values(#{recipeId}, #{stepNumber}, #{instruction}, #{arrange})
+    INSERT INTO instructions(recipe_id, step_number, content, arrange)
+    values(#{recipeId}, #{stepNumber}, #{content}, #{arrange})
   </insert>
 
   <!--  レシピの更新  -->
