@@ -14,12 +14,22 @@
     SELECT * FROM recipes WHERE id = #{id}
   </select>
 
+  <!--  材料の全件取得  -->
+  <select id="getAllIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients
+  </select>
+
   <!--  レシピIDに紐づく材料の取得  -->
   <select id="getIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
     SELECT * FROM ingredients WHERE recipe_id = #{recipeId}
   </select>
 
-  <!--  レシピIDに紐づく作成手順の取得  -->
+  <!--  調理手順の全件取得  -->
+  <select id="getAllInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions
+  </select>
+
+  <!--  レシピIDに紐づく調理手順の取得  -->
   <select id="getInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
     SELECT * FROM instructions WHERE recipe_id = #{recipeId}
   </select>
@@ -37,7 +47,7 @@
     values(#{recipeId}, #{name}, #{quantity}, #{unit}, #{arrange})
   </insert>
 
-  <!--  レシピの手順の新規登録  -->
+  <!--  レシピの調理手順の新規登録  -->
   <insert id="registerInstruction" useGeneratedKeys="true" keyProperty="id">
     INSERT INTO instructions(recipe_id, step_number, instruction, arrange)
     values(#{recipeId}, #{stepNumber}, #{instruction}, #{arrange})
@@ -56,7 +66,7 @@
     WHERE id=#{id}
   </update>
 
-  <!--  レシピの作成手順の更新  -->
+  <!--  レシピの調理手順の更新  -->
   <update id="updateInstruction">
     UPDATE instructions SET step_number=#{stepNumber}, instruction=#{instruction},
     arrange=#{arrange}
@@ -73,7 +83,7 @@
     DELETE FROM ingredients WHERE id=#{id};
   </delete>
 
-  <!--  レシピの材料の削除  -->
+  <!--  レシピの調理手順の削除  -->
   <delete id="deleteInstruction">
     DELETE FROM instructions WHERE id=#{id};
   </delete>

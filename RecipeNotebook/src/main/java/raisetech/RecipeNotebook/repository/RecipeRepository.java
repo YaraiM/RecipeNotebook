@@ -25,21 +25,33 @@ public interface RecipeRepository {
    */
   Recipe getRecipe(int id);
 
-//  TODO:レシピの全件検索時は食材や手順の情報を統合した情報を検索したいので、食材や手順の全件検索も必要
+  /**
+   * 材料を全件取得します。
+   *
+   * @return 材料一覧（全件）
+   */
+  List<Ingredient> getAllIngredients();
 
   /**
    * レシピIDに紐づく材料を取得します。
    *
    * @param recipeId レシピID
-   * @return レシピの食材一覧
+   * @return レシピの材料
    */
   List<Ingredient> getIngredients(int recipeId);
 
   /**
-   * レシピIDに紐づく手順を取得します。
+   * 調理手順を全件取得します。
+   *
+   * @return 調理手順一覧（全件）
+   */
+  List<Instruction> getAllInstructions();
+
+  /**
+   * レシピIDに紐づく調理手順を取得します。
    *
    * @param recipeId レシピID
-   * @return レシピの手順一覧
+   * @return レシピの調理手順
    */
   List<Instruction> getInstructions(int recipeId);
 
@@ -58,9 +70,9 @@ public interface RecipeRepository {
   void registerIngredient(Ingredient ingredient);
 
   /**
-   * 手順の新規登録です。レシピの作成手順を作成手順テーブルに追加します。
+   * 調理手順の新規登録です。レシピの調理手順を調理手順テーブルに追加します。
    *
-   * @param instruction レシピの作成手順
+   * @param instruction レシピの調理手順
    */
   void registerInstruction(Instruction instruction);
 
@@ -79,9 +91,9 @@ public interface RecipeRepository {
   void updateIngredient(Ingredient ingredient);
 
   /**
-   * レシピの作成手順の更新です。レシピの作成手順情報の中にあるレシピIDを参照して、作成手順テーブルで該当するレコードを更新します。
+   * レシピの調理手順の更新です。レシピの調理手順情報の中にあるレシピIDを参照して、調理手順テーブルで該当するレコードを更新します。
    *
-   * @param instruction レシピの作成手順
+   * @param instruction レシピの調理手順
    */
   void updateInstruction(Instruction instruction);
 
@@ -100,9 +112,9 @@ public interface RecipeRepository {
   void deleteIngredient(Ingredient ingredient);
 
   /**
-   * レシピの作成手順の削除です。レシピの作成手順情報の中にあるレシピIDを参照して、作成手順テーブルで該当するレコードを削除します。
+   * レシピの調理手順の削除です。レシピの調理手順情報の中にあるレシピIDを参照して、調理手順テーブルで該当するレコードを削除します。
    *
-   * @param instruction レシピの作成手順
+   * @param instruction レシピの調理手順
    */
   void deleteInstruction(Instruction instruction);
 
