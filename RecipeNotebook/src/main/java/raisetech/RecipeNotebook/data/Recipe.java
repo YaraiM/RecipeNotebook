@@ -21,7 +21,7 @@ public class Recipe {
   @NotBlank
   private String name;
 
-  private String image_path;
+  private String imagePath;
 
   private String recipeSource;
 

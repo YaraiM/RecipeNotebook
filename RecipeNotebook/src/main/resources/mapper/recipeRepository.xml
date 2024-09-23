@@ -24,4 +24,24 @@
     SELECT * FROM instructions WHERE recipe_id = #{recipeId}
   </select>
 
+  <!--  レシピの新規登録  -->
+  <insert id="registerRecipe" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO recipes(name, image_path, recipe_source, servings, remark, created_at, updated_at,
+    favorite)
+    values(#{name}, #{imagePath}, #{recipeSource}, #{servings}, #{remark}, #{createdAt},
+    #{updatedAt}, #{favorite})
+  </insert>
+
+  <!--  レシピの材料の新規登録  -->
+  <insert id="registerIngredient" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO ingredients(recipe_id, name, quantity, unit, arrange)
+    values(#{recipeId}, #{name}, #{quantity}, #{unit}, #{arrange})
+  </insert>
+
+  <!--  レシピの手順の新規登録  -->
+  <insert id="registerInstruction" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO instructions(recipe_id, step_number, instruction, arrange)
+    values(#{recipeId}, #{stepNumber}, #{instruction}, #{arrange})
+  </insert>
+
 </mapper>

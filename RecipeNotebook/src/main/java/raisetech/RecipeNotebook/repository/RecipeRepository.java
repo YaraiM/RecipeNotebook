@@ -25,6 +25,8 @@ public interface RecipeRepository {
    */
   Recipe getRecipe(int id);
 
+//  TODO:レシピの全件検索時は食材や手順の情報を統合した情報を検索したいので、食材や手順の全件検索も必要
+
   /**
    * レシピIDに紐づく材料を取得します。
    *
@@ -41,4 +43,24 @@ public interface RecipeRepository {
    */
   List<Instruction> getInstructions(int recipeId);
 
+  /**
+   * レシピの新規登録です。新規レシピをレシピテーブルに追加します。
+   *
+   * @param recipe レシピ情報
+   */
+  void registerRecipe(Recipe recipe);
+
+  /**
+   * 材料の新規登録です。レシピに使用される材料を材料テーブルに追加します。
+   *
+   * @param ingredient レシピの材料
+   */
+  void registerIngredient(Ingredient ingredient);
+
+  /**
+   * 手順の新規登録です。レシピの作成手順を作成手順テーブルに追加します。
+   *
+   * @param instruction レシピの作成手順
+   */
+  void registerInstruction(Instruction instruction);
 }
