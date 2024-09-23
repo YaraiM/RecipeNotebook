@@ -29,7 +29,7 @@ CREATE TABLE ingredients (
   unit VARCHAR(255),
   arrange BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 );
 
 INSERT INTO ingredients (recipe_id, name, quantity, unit, arrange)
@@ -47,7 +47,7 @@ CREATE TABLE instructions (
   instruction TEXT NOT NULL,
   arrange BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id),
-  FOREIGN KEY (recipe_id) REFERENCES recipes(id)
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 );
 
 INSERT INTO instructions (recipe_id, step_number, instruction, arrange)
@@ -75,8 +75,8 @@ DROP TABLE IF EXISTS recipe_categories;
 CREATE TABLE recipe_categories (
   recipe_id INT NOT NULL,
   category_id INT NOT NULL,
-  FOREIGN KEY (recipe_id) REFERENCES recipes(id),
-  FOREIGN KEY (category_id) REFERENCES categories(id)
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 );
 
 INSERT INTO recipe_categories (recipe_id, category_id)

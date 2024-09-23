@@ -85,4 +85,25 @@ public interface RecipeRepository {
    */
   void updateInstruction(Instruction instruction);
 
+  /**
+   * レシピの削除です。レシピ情報の中にあるレシピIDを参照して、レシピテーブルで該当するレコードを削除します。
+   *
+   * @param recipe レシピ
+   */
+  void deleteRecipe(Recipe recipe);
+
+  /**
+   * レシピの材料の削除です。レシピの材料情報の中にあるレシピIDを参照して、材料テーブルで該当するレコードを削除します。
+   *
+   * @param ingredient レシピの材料
+   */
+  void deleteIngredient(Ingredient ingredient);
+
+  /**
+   * レシピの作成手順の削除です。レシピの作成手順情報の中にあるレシピIDを参照して、作成手順テーブルで該当するレコードを削除します。
+   *
+   * @param instruction レシピの作成手順
+   */
+  void deleteInstruction(Instruction instruction);
+
 }
