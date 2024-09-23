@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="raisetech.RecipeNotebook.repository.RecipeRepository">
+
+  <!--  レシピの全件取得  -->
+  <select id="getAllRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
+    SELECT * FROM recipes
+  </select>
+
+  <!--  レシピの取得  -->
+  <select id="getRecipe" resultType="raisetech.RecipeNotebook.data.Recipe">
+    SELECT * FROM recipes WHERE id = #{id}
+  </select>
+
+  <!--  レシピIDに紐づく材料の取得  -->
+  <select id="getIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients WHERE recipe_id = #{recipeId}
+  </select>
+
+  <!--  レシピIDに紐づく作成手順の取得  -->
+  <select id="getInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions WHERE recipe_id = #{recipeId}
+  </select>
+
+</mapper>
