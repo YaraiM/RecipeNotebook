@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
 
     runs-on: ubuntu-latest
     permissions:
@@ -25,25 +25,26 @@ jobs:
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
 
       - name: Grant execute permission for Gradle Wrapper
-        run: chmod +x gradlew
-        working-directory: RecipeNotebook/gradlew
+        run: chmod +x RecipeNotebook/gradlew
 
       - name: Build with Gradle Wrapper
-        run: ./gradlew build
+        run: ./RecipeNotebook/gradlew build
+        working-directory: RecipeNotebook
 
       - name: Test with Gradle Wrapper
-        run: ./gradlew test --info
+        run: ./RecipeNotebook/gradlew test --info
+        working-directory: RecipeNotebook
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
-          path: build/reports/tests/test/
+          path: RecipeNotebook/build/reports/tests/test/
 
       - name: Upload test logs
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: test-logs
-          path: build/test-results/test/
+          path: RecipeNotebook/build/test-results/test/
