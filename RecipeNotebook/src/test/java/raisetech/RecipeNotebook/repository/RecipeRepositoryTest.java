@@ -149,6 +149,59 @@ class RecipeRepositoryTest {
 
   }
 
+  @Test
+  void 指定したIDのレシピを更新できること() {
+
+    Recipe recipe = new Recipe();
+    recipe.setId(1);
+    recipe.setName("卵焼きrev");
+    recipe.setImagePath("test1/path/rev");
+    recipe.setRecipeSource("https://------1/rev.com");
+    recipe.setServings("2人分rev");
+    recipe.setRemark("備考欄1rev");
+    recipe.setFavorite(true);
+    recipe.setUpdatedAt(LocalDateTime.parse("2024-11-24T17:00:00"));
+
+    sut.updateRecipe(recipe);
+
+    Recipe actual = sut.getRecipe(1);
+    assertRecipeDetail(actual, "卵焼きrev", "test1/path/rev", "https://------1/rev.com", "2人分rev",
+        "備考欄1rev", true, LocalDateTime.parse("2024-09-22T17:00:00"),
+        LocalDateTime.parse("2024-11-24T17:00:00"));
+
+  }
+
+  @Test
+  void 指定したIDの材料を更新できること() {
+    Ingredient ingredient = new Ingredient();
+    ingredient.setId(1);
+    ingredient.setName("卵rev");
+    ingredient.setQuantity(BigDecimal.valueOf(4));
+    ingredient.setUnit("個rev");
+    ingredient.setArrange(true);
+
+    sut.updateIngredient(ingredient);
+
+    List<Ingredient> actual = sut.getIngredients(1);
+    assertIngredientDetail(actual.get(0), 1, "卵rev", BigDecimal.valueOf(4.0), "個rev",
+        true);
+
+  }
+
+  @Test
+  void 指定したIDの調理手順を更新できること() {
+    Instruction instruction = new Instruction();
+    instruction.setId(1);
+    instruction.setStepNumber(2);
+    instruction.setContent("卵を溶いて調味料を混ぜ、卵液を作るrev");
+    instruction.setArrange(true);
+
+    sut.updateInstruction(instruction);
+
+    List<Instruction> actual = sut.getInstructions(1);
+    assertInstructionDetail(actual.get(0), 1, 2, "卵を溶いて調味料を混ぜ、卵液を作るrev", true);
+
+  }
 
   /**
    * レシピのアサーションを行うヘルパーメソッドです。

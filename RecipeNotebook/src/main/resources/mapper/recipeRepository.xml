@@ -56,7 +56,7 @@
   <!--  レシピの更新  -->
   <update id="updateRecipe">
     UPDATE recipes SET name=#{name}, image_path=#{imagePath}, recipe_source=#{recipeSource},
-    servings=#{servings}, remark=#{remark}, favorite=#{favorite}, updatedAt=#{gender}
+    servings=#{servings}, remark=#{remark}, favorite=#{favorite}, updated_at=#{updatedAt}
     WHERE id=#{id}
   </update>
 
@@ -68,7 +68,7 @@
 
   <!--  レシピの調理手順の更新  -->
   <update id="updateInstruction">
-    UPDATE instructions SET step_number=#{stepNumber}, instruction=#{instruction},
+    UPDATE instructions SET step_number=#{stepNumber}, content=#{content},
     arrange=#{arrange}
     WHERE id=#{id}
   </update>
