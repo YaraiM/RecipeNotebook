@@ -1,7 +1,9 @@
 package raisetech.RecipeNotebook.repository;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.math.BigDecimal;
@@ -104,11 +106,11 @@ class RecipeRepositoryTest {
 
   @Test
   void レシピをデータベースに追加できること() {
-
     Recipe recipe = createSampleRecipe();
     sut.registerRecipe(recipe);
 
-    Recipe actual = sut.getRecipe(3);
+    Recipe actual = sut.getAllRecipes()
+        .getLast(); // DB上のIDの値にかかわらず、最後に追加されたレコードを検証できるようにしている。
     assertRecipeDetail(actual, "ゆで卵", "test3/path", "https://------3.com", "1人分",
         "備考欄3", true, LocalDateTime.parse("2024-09-24T17:00:00"),
         null);
@@ -122,12 +124,16 @@ class RecipeRepositoryTest {
 
     List<Ingredient> ingredients = createSampleIngredients();
     for (Ingredient ingredient : ingredients) {
+      ingredient.setRecipeId(
+          recipe.getId()); //　MySQLの仕様でオートインクリメントされたレシピID値はロールバック後も使用されないため、固定の数値（3）ではなくrecipeのIDを直接参照してセットする。
       sut.registerIngredient(ingredient);
     }
 
-    List<Ingredient> actual = sut.getIngredients(3);
-    assertIngredientDetail(actual.get(0), 3, "卵", BigDecimal.valueOf(1.0), "個", false);
-    assertIngredientDetail(actual.get(1), 3, "水", null, null, false);
+    List<Ingredient> actual = sut.getIngredients(
+        recipe.getId());  //　MySQLの仕様でオートインクリメントされたレシピID値はロールバック後も使用されないため、固定の数値（3）ではなくrecipeのIDを直接参照する。
+    assertIngredientDetail(actual.get(0), recipe.getId(), "卵", BigDecimal.valueOf(1.0), "個",
+        false);
+    assertIngredientDetail(actual.get(1), recipe.getId(), "水", null, null, false);
 
   }
 
@@ -138,20 +144,23 @@ class RecipeRepositoryTest {
 
     List<Instruction> instructions = createSampleInstructions();
     for (Instruction instruction : instructions) {
+      instruction.setRecipeId(
+          recipe.getId()); //　MySQLの仕様でオートインクリメントされたレシピID値はロールバック後も使用されないため、固定の数値（3）ではなくrecipeのIDを直接参照してセットする。
       sut.registerInstruction(instruction);
     }
 
-    List<Instruction> actual = sut.getInstructions(3);
-    assertInstructionDetail(actual.get(0), 3, 1, "鍋に卵がかぶるくらいの水を入れて沸騰させる",
+    List<Instruction> actual = sut.getInstructions(
+        recipe.getId()); //　MySQLの仕様でオートインクリメントされたレシピID値はロールバック後も使用されないため、固定の数値（3）ではなくrecipeのIDを直接参照する。
+    assertInstructionDetail(actual.get(0), recipe.getId(), 1,
+        "鍋に卵がかぶるくらいの水を入れて沸騰させる",
         false);
-    assertInstructionDetail(actual.get(1), 3, 2,
+    assertInstructionDetail(actual.get(1), recipe.getId(), 2,
         "卵を沸かした水に入れて7~12分茹でる。好みの硬さで時間を調整する", false);
 
   }
 
   @Test
   void 指定したIDのレシピを更新できること() {
-
     Recipe recipe = new Recipe();
     recipe.setId(1);
     recipe.setName("卵焼きrev");
@@ -200,6 +209,49 @@ class RecipeRepositoryTest {
 
     List<Instruction> actual = sut.getInstructions(1);
     assertInstructionDetail(actual.get(0), 1, 2, "卵を溶いて調味料を混ぜ、卵液を作るrev", true);
+
+  }
+
+  @Test
+  void 指定したIDのレシピを削除できること() {
+    sut.deleteRecipe(1);
+
+    List<Recipe> actualAll = sut.getAllRecipes();
+    Recipe actual = sut.getRecipe(1);
+
+    assertAll(
+        "Multiple assertions",
+        () -> assertThat(actualAll, hasSize(1)),
+        () -> assertThat(actual, is(nullValue()))
+    );
+
+  }
+
+  @Test
+  void 指定したIDの材料を削除できること() {
+    sut.deleteIngredient(1);
+
+    List<Ingredient> actual = sut.getAllIngredients();
+
+    assertAll(
+        "Multiple assertions",
+        () -> assertThat(actual, hasSize(6)),
+        () -> assertThat(actual.stream().noneMatch(value -> value.getId() == 1), is(true))
+    );
+
+  }
+
+  @Test
+  void 指定したIDの調理手順を削除できること() {
+    sut.deleteInstruction(1);
+
+    List<Instruction> actual = sut.getAllInstructions();
+
+    assertAll(
+        "Multiple assertions",
+        () -> assertThat(actual, hasSize(6)),
+        () -> assertThat(actual.stream().noneMatch(value -> value.getId() == 1), is(true))
+    );
 
   }
 
@@ -271,19 +323,18 @@ class RecipeRepositoryTest {
 
   /**
    * テスト用のサンプル材料リストです。
+   * レシピオブジェクトのIDはDB上で自動付番されますが、MySQLの仕様でロールバック後も同じ値が二度と使用されないため、参照整合性エラーが起きないよう、この時点ではこの時点ではレシピIDを設定しません。
    */
   private static List<Ingredient> createSampleIngredients() {
     List<Ingredient> ingredients = new ArrayList<>();
 
     Ingredient ingredient1 = new Ingredient();
-    ingredient1.setRecipeId(3);
     ingredient1.setName("卵");
     ingredient1.setQuantity(BigDecimal.valueOf(1));
     ingredient1.setUnit("個");
     ingredient1.setArrange(false);
 
     Ingredient ingredient2 = new Ingredient();
-    ingredient2.setRecipeId(3);
     ingredient2.setName("水");
     ingredient2.setQuantity(null);
     ingredient2.setUnit(null);
@@ -297,18 +348,17 @@ class RecipeRepositoryTest {
 
   /**
    * テスト用のサンプル調理手順リストです。
+   * レシピオブジェクトのIDはDB上で自動付番されますが、MySQLの仕様でロールバック後も同じ値が二度と使用されないため、参照整合性エラーが起きないよう、この時点ではこの時点ではレシピIDを設定しません。
    */
   private static List<Instruction> createSampleInstructions() {
     List<Instruction> instructions = new ArrayList<>();
 
     Instruction instruction1 = new Instruction();
-    instruction1.setRecipeId(3);
     instruction1.setStepNumber(1);
     instruction1.setContent("鍋に卵がかぶるくらいの水を入れて沸騰させる");
     instruction1.setArrange(false);
 
     Instruction instruction2 = new Instruction();
-    instruction2.setRecipeId(3);
     instruction2.setStepNumber(2);
     instruction2.setContent("卵を沸かした水に入れて7~12分茹でる。好みの硬さで時間を調整する");
     instruction2.setArrange(false);

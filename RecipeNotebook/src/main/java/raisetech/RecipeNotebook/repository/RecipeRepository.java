@@ -84,38 +84,38 @@ public interface RecipeRepository {
   void updateRecipe(Recipe recipe);
 
   /**
-   * レシピの材料の更新です。レシピの材料情報の中にあるレシピIDを参照して、材料テーブルで該当するレコードを更新します。
+   * レシピの材料の更新です。材料情報の中にあるIDを参照して、材料テーブルで該当するレコードを更新します。
    *
    * @param ingredient レシピの材料
    */
   void updateIngredient(Ingredient ingredient);
 
   /**
-   * レシピの調理手順の更新です。レシピの調理手順情報の中にあるレシピIDを参照して、調理手順テーブルで該当するレコードを更新します。
+   * レシピの調理手順の更新です。調理手順情報の中にあるIDを参照して、調理手順テーブルで該当するレコードを更新します。
    *
    * @param instruction レシピの調理手順
    */
   void updateInstruction(Instruction instruction);
 
   /**
-   * レシピの削除です。レシピ情報の中にあるレシピIDを参照して、レシピテーブルで該当するレコードを削除します。
+   * レシピの削除です。レシピテーブルにおいて、指定したIDに紐づくレコードを削除します。
    *
-   * @param recipe レシピ
+   * @param id レシピID
    */
-  void deleteRecipe(Recipe recipe);
+  void deleteRecipe(int id);
 
   /**
-   * レシピの材料の削除です。レシピの材料情報の中にあるレシピIDを参照して、材料テーブルで該当するレコードを削除します。
+   * レシピの材料の削除です。材料テーブルにおいて、指定したIDに紐づくレコードを削除します。
    *
-   * @param ingredient レシピの材料
+   * @param id 材料ID
    */
-  void deleteIngredient(Ingredient ingredient);
+  void deleteIngredient(int id);
 
   /**
-   * レシピの調理手順の削除です。レシピの調理手順情報の中にあるレシピIDを参照して、調理手順テーブルで該当するレコードを削除します。
+   * レシピの調理手順の削除です。調理手順テーブルにおいて、指定したIDに紐づくレコードを削除します。
    *
-   * @param instruction レシピの調理手順
+   * @param id 調理手順ID
    */
-  void deleteInstruction(Instruction instruction);
+  void deleteInstruction(int id);
 
 }
