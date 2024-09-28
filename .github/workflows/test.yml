@@ -28,11 +28,11 @@ jobs:
         run: chmod +x RecipeNotebook/gradlew
 
       - name: Build with Gradle Wrapper
-        run: ./RecipeNotebook/gradlew build
+        run: ./gradlew build
         working-directory: RecipeNotebook
 
       - name: Test with Gradle Wrapper
-        run: ./RecipeNotebook/gradlew test --info
+        run: ./gradlew test --info
         working-directory: RecipeNotebook
 
       - name: Upload test results
