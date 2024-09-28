@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="raisetech.RecipeNotebook.repository.RecipeRepository">
+
+  <!--  レシピの全件取得  -->
+  <select id="getAllRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
+    SELECT * FROM recipes
+  </select>
+
+  <!--  レシピの取得  -->
+  <select id="getRecipe" resultType="raisetech.RecipeNotebook.data.Recipe">
+    SELECT * FROM recipes WHERE id = #{id}
+  </select>
+
+  <!--  材料の全件取得  -->
+  <select id="getAllIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients
+  </select>
+
+  <!--  レシピIDに紐づく材料の取得  -->
+  <select id="getIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients WHERE recipe_id = #{recipeId}
+  </select>
+
+  <!--  調理手順の全件取得  -->
+  <select id="getAllInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions
+  </select>
+
+  <!--  レシピIDに紐づく調理手順の取得  -->
+  <select id="getInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions WHERE recipe_id = #{recipeId}
+  </select>
+
+  <!--  レシピの新規登録  -->
+  <insert id="registerRecipe" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO recipes(name, image_path, recipe_source, servings, remark, favorite, created_at)
+    values(#{name}, #{imagePath}, #{recipeSource}, #{servings}, #{remark}, #{favorite},
+    #{createdAt})
+  </insert>
+
+  <!--  レシピの材料の新規登録  -->
+  <insert id="registerIngredient" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO ingredients(recipe_id, name, quantity, unit, arrange)
+    values(#{recipeId}, #{name}, #{quantity}, #{unit}, #{arrange})
+  </insert>
+
+  <!--  レシピの調理手順の新規登録  -->
+  <insert id="registerInstruction" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO instructions(recipe_id, step_number, content, arrange)
+    values(#{recipeId}, #{stepNumber}, #{content}, #{arrange})
+  </insert>
+
+  <!--  レシピの更新  -->
+  <update id="updateRecipe">
+    UPDATE recipes SET name=#{name}, image_path=#{imagePath}, recipe_source=#{recipeSource},
+    servings=#{servings}, remark=#{remark}, favorite=#{favorite}, updated_at=#{updatedAt}
+    WHERE id=#{id}
+  </update>
+
+  <!--  レシピの材料の更新  -->
+  <update id="updateIngredient">
+    UPDATE ingredients SET name=#{name}, quantity=#{quantity}, unit=#{unit}, arrange=#{arrange}
+    WHERE id=#{id}
+  </update>
+
+  <!--  レシピの調理手順の更新  -->
+  <update id="updateInstruction">
+    UPDATE instructions SET step_number=#{stepNumber}, content=#{content},
+    arrange=#{arrange}
+    WHERE id=#{id}
+  </update>
+
+  <!--  レシピの削除  -->
+  <delete id="deleteRecipe">
+    DELETE FROM recipes WHERE id=#{id};
+  </delete>
+
+  <!--  レシピの材料の削除  -->
+  <delete id="deleteIngredient">
+    DELETE FROM ingredients WHERE id=#{id};
+  </delete>
+
+  <!--  レシピの調理手順の削除  -->
+  <delete id="deleteInstruction">
+    DELETE FROM instructions WHERE id=#{id};
+  </delete>
+
+
+</mapper>
