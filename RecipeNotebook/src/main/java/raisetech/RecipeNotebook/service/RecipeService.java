@@ -1,7 +1,9 @@
 package raisetech.RecipeNotebook.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import raisetech.RecipeNotebook.converter.RecipeConverter;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
@@ -56,6 +58,29 @@ public class RecipeService {
 
     return new RecipeDetail(recipe, ingredients, instructions);
 
+  }
+
+  @Transactional
+  public RecipeDetail registerRecipeDetail(RecipeDetail recipeDetail) {
+    Recipe recipe = recipeDetail.getRecipe();
+    recipe.setCreatedAt(LocalDateTime.now());
+    repository.registerRecipe(recipe);
+
+    List<Ingredient> ingredients = recipeDetail.getIngredients();
+    for (Ingredient ingredient : ingredients) {
+      ingredient.setRecipeId(recipe.getId());
+      repository.registerIngredient(ingredient);
+    }
+
+    List<Instruction> instructions = recipeDetail.getInstructions();
+    for (int i = 0; i < instructions.size(); i++) {
+      Instruction instruction = instructions.get(i);
+      instruction.setRecipeId(recipe.getId());
+      instruction.setStepNumber(i + 1);
+      repository.registerInstruction(instruction);
+    }
+
+    return recipeDetail;
   }
 
 }
