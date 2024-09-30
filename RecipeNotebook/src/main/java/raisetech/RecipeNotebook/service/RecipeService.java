@@ -99,14 +99,14 @@ public class RecipeService {
 
     for (Ingredient ingredient : recipeDetail.getIngredients()) {
       int ingredientId = ingredient.getId();
-      if (repository.getIngredients(ingredientId) == null) {
+      if (repository.getIngredient(ingredientId) == null) {
         throw new ResourceNotFoundException("材料ID「" + ingredientId + "」は存在しません");
       }
     }
 
     for (Instruction instruction : recipeDetail.getInstructions()) {
       int instructionId = instruction.getId();
-      if (repository.getInstructions(instructionId) == null) {
+      if (repository.getInstruction(instructionId) == null) {
         throw new ResourceNotFoundException("調理手順ID「" + instructionId + "」は存在しません");
       }
     }
