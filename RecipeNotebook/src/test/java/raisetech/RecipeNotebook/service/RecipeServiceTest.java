@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -162,6 +163,123 @@ class RecipeServiceTest {
 
   }
 
+  @Test
+  void レシピ詳細情報の更新_正常系_リポジトリメソッドの呼び出しと更新日時の登録が適切に行われていること() {
+    Recipe recipe = createSampleRecipe();
+
+    List<Ingredient> ingredients = createSampleIngredients(recipe);
+    Ingredient ingredient1 = ingredients.get(0);
+    Ingredient ingredient2 = ingredients.get(1);
+
+    List<Instruction> instructions = createSampleInstructions(recipe);
+    Instruction instruction1 = instructions.get(0);
+    Instruction instruction2 = instructions.get(1);
+
+    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
+
+    when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
+    when(repository.getIngredient(ingredient1.getId())).thenReturn(ingredient1);
+    when(repository.getIngredient(ingredient2.getId())).thenReturn(ingredient2);
+    when(repository.getInstruction(instruction1.getId())).thenReturn(instruction1);
+    when(repository.getInstruction(instruction2.getId())).thenReturn(instruction2);
+
+    LocalDateTime testStartedTime = LocalDateTime.now();
+
+    RecipeDetail actual = sut.updateRecipeDetail(recipeDetail);
+    LocalDateTime actualUpdatedAt = actual.getRecipe().getUpdatedAt();
+
+    verify(repository, times(1)).getRecipe(recipe.getId());
+    verify(repository, times(2)).getIngredient(anyInt());
+    verify(repository, times(2)).getInstruction(anyInt());
+    verify(repository, times(1)).updateRecipe(recipe);
+    verify(repository, times(2)).updateIngredient(any(Ingredient.class));
+    verify(repository, times(2)).updateInstruction(any(Instruction.class));
+
+    assertThat(actualUpdatedAt.isAfter(testStartedTime)
+        || actualUpdatedAt.isEqual(testStartedTime), is(true));
+
+  }
+
+  @Test
+  void レシピ詳細情報の更新_異常系_存在しないレシピIDを指定した場合に例外がスローされること() {
+    Recipe recipe = createSampleRecipe();
+    List<Ingredient> ingredients = createSampleIngredients(recipe);
+    List<Instruction> instructions = createSampleInstructions(recipe);
+    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
+
+    when(repository.getRecipe(recipe.getId())).thenReturn(null);
+
+    ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
+        () -> sut.updateRecipeDetail(recipeDetail));
+    assertThat(e.getMessage(), is("レシピID「" + recipe.getId() + "」は存在しません"));
+
+    verify(repository, times(1)).getRecipe(recipe.getId());
+    verify(repository, never()).getIngredient(anyInt());
+    verify(repository, never()).getInstruction(anyInt());
+    verify(repository, never()).updateRecipe(recipe);
+    verify(repository, never()).updateIngredient(any(Ingredient.class));
+    verify(repository, never()).updateInstruction(any(Instruction.class));
+
+  }
+
+  @Test
+  void レシピ詳細情報の更新_異常系_存在しない材料IDを指定した場合に例外がスローされること() {
+    Recipe recipe = createSampleRecipe();
+
+    List<Ingredient> ingredients = createSampleIngredients(recipe);
+    Ingredient ingredient = ingredients.get(0);
+
+    List<Instruction> instructions = createSampleInstructions(recipe);
+
+    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
+
+    when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
+    when(repository.getIngredient(ingredient.getId())).thenReturn(null);
+
+    ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
+        () -> sut.updateRecipeDetail(recipeDetail));
+    assertThat(e.getMessage(), is("材料ID「" + ingredient.getId() + "」は存在しません"));
+
+    verify(repository, times(1)).getRecipe(recipe.getId());
+    verify(repository, times(1)).getIngredient(ingredient.getId());
+    verify(repository, never()).getInstruction(anyInt());
+    verify(repository, never()).updateRecipe(recipe);
+    verify(repository, never()).updateIngredient(any(Ingredient.class));
+    verify(repository, never()).updateInstruction(any(Instruction.class));
+
+  }
+
+  @Test
+  void レシピ詳細情報の更新_異常系_存在しない調理手順IDを指定した場合に例外がスローされること() {
+    Recipe recipe = createSampleRecipe();
+
+    List<Ingredient> ingredients = createSampleIngredients(recipe);
+    Ingredient ingredient1 = ingredients.get(0);
+    Ingredient ingredient2 = ingredients.get(1);
+
+    List<Instruction> instructions = createSampleInstructions(recipe);
+    Instruction instruction = instructions.get(0);
+
+    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
+
+    when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
+    when(repository.getIngredient(ingredient1.getId())).thenReturn(ingredient1);
+    when(repository.getIngredient(ingredient2.getId())).thenReturn(ingredient2);
+    when(repository.getInstruction(instruction.getId())).thenReturn(null);
+
+    ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
+        () -> sut.updateRecipeDetail(recipeDetail));
+    assertThat(e.getMessage(), is("調理手順ID「" + instruction.getId() + "」は存在しません"));
+
+    verify(repository, times(1)).getRecipe(recipe.getId());
+    verify(repository, times(2)).getIngredient(anyInt());
+    verify(repository, times(1)).getInstruction(instruction.getId());
+    verify(repository, never()).updateRecipe(recipe);
+    verify(repository, never()).updateIngredient(any(Ingredient.class));
+    verify(repository, never()).updateInstruction(any(Instruction.class));
+
+  }
+
   /**
    * テスト用のサンプルレシピ一覧を作成するメソッドです。
    *
@@ -208,7 +326,7 @@ class RecipeServiceTest {
   }
 
   /**
-   * テスト用のサンプル材料を作成するメソッドです。
+   * テスト用のサンプルレシピに紐づくサンプル材料一覧を作成するメソッドです。
    *
    * @return 材料
    */
@@ -239,7 +357,7 @@ class RecipeServiceTest {
   }
 
   /**
-   * テスト用のサンプル調理手順を作成するメソッドです。
+   * テスト用のサンプルレシピに紐づくサンプル調理手順一覧を作成するメソッドです。
    *
    * @return 調理手順
    */
