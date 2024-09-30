@@ -60,6 +60,13 @@ public class RecipeService {
 
   }
 
+  /**
+   * レシピの新規登録です。引数として渡されたレシピ詳細情報オブジェクトに基づいて新規登録を行います。
+   * 登録日時、材料および調理手順に紐づくレシピID、調理手順の番号は自動でと登録されます。
+   *
+   * @param recipeDetail 初期情報を除くレシピの詳細情報
+   * @return 初期情報を含むレシピの詳細情報
+   */
   @Transactional
   public RecipeDetail registerRecipeDetail(RecipeDetail recipeDetail) {
     Recipe recipe = recipeDetail.getRecipe();
@@ -79,6 +86,38 @@ public class RecipeService {
       instruction.setStepNumber(i + 1);
       repository.registerInstruction(instruction);
     }
+
+    return recipeDetail;
+  }
+
+  @Transactional
+  public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail) {
+    int recipeId = recipeDetail.getRecipe().getId();
+    if (repository.getRecipe(recipeId) == null) {
+      throw new ResourceNotFoundException("レシピID「" + recipeId + "」は存在しません");
+    }
+
+    for (Ingredient ingredient : recipeDetail.getIngredients()) {
+      int ingredientId = ingredient.getId();
+      if (repository.getIngredients(ingredientId) == null) {
+        throw new ResourceNotFoundException("材料ID「" + ingredientId + "」は存在しません");
+      }
+    }
+
+    for (Instruction instruction : recipeDetail.getInstructions()) {
+      int instructionId = instruction.getId();
+      if (repository.getInstructions(instructionId) == null) {
+        throw new ResourceNotFoundException("調理手順ID「" + instructionId + "」は存在しません");
+      }
+    }
+
+    Recipe recipe = recipeDetail.getRecipe();
+    recipe.setUpdatedAt(LocalDateTime.now());
+    repository.updateRecipe(recipe);
+
+    recipeDetail.getIngredients().forEach(repository::updateIngredient);
+
+    recipeDetail.getInstructions().forEach(repository::updateInstruction);
 
     return recipeDetail;
   }
