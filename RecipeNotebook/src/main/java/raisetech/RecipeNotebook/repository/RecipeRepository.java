@@ -33,12 +33,20 @@ public interface RecipeRepository {
   List<Ingredient> getAllIngredients();
 
   /**
-   * レシピIDに紐づく材料を取得します。
+   * レシピIDに紐づく材料一覧を取得します。
    *
    * @param recipeId レシピID
-   * @return レシピの材料
+   * @return レシピの材料一覧
    */
   List<Ingredient> getIngredients(int recipeId);
+
+  /**
+   * IDに紐づく材料を取得します。
+   *
+   * @param id 材料のID
+   * @return 材料
+   */
+  Ingredient getIngredient(int id);
 
   /**
    * 調理手順を全件取得します。
@@ -48,12 +56,20 @@ public interface RecipeRepository {
   List<Instruction> getAllInstructions();
 
   /**
-   * レシピIDに紐づく調理手順を取得します。
+   * レシピIDに紐づく調理手順一覧を取得します。
    *
    * @param recipeId レシピID
-   * @return レシピの調理手順
+   * @return レシピの調理手順一覧
    */
   List<Instruction> getInstructions(int recipeId);
+
+  /**
+   * IDに紐づく調理手順を取得します。
+   *
+   * @param id 調理手順のID
+   * @return 調理手順
+   */
+  Instruction getInstruction(int id);
 
   /**
    * レシピの新規登録です。新規レシピをレシピテーブルに追加します。

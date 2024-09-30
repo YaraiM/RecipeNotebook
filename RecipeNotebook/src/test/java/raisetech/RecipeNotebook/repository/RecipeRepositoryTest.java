@@ -63,7 +63,7 @@ class RecipeRepositoryTest {
   }
 
   @Test
-  void レシピIDに紐づく材料を取得できること() {
+  void レシピIDに紐づく材料一覧を取得できること() {
     List<Ingredient> actual = sut.getIngredients(1);
 
     assertThat(actual.size(), is(4));
@@ -71,6 +71,14 @@ class RecipeRepositoryTest {
     assertIngredientDetail(actual.get(1), 1, "サラダ油", null, null, false);
     assertIngredientDetail(actual.get(2), 1, "醤油", BigDecimal.valueOf(0.5), "大さじ", false);
     assertIngredientDetail(actual.get(3), 1, "砂糖", BigDecimal.valueOf(1.0), "大さじ", false);
+
+  }
+
+  @Test
+  void IDに紐づく材料を取得できること() {
+    Ingredient actual = sut.getIngredient(1);
+
+    assertIngredientDetail(actual, 1, "卵", BigDecimal.valueOf(3.0), "個", false);
 
   }
 
@@ -92,7 +100,7 @@ class RecipeRepositoryTest {
   }
 
   @Test
-  void レシピIDに紐づく調理手順を取得できること() {
+  void レシピIDに紐づく調理手順一覧を取得できること() {
     List<Instruction> actual = sut.getInstructions(1);
 
     assertThat(actual.size(), is(4));
@@ -101,6 +109,14 @@ class RecipeRepositoryTest {
     assertInstructionDetail(actual.get(2), 1, 3, "卵液を1/3くらいフライパンに入れて焼き、巻く",
         true);
     assertInstructionDetail(actual.get(3), 1, 4, "3の手順を繰り返して完成", false);
+
+  }
+
+  @Test
+  void IDに紐づく調理手順を取得できること() {
+    Instruction actual = sut.getInstruction(1);
+
+    assertInstructionDetail(actual, 1, 1, "卵を溶いて調味料を混ぜ、卵液を作る", false);
 
   }
 

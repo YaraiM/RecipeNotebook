@@ -19,9 +19,14 @@
     SELECT * FROM ingredients
   </select>
 
-  <!--  レシピIDに紐づく材料の取得  -->
+  <!--  レシピIDに紐づく材料一覧の取得  -->
   <select id="getIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
     SELECT * FROM ingredients WHERE recipe_id = #{recipeId}
+  </select>
+
+  <!--  IDに紐づく材料の取得  -->
+  <select id="getIngredient" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients WHERE id = #{id}
   </select>
 
   <!--  調理手順の全件取得  -->
@@ -29,9 +34,14 @@
     SELECT * FROM instructions
   </select>
 
-  <!--  レシピIDに紐づく調理手順の取得  -->
+  <!--  レシピIDに紐づく調理手順一覧の取得  -->
   <select id="getInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
     SELECT * FROM instructions WHERE recipe_id = #{recipeId}
+  </select>
+
+  <!--  IDに紐づく調理手順の取得  -->
+  <select id="getInstruction" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions WHERE id = #{id}
   </select>
 
   <!--  レシピの新規登録  -->
