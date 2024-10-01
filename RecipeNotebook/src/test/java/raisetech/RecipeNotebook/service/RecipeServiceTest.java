@@ -280,6 +280,100 @@ class RecipeServiceTest {
 
   }
 
+  @Test
+  void レシピの削除_正常系_IDに紐づくレシピ削除メソッドが実行されること() {
+    Recipe recipe = createSampleRecipe();
+    int id = recipe.getId();
+
+    when(repository.getRecipe(id)).thenReturn(recipe);
+
+    sut.deleteRecipe(id);
+
+    verify(repository, times(1)).getRecipe(id);
+    verify(repository, times(1)).deleteRecipe(id);
+
+  }
+
+  @Test
+  void レシピの削除_異常系_存在しないIDを指定した場合に例外がスローされること() {
+    Recipe recipe = createSampleRecipe();
+    int id = recipe.getId();
+
+    when(repository.getRecipe(id)).thenReturn(null);
+
+    ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
+        () -> sut.deleteRecipe(id));
+    assertThat(e.getMessage(), is("レシピID「" + id + "」は存在しません"));
+
+    verify(repository, times(1)).getRecipe(id);
+    verify(repository, never()).deleteRecipe(id);
+
+  }
+
+  @Test
+  void 材料の削除_正常系_IDに紐づく材料削除メソッドが実行されること() {
+    Ingredient ingredient = new Ingredient();
+    int id = 999;
+    ingredient.setId(id);
+
+    when(repository.getIngredient(id)).thenReturn(ingredient);
+
+    sut.deleteIngredient(id);
+
+    verify(repository, times(1)).getIngredient(id);
+    verify(repository, times(1)).deleteIngredient(id);
+
+  }
+
+  @Test
+  void 材料の削除_異常系_存在しないIDを指定した場合に例外がスローされること() {
+    Ingredient ingredient = new Ingredient();
+    int id = 999;
+    ingredient.setId(id);
+
+    when(repository.getIngredient(id)).thenReturn(null);
+
+    ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
+        () -> sut.deleteIngredient(id));
+    assertThat(e.getMessage(), is("材料ID「" + id + "」は存在しません"));
+
+    verify(repository, times(1)).getIngredient(id);
+    verify(repository, never()).deleteIngredient(id);
+
+  }
+
+  @Test
+  void 調理手順の削除_正常系_IDに紐づく調理手順削除メソッドが実行されること() {
+    Instruction instruction = new Instruction();
+    int id = 999;
+    instruction.setId(id);
+
+    when(repository.getInstruction(id)).thenReturn(instruction);
+
+    sut.deleteInstruction(id);
+
+    verify(repository, times(1)).getInstruction(id);
+    verify(repository, times(1)).deleteInstruction(id);
+
+  }
+
+  @Test
+  void 調理手順の削除_異常系_存在しないIDを指定した場合に例外がスローされること() {
+    Instruction instruction = new Instruction();
+    int id = 999;
+    instruction.setId(id);
+
+    when(repository.getInstruction(id)).thenReturn(null);
+
+    ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
+        () -> sut.deleteInstruction(id));
+    assertThat(e.getMessage(), is("調理手順ID「" + id + "」は存在しません"));
+
+    verify(repository, times(1)).getInstruction(id);
+    verify(repository, never()).deleteInstruction(id);
+
+  }
+
   /**
    * テスト用のサンプルレシピ一覧を作成するメソッドです。
    *
