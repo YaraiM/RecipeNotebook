@@ -65,7 +65,7 @@ public class RecipeService {
    * 登録日時、材料および調理手順に紐づくレシピID、調理手順の番号は自動でと登録されます。
    *
    * @param recipeDetail 初期情報を除くレシピの詳細情報
-   * @return 初期情報を含むレシピの詳細情報
+   * @return 新規登録されたレシピ詳細情報
    */
   @Transactional
   public RecipeDetail registerRecipeDetail(RecipeDetail recipeDetail) {
@@ -90,6 +90,12 @@ public class RecipeService {
     return recipeDetail;
   }
 
+  /**
+   * レシピの更新です。引数で渡されたレシピ詳細情報のレシピID・材料ID・調理手順IDにそれぞれ紐づく情報を更新します。
+   *
+   * @param recipeDetail レシピ詳細情報
+   * @return 更新されたレシピ詳細情報
+   */
   @Transactional
   public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail) {
     int recipeId = recipeDetail.getRecipe().getId();
@@ -120,6 +126,55 @@ public class RecipeService {
     recipeDetail.getInstructions().forEach(repository::updateInstruction);
 
     return recipeDetail;
+  }
+
+  /**
+   * レシピを削除するメソッドです。データベース側の設定により、レシピIDに紐づく材料と調理手順も削除されます。
+   * したがって、レシピ詳細情報を削除することを意味します。
+   *
+   * @param id レシピID
+   */
+  @Transactional
+  public void deleteRecipe(int id) {
+
+    if (repository.getRecipe(id) == null) {
+      throw new ResourceNotFoundException("レシピID「" + id + "」は存在しません");
+    }
+
+    repository.deleteRecipe(id);
+
+  }
+
+  /**
+   * 材料を削除するメソッドです。レシピ詳細情報に含まれる特定の材料を削除することを想定しています。
+   *
+   * @param id 材料ID
+   */
+  @Transactional
+  public void deleteIngredient(int id) {
+
+    if (repository.getIngredient(id) == null) {
+      throw new ResourceNotFoundException("材料ID「" + id + "」は存在しません");
+    }
+
+    repository.deleteIngredient(id);
+
+  }
+
+  /**
+   * 調理手順を削除するメソッドです。レシピ詳細情報に含まれる特定の調理手順を削除することを想定しています。
+   *
+   * @param id 調理手順ID
+   */
+  @Transactional
+  public void deleteInstruction(int id) {
+
+    if (repository.getInstruction(id) == null) {
+      throw new ResourceNotFoundException("調理手順ID「" + id + "」は存在しません");
+    }
+
+    repository.deleteInstruction(id);
+
   }
 
 }
