@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
+import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 
 @Mapper
 public interface RecipeRepository {
@@ -16,6 +17,14 @@ public interface RecipeRepository {
    * @return レシピ一覧（全件）
    */
   List<Recipe> getAllRecipes();
+
+  /**
+   * 検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件検索になります。
+   *
+   * @param criteria レシピ検索条件
+   * @return レシピ一覧
+   */
+  List<Recipe> getRecipes(RecipeSearchCriteria criteria);
 
   /**
    * IDに紐づくレシピを取得します。
@@ -31,6 +40,26 @@ public interface RecipeRepository {
    * @return 材料一覧（全件）
    */
   List<Ingredient> getAllIngredients();
+
+  /**
+   * 複数のレシピIDおよび検索条件に対応する材料一覧を取得します。
+   *
+   * @param recipeIds 複数のレシピID
+   * @param criteria レシピ検索条件
+   * @return 材料一覧
+   */
+  List<Ingredient> getIngredientsByRecipeIds(List<Integer> recipeIds,
+      RecipeSearchCriteria criteria);
+
+  /**
+   * 複数のレシピIDに対応する調理手順一覧を取得します。
+   *
+   * @param recipeIds 複数のレシピID
+   * @param criteria レシピ検索条件
+   * @return 調理手順一覧
+   */
+  List<Instruction> getInstructionsByRecipeIds(List<Integer> recipeIds,
+      RecipeSearchCriteria criteria);
 
   /**
    * レシピIDに紐づく材料一覧を取得します。

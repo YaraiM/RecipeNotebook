@@ -15,9 +15,13 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import raisetech.RecipeNotebook.converter.RecipeConverter;
@@ -25,6 +29,7 @@ import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
+import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.ResourceNotFoundException;
 import raisetech.RecipeNotebook.repository.RecipeRepository;
 
@@ -42,74 +47,92 @@ class RecipeServiceTest {
     sut = new RecipeService(repository, recipeConverter); // sutを手動でインスタンス化（repositoryとconverterを注入）
   }
 
-  @Test
-  void レシピ詳細情報の一覧検索_全件検索できること() {
-    List<Recipe> allRecipes = createAllSampleRecipes();
-    List<Ingredient> allIngredients = createAllSampleIngredients();
-    List<Instruction> allInstructions = createAllSampleInstructions();
+  @ParameterizedTest
+  @MethodSource("provideSearchRecipeTestCase")
+  void レシピ詳細情報の一覧検索_検索条件に応じてメソッドが適切に呼び出されること(
+      List<Integer> ids, RecipeSearchCriteria criteria, int expectedResultCount
+  ) {
+    List<Recipe> recipes = createMockRecipes(ids);
 
-    when(repository.getAllRecipes()).thenReturn(allRecipes);
-    when(repository.getAllIngredients()).thenReturn(allIngredients);
-    when(repository.getAllInstructions()).thenReturn(allInstructions);
+    when(repository.getRecipes(criteria)).thenReturn(recipes);
 
-    List<RecipeDetail> actual = sut.searchRecipeList();
+    if (!ids.isEmpty()) {
+      List<Ingredient> ingredients = createMockIngredients(ids);
+      List<Instruction> instructions = createMockInstructions(ids);
+      when(repository.getIngredientsByRecipeIds(ids, criteria)).thenReturn(ingredients);
+      when(repository.getInstructionsByRecipeIds(ids, criteria)).thenReturn(instructions);
 
-    verify(repository, times(1)).getAllRecipes();
-    verify(repository, times(1)).getAllIngredients();
-    verify(repository, times(1)).getAllInstructions();
+      for (Integer id : ids) {
+        Recipe recipe = recipes.stream().filter(r -> r.getId() == id).findFirst().orElse(null);
+        List<Ingredient> recipeIngredients = ingredients.stream()
+            .filter(ing -> ing.getRecipeId() == id).toList();
+        List<Instruction> recipeInstructions = instructions.stream()
+            .filter(ins -> ins.getRecipeId() == id).toList();
 
-    assertAll(
-        "Multiple assertions",
-        () -> assertThat(actual, hasSize(2)),
-        () -> assertThat(actual.get(0).getRecipe().getId(), is(1)),
-        () -> assertThat(actual.get(1).getRecipe().getId(), is(2)),
-        () -> {
-          for (RecipeDetail actualValue : actual) {
-            assertThat(actualValue.getIngredients(), hasSize(2));
-            assertThat(actualValue.getInstructions(), hasSize(2));
+        when(repository.getRecipe(id)).thenReturn(recipe);
+        when(repository.getIngredients(id)).thenReturn(recipeIngredients);
+        when(repository.getInstructions(id)).thenReturn(recipeInstructions);
+      }
+    }
 
-            for (Ingredient ingredient : actualValue.getIngredients()) {
-              assertThat(ingredient.getRecipeId(), is(actualValue.getRecipe().getId()));
-            }
-            assertThat(actualValue.getInstructions(), hasSize(2));
+    List<RecipeDetail> actual = sut.searchRecipeList(criteria);
 
-            for (Instruction instruction : actualValue.getInstructions()) {
-              assertThat(instruction.getRecipeId(), is(actualValue.getRecipe().getId()));
-            }
-          }
-        }
-    );
+    assertThat(actual, hasSize(ids.size()));
+
+    verify(repository, times(1)).getRecipes(criteria);
+    if (!ids.isEmpty()) {
+      verify(repository, times(1)).getIngredientsByRecipeIds(ids, criteria);
+      verify(repository, times(1)).getInstructionsByRecipeIds(ids, criteria);
+
+      for (int i = 0; i < expectedResultCount; i++) {
+        int recipeId = ids.get(i);
+        verify(repository, times(1)).getRecipe(recipeId);
+        verify(repository, times(1)).getIngredients(recipeId);
+        verify(repository, times(1)).getInstructions(recipeId);
+      }
+    } else {
+      verify(repository, never()).getIngredientsByRecipeIds(any(), any());
+      verify(repository, never()).getInstructionsByRecipeIds(any(), any());
+    }
 
   }
 
+  /**
+   * レシピ詳細一覧検索のパラメータテストに適用するテストケースです。
+   *
+   * @return Argument
+   */
+  private static Stream<Arguments> provideSearchRecipeTestCase() {
+    return Stream.of(Arguments.of(List.of(1, 2), new RecipeSearchCriteria("卵焼き", null), 2),
+        Arguments.of(List.of(3), new RecipeSearchCriteria(null, "目玉焼き"), 1),
+        Arguments.of(List.of(), new RecipeSearchCriteria("存在しないレシピ", null), 0));
+  }
+
   @Test
-  void レシピ詳細情報の検索_正常系_IDに紐づくレシピ詳細情報を検索できること() {
-    Recipe recipe = createSampleRecipe();
-    List<Ingredient> ingredients = createSampleIngredients(recipe);
-    List<Instruction> instructions = createSampleInstructions(recipe);
+  void レシピ詳細情報の検索_正常系_メソッドが適切に呼び出されレシピIDに紐づく情報が検索できること() {
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    List<Ingredient> ingredients = createMockIngredients(List.of(1));
+    List<Instruction> instructions = createMockInstructions(List.of(1));
 
     when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
     when(repository.getIngredients(recipe.getId())).thenReturn(ingredients);
     when(repository.getInstructions(recipe.getId())).thenReturn(instructions);
 
-    RecipeDetail actual = sut.searchRecipe(recipe.getId());
+    RecipeDetail actual = sut.searchRecipeDetail(recipe.getId());
 
     verify(repository, times(1)).getRecipe(recipe.getId());
     verify(repository, times(1)).getIngredients(recipe.getId());
     verify(repository, times(1)).getInstructions(recipe.getId());
 
-    assertAll(
-        "Multiple assertions",
-        () -> assertThat(actual.getRecipe().getId(), is(recipe.getId())),
-        () -> {
+    assertAll("Multiple assertions",
+        () -> assertThat(actual.getRecipe().getId(), is(recipe.getId())), () -> {
           for (Ingredient ingredient : actual.getIngredients()) {
             assertThat(ingredient.getRecipeId(), is(actual.getRecipe().getId()));
           }
           for (Instruction instruction : actual.getInstructions()) {
             assertThat(instruction.getRecipeId(), is(actual.getRecipe().getId()));
           }
-        }
-    );
+        });
 
   }
 
@@ -119,7 +142,7 @@ class RecipeServiceTest {
     when(repository.getRecipe(id)).thenReturn(null);
 
     ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
-        () -> sut.searchRecipe(id));
+        () -> sut.searchRecipeDetail(id));
     assertThat(e.getMessage(), is("レシピID「" + id + "」は存在しません"));
 
     verify(repository, times(1)).getRecipe(id);
@@ -130,9 +153,9 @@ class RecipeServiceTest {
 
   @Test
   void レシピ詳細情報の新規登録_リポジトリメソッドの呼び出しと初期情報の登録が適切に行われていること() {
-    Recipe recipe = createSampleRecipe();
-    List<Ingredient> ingredients = createSampleIngredients(recipe);
-    List<Instruction> instructions = createSampleInstructions(recipe);
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    List<Ingredient> ingredients = createMockIngredients(List.of(1));
+    List<Instruction> instructions = createMockInstructions(List.of(1));
     RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
 
     LocalDateTime testStartedTime = LocalDateTime.now();
@@ -144,38 +167,34 @@ class RecipeServiceTest {
     verify(repository, times(2)).registerIngredient(any(Ingredient.class));
     verify(repository, times(2)).registerInstruction(any(Instruction.class));
 
-    assertAll(
-        "Multiple assertions",
-        () -> assertThat(
-            actualCreatedAt.isAfter(testStartedTime) || actualCreatedAt.isEqual(testStartedTime),
-            is(true)),
-        () -> {
-          for (Ingredient ingredient : actual.getIngredients()) {
-            assertThat(ingredient.getRecipeId(), is(actual.getRecipe().getId()));
-          }
-          for (int i = 0; i < actual.getInstructions().size(); i++) {
-            Instruction instruction = actual.getInstructions().get(i);
-            assertThat(instruction.getRecipeId(), is(actual.getRecipe().getId()));
-            assertThat(instruction.getStepNumber(), is(i + 1));
-          }
-        }
-    );
+    assertAll("Multiple assertions", () -> assertThat(
+        actualCreatedAt.isAfter(testStartedTime) || actualCreatedAt.isEqual(testStartedTime),
+        is(true)), () -> {
+      for (Ingredient ingredient : actual.getIngredients()) {
+        assertThat(ingredient.getRecipeId(), is(actual.getRecipe().getId()));
+      }
+      for (int i = 0; i < actual.getInstructions().size(); i++) {
+        Instruction instruction = actual.getInstructions().get(i);
+        assertThat(instruction.getRecipeId(), is(actual.getRecipe().getId()));
+        assertThat(instruction.getStepNumber(), is(i + 1));
+      }
+    });
 
   }
 
   @Test
   void レシピ詳細情報の更新_正常系_リポジトリメソッドの呼び出しと更新日時の登録が適切に行われていること() {
-    Recipe recipe = createSampleRecipe();
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    List<Ingredient> ingredients = createMockIngredients(List.of(1));
+    List<Instruction> instructions = createMockInstructions(List.of(1));
 
-    List<Ingredient> ingredients = createSampleIngredients(recipe);
+    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
+
     Ingredient ingredient1 = ingredients.get(0);
     Ingredient ingredient2 = ingredients.get(1);
 
-    List<Instruction> instructions = createSampleInstructions(recipe);
     Instruction instruction1 = instructions.get(0);
     Instruction instruction2 = instructions.get(1);
-
-    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
 
     when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
     when(repository.getIngredient(ingredient1.getId())).thenReturn(ingredient1);
@@ -195,16 +214,17 @@ class RecipeServiceTest {
     verify(repository, times(2)).updateIngredient(any(Ingredient.class));
     verify(repository, times(2)).updateInstruction(any(Instruction.class));
 
-    assertThat(actualUpdatedAt.isAfter(testStartedTime)
-        || actualUpdatedAt.isEqual(testStartedTime), is(true));
+    assertThat(actualUpdatedAt.isAfter(testStartedTime) || actualUpdatedAt.isEqual(testStartedTime),
+        is(true));
 
   }
 
   @Test
   void レシピ詳細情報の更新_異常系_存在しないレシピIDを指定した場合に例外がスローされること() {
-    Recipe recipe = createSampleRecipe();
-    List<Ingredient> ingredients = createSampleIngredients(recipe);
-    List<Instruction> instructions = createSampleInstructions(recipe);
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    List<Ingredient> ingredients = createMockIngredients(List.of(1));
+    List<Instruction> instructions = createMockInstructions(List.of(1));
+
     RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
 
     when(repository.getRecipe(recipe.getId())).thenReturn(null);
@@ -224,14 +244,13 @@ class RecipeServiceTest {
 
   @Test
   void レシピ詳細情報の更新_異常系_存在しない材料IDを指定した場合に例外がスローされること() {
-    Recipe recipe = createSampleRecipe();
-
-    List<Ingredient> ingredients = createSampleIngredients(recipe);
-    Ingredient ingredient = ingredients.get(0);
-
-    List<Instruction> instructions = createSampleInstructions(recipe);
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    List<Ingredient> ingredients = createMockIngredients(List.of(1));
+    List<Instruction> instructions = createMockInstructions(List.of(1));
 
     RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
+
+    Ingredient ingredient = ingredients.get(0);
 
     when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
     when(repository.getIngredient(ingredient.getId())).thenReturn(null);
@@ -251,16 +270,16 @@ class RecipeServiceTest {
 
   @Test
   void レシピ詳細情報の更新_異常系_存在しない調理手順IDを指定した場合に例外がスローされること() {
-    Recipe recipe = createSampleRecipe();
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    List<Ingredient> ingredients = createMockIngredients(List.of(1));
+    List<Instruction> instructions = createMockInstructions(List.of(1));
 
-    List<Ingredient> ingredients = createSampleIngredients(recipe);
+    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
+
     Ingredient ingredient1 = ingredients.get(0);
     Ingredient ingredient2 = ingredients.get(1);
 
-    List<Instruction> instructions = createSampleInstructions(recipe);
     Instruction instruction = instructions.get(0);
-
-    RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
 
     when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
     when(repository.getIngredient(ingredient1.getId())).thenReturn(ingredient1);
@@ -282,7 +301,7 @@ class RecipeServiceTest {
 
   @Test
   void レシピの削除_正常系_IDに紐づくレシピ削除メソッドが実行されること() {
-    Recipe recipe = createSampleRecipe();
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
     int id = recipe.getId();
 
     when(repository.getRecipe(id)).thenReturn(recipe);
@@ -296,7 +315,7 @@ class RecipeServiceTest {
 
   @Test
   void レシピの削除_異常系_存在しないIDを指定した場合に例外がスローされること() {
-    Recipe recipe = createSampleRecipe();
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
     int id = recipe.getId();
 
     when(repository.getRecipe(id)).thenReturn(null);
@@ -313,7 +332,7 @@ class RecipeServiceTest {
   @Test
   void 材料の削除_正常系_IDに紐づく材料削除メソッドが実行されること() {
     Ingredient ingredient = new Ingredient();
-    int id = 999;
+    int id = 1;
     ingredient.setId(id);
 
     when(repository.getIngredient(id)).thenReturn(ingredient);
@@ -345,7 +364,7 @@ class RecipeServiceTest {
   @Test
   void 調理手順の削除_正常系_IDに紐づく調理手順削除メソッドが実行されること() {
     Instruction instruction = new Instruction();
-    int id = 999;
+    int id = 1;
     instruction.setId(id);
 
     when(repository.getInstruction(id)).thenReturn(instruction);
@@ -379,56 +398,31 @@ class RecipeServiceTest {
    *
    * @return レシピ一覧
    */
-  private static List<Recipe> createAllSampleRecipes() {
+  private List<Recipe> createMockRecipes(List<Integer> ids) {
     List<Recipe> recipes = new ArrayList<>();
-    for (int i = 1; i <= 2; i++) {
+    for (Integer id : ids) {
       Recipe recipe = new Recipe();
-      recipe.setId(i);
+      recipe.setId(id);
       recipes.add(recipe);
     }
     return recipes;
   }
 
   /**
-   * テスト用のサンプルレシピを作成するメソッドです。
-   *
-   * @return レシピ
-   */
-  private static Recipe createSampleRecipe() {
-    List<Recipe> allRecipes = createAllSampleRecipes();
-    return allRecipes.getFirst();
-  }
-
-  /**
    * テスト用のサンプル材料一覧を作成するメソッドです。
-   *
-   * @return 材料一覧
-   */
-  private static List<Ingredient> createAllSampleIngredients() {
-    List<Ingredient> ingredients = new ArrayList<>();
-    for (int i = 1; i <= 2; i++) {
-      Ingredient ingredient1 = new Ingredient();
-      ingredient1.setRecipeId(i);
-      ingredients.add(ingredient1);
-
-      Ingredient ingredient2 = new Ingredient();
-      ingredient2.setRecipeId(i);
-      ingredients.add(ingredient2);
-
-    }
-    return ingredients;
-  }
-
-  /**
-   * テスト用のサンプルレシピに紐づくサンプル材料一覧を作成するメソッドです。
    *
    * @return 材料
    */
-  private static List<Ingredient> createSampleIngredients(Recipe recipe) {
-    List<Ingredient> allIngredients = createAllSampleIngredients();
-    return allIngredients.stream()
-        .filter(ingredient -> ingredient.getRecipeId() == recipe.getId())
-        .toList();
+  private List<Ingredient> createMockIngredients(List<Integer> ids) {
+    List<Ingredient> ingredients = new ArrayList<>();
+    for (Integer id : ids) {
+      for (int i = 0; i < 2; i++) {
+        Ingredient ingredient = new Ingredient();
+        ingredient.setRecipeId(id);
+        ingredients.add(ingredient);
+      }
+    }
+    return ingredients;
   }
 
   /**
@@ -436,30 +430,16 @@ class RecipeServiceTest {
    *
    * @return 調理手順一覧
    */
-  private static List<Instruction> createAllSampleInstructions() {
+  private List<Instruction> createMockInstructions(List<Integer> ids) {
     List<Instruction> instructions = new ArrayList<>();
-    for (int i = 1; i <= 2; i++) {
-      Instruction instruction1 = new Instruction();
-      instruction1.setRecipeId(i);
-      instructions.add(instruction1);
-
-      Instruction instruction2 = new Instruction();
-      instruction2.setRecipeId(i);
-      instructions.add(instruction2);
+    for (Integer id : ids) {
+      for (int i = 0; i < 2; i++) {
+        Instruction instruction = new Instruction();
+        instruction.setRecipeId(id);
+        instructions.add(instruction);
+      }
     }
     return instructions;
-  }
-
-  /**
-   * テスト用のサンプルレシピに紐づくサンプル調理手順一覧を作成するメソッドです。
-   *
-   * @return 調理手順
-   */
-  private static List<Instruction> createSampleInstructions(Recipe recipe) {
-    List<Instruction> allInstructions = createAllSampleInstructions();
-    return allInstructions.stream()
-        .filter(instruction -> instruction.getRecipeId() == recipe.getId())
-        .toList();
   }
 
 }

@@ -1,7 +1,11 @@
 package raisetech.RecipeNotebook.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import raisetech.RecipeNotebook.converter.RecipeConverter;
@@ -9,6 +13,7 @@ import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
+import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.ResourceNotFoundException;
 import raisetech.RecipeNotebook.repository.RecipeRepository;
 
@@ -27,16 +32,37 @@ public class RecipeService {
   }
 
   /**
-   * レシピ詳細情報の一覧検索です。レシピ一覧・材料一覧・調理手順一覧をconverterでレシピ詳細情報一覧に変換します。
-   * TODO: 現在は全件検索のみ。絞り込みフィルターは後で実装する。
+   * レシピ詳細情報の一覧検索です。
    * @return レシピ詳細情報の一覧
    */
-  public List<RecipeDetail> searchRecipeList() {
-    List<Recipe> allRecipes = repository.getAllRecipes();
-    List<Ingredient> allIngredients = repository.getAllIngredients();
-    List<Instruction> allInstructions = repository.getAllInstructions();
+  public List<RecipeDetail> searchRecipeList(RecipeSearchCriteria criteria) {
+    List<Recipe> recipes = repository.getRecipes(criteria);
 
-    return recipeConverter.convertRecipeDetails(allRecipes, allIngredients, allInstructions);
+    if (recipes.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    List<Integer> recipeIds = recipes.stream().map(Recipe::getId).toList();
+    List<Ingredient> ingredients = repository.getIngredientsByRecipeIds(recipeIds, criteria);
+    List<Instruction> instructions = repository.getInstructionsByRecipeIds(recipeIds, criteria);
+
+    Set<Integer> resultRecipeIds = new LinkedHashSet<>();
+    for (int recipeId : recipeIds) {
+      for (Ingredient ingredient : ingredients) {
+        for (Instruction instruction : instructions) {
+          if (recipeId == ingredient.getRecipeId() & recipeId == instruction.getRecipeId()) {
+            resultRecipeIds.add(recipeId);
+          }
+        }
+      }
+    }
+
+    List<RecipeDetail> recipeDetails = new ArrayList<>();
+    for (int resultRecipeId : resultRecipeIds) {
+      recipeDetails.add(searchRecipeDetail(resultRecipeId));
+    }
+
+    return recipeDetails;
 
   }
 
@@ -46,7 +72,7 @@ public class RecipeService {
    * @param id レシピのID
    * @return IDに紐づくレシピの詳細情報
    */
-  public RecipeDetail searchRecipe(int id) {
+  public RecipeDetail searchRecipeDetail(int id) {
     Recipe recipe = repository.getRecipe(id);
 
     if (recipe == null) {
