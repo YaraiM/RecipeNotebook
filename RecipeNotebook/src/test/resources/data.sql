@@ -5,8 +5,8 @@ VALUES ('目玉焼き', 'test2/path', 'https://------2.com', '1人分', '備考�
 
 INSERT INTO ingredients (recipe_id, name, quantity, unit, arrange)
 VALUES
-(1, '卵', 3, '個', FALSE), (1, 'サラダ油', NULL, NULL, FALSE), (1, '醤油', 0.5, '大さじ', FALSE), (1, '砂糖', 1, '大さじ', FALSE),
-(2, '卵', 1, '個', FALSE), (2, 'サラダ油', NULL, NULL, FALSE), (2, '水', NULL, NULL, FALSE);
+(1, '卵', '3', '個', FALSE), (1, 'サラダ油', '適量', NULL, FALSE), (1, '醤油', '1/2', '大さじ', FALSE), (1, '砂糖', '1', '大さじ', FALSE),
+(2, '卵', '1', '個', FALSE), (2, 'サラダ油', '適量', NULL, FALSE), (2, '水', NULL, NULL, FALSE);
 
 INSERT INTO instructions (recipe_id, step_number, content, arrange)
 VALUES

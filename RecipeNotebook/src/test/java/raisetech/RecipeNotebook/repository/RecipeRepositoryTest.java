@@ -6,7 +6,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -108,12 +107,12 @@ class RecipeRepositoryTest {
     List<Ingredient> actual = sut.getAllIngredients();
 
     assertThat(actual.size(), is(7));
-    assertIngredientDetail(actual.get(0), 1, "卵", BigDecimal.valueOf(3.0), "個", false);
-    assertIngredientDetail(actual.get(1), 1, "サラダ油", null, null, false);
-    assertIngredientDetail(actual.get(2), 1, "醤油", BigDecimal.valueOf(0.5), "大さじ", false);
-    assertIngredientDetail(actual.get(3), 1, "砂糖", BigDecimal.valueOf(1.0), "大さじ", false);
-    assertIngredientDetail(actual.get(4), 2, "卵", BigDecimal.valueOf(1.0), "個", false);
-    assertIngredientDetail(actual.get(5), 2, "サラダ油", null, null, false);
+    assertIngredientDetail(actual.get(0), 1, "卵", "3", "個", false);
+    assertIngredientDetail(actual.get(1), 1, "サラダ油", "適量", null, false);
+    assertIngredientDetail(actual.get(2), 1, "醤油", "1/2", "大さじ", false);
+    assertIngredientDetail(actual.get(3), 1, "砂糖", "1", "大さじ", false);
+    assertIngredientDetail(actual.get(4), 2, "卵", "1", "個", false);
+    assertIngredientDetail(actual.get(5), 2, "サラダ油", "適量", null, false);
     assertIngredientDetail(actual.get(6), 2, "水", null, null, false);
 
   }
@@ -139,8 +138,6 @@ class RecipeRepositoryTest {
     }
   }
 
-  //TODO:ingredientsデータベースのうち、quantityをStringに変更する（ノートとしての柔軟性を上げるため）
-
   /**
    * 材料取得のパラメータテストに適用するテストケースです。
    *
@@ -150,16 +147,16 @@ class RecipeRepositoryTest {
     return Stream.of(
         Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null),
             List.of(
-                new Ingredient(1, 1, "卵", BigDecimal.valueOf(3.0), "個", false),
-                new Ingredient(2, 1, "サラダ油", null, null, false),
-                new Ingredient(3, 1, "醤油", BigDecimal.valueOf(0.5), "大さじ", false),
-                new Ingredient(4, 1, "砂糖", BigDecimal.valueOf(1.0), "大さじ", false),
-                new Ingredient(5, 2, "卵", BigDecimal.valueOf(1.0), "個", false),
-                new Ingredient(6, 2, "サラダ油", null, null, false),
+                new Ingredient(1, 1, "卵", "3", "個", false),
+                new Ingredient(2, 1, "サラダ油", "適量", null, false),
+                new Ingredient(3, 1, "醤油", "1/2", "大さじ", false),
+                new Ingredient(4, 1, "砂糖", "1", "大さじ", false),
+                new Ingredient(5, 2, "卵", "1", "個", false),
+                new Ingredient(6, 2, "サラダ油", "適量", null, false),
                 new Ingredient(7, 2, "水", null, null, false))),
         Arguments.of(List.of(1), new RecipeSearchCriteria("卵焼き", "卵"),
             List.of(
-                new Ingredient(1, 1, "卵", BigDecimal.valueOf(3.0), "個", false))),
+                new Ingredient(1, 1, "卵", "3", "個", false))),
         Arguments.of(List.of(), new RecipeSearchCriteria("存在しないレシピ", "存在しない材料"),
             List.of())
 
@@ -171,10 +168,10 @@ class RecipeRepositoryTest {
     List<Ingredient> actual = sut.getIngredients(1);
 
     assertThat(actual.size(), is(4));
-    assertIngredientDetail(actual.get(0), 1, "卵", BigDecimal.valueOf(3.0), "個", false);
-    assertIngredientDetail(actual.get(1), 1, "サラダ油", null, null, false);
-    assertIngredientDetail(actual.get(2), 1, "醤油", BigDecimal.valueOf(0.5), "大さじ", false);
-    assertIngredientDetail(actual.get(3), 1, "砂糖", BigDecimal.valueOf(1.0), "大さじ", false);
+    assertIngredientDetail(actual.get(0), 1, "卵", "3", "個", false);
+    assertIngredientDetail(actual.get(1), 1, "サラダ油", "適量", null, false);
+    assertIngredientDetail(actual.get(2), 1, "醤油", "1/2", "大さじ", false);
+    assertIngredientDetail(actual.get(3), 1, "砂糖", "1", "大さじ", false);
 
   }
 
@@ -182,7 +179,7 @@ class RecipeRepositoryTest {
   void IDに紐づく材料を取得できること() {
     Ingredient actual = sut.getIngredient(1);
 
-    assertIngredientDetail(actual, 1, "卵", BigDecimal.valueOf(3.0), "個", false);
+    assertIngredientDetail(actual, 1, "卵", "3", "個", false);
 
   }
 
@@ -290,7 +287,7 @@ class RecipeRepositoryTest {
 
     List<Ingredient> actual = sut.getIngredients(
         recipe.getId());  //　MySQLの仕様でオートインクリメントされたレシピID値はロールバック後も使用されないため、固定の数値（3）ではなくrecipeのIDを直接参照する。
-    assertIngredientDetail(actual.get(0), recipe.getId(), "卵", BigDecimal.valueOf(1.0), "個",
+    assertIngredientDetail(actual.get(0), recipe.getId(), "卵", "1", "個",
         false);
     assertIngredientDetail(actual.get(1), recipe.getId(), "水", null, null, false);
 
@@ -343,14 +340,14 @@ class RecipeRepositoryTest {
     Ingredient ingredient = new Ingredient();
     ingredient.setId(1);
     ingredient.setName("卵rev");
-    ingredient.setQuantity(BigDecimal.valueOf(4));
+    ingredient.setQuantity("4");
     ingredient.setUnit("個rev");
     ingredient.setArrange(true);
 
     sut.updateIngredient(ingredient);
 
     List<Ingredient> actual = sut.getIngredients(1);
-    assertIngredientDetail(actual.get(0), 1, "卵rev", BigDecimal.valueOf(4.0), "個rev", true);
+    assertIngredientDetail(actual.get(0), 1, "卵rev", "4", "個rev", true);
 
   }
 
@@ -423,7 +420,7 @@ class RecipeRepositoryTest {
    * 材料のアサーションを行うヘルパーメソッドです。
    */
   private void assertIngredientDetail(Ingredient ingredient, int recipeId, String name,
-      BigDecimal quantity, String unit, Boolean arrange) {
+      String quantity, String unit, Boolean arrange) {
     assertAll("Multiple assertions", () -> assertThat(ingredient.getRecipeId(), is(recipeId)),
         () -> assertThat(ingredient.getName(), is(name)),
         () -> assertThat(ingredient.getQuantity(), is(quantity)),
@@ -467,7 +464,7 @@ class RecipeRepositoryTest {
 
     Ingredient ingredient1 = new Ingredient();
     ingredient1.setName("卵");
-    ingredient1.setQuantity(BigDecimal.valueOf(1));
+    ingredient1.setQuantity("1");
     ingredient1.setUnit("個");
     ingredient1.setArrange(false);
 
