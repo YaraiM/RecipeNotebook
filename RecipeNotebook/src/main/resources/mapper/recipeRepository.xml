@@ -13,8 +13,25 @@
   <select id="getRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes
     <where>
-      <if test="recipeName != null and recipeName != ''">
-        AND name LIKE CONCAT('%', #{recipeName}, '%')
+      <if test="recipeNames != null and recipeNames.size() > 0">
+        <foreach item="recipeName" collection="recipeNames" open="(" separator=" AND " close=")">
+          name LIKE CONCAT('%', #{recipeName}, '%')
+        </foreach>
+      </if>
+      <if test="favoriteRecipe != null">
+        AND favorite = #{favoriteRecipe}
+      </if>
+      <if test="createDateFrom != null">
+        AND CAST(created_at AS DATE) >= #{createDateFrom}
+      </if>
+      <if test="createDateTo != null">
+        AND CAST(created_at AS DATE) &lt;= #{createDateTo}
+      </if>
+      <if test="updateDateFrom != null">
+        AND CAST(updated_at AS DATE) >= #{updateDateFrom}
+      </if>
+      <if test="updateDateTo != null">
+        AND CAST(updated_at AS DATE) &lt;= #{updateDateTo}
       </if>
     </where>
   </select>
@@ -39,8 +56,12 @@
           #{id}
         </foreach>
       </if>
-      <if test="criteria.ingredientName != null and criteria.ingredientName != ''">
-        AND name LIKE CONCAT('%', #{criteria.ingredientName}, '%')
+      <if test="criteria.ingredientNames != null and criteria.ingredientNames.size() > 0">
+        <if test="recipeIds != null and recipeIds.size() > 0">AND</if>
+        <foreach item="ingredientName" collection="criteria.ingredientNames" open="("
+          separator=" AND " close=")">
+          name LIKE CONCAT('%', #{ingredientName}, '%')
+        </foreach>
       </if>
     </where>
   </select>

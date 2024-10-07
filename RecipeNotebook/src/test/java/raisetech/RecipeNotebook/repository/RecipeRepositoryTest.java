@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,9 @@ class RecipeRepositoryTest {
    */
   private static Stream<Arguments> provideGetRecipeTestCase() {
     return Stream.of(
-        Arguments.of(new RecipeSearchCriteria(null, null),
+        Arguments.of(
+            new RecipeSearchCriteria(null, null, null,
+                null, null, null, null),
             List.of(
                 new Recipe(1, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
                     false,
@@ -82,13 +85,16 @@ class RecipeRepositoryTest {
                     true,
                     LocalDateTime.parse("2024-09-23T17:00:00"),
                     LocalDateTime.parse("2024-10-23T17:00:00")))),
-        Arguments.of(new RecipeSearchCriteria("卵焼き", "卵"),
+        Arguments.of(new RecipeSearchCriteria(List.of("卵焼き"), false,
+                LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
+                LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵")),
             List.of(
                 new Recipe(1, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
                     false,
                     LocalDateTime.parse("2024-09-22T17:00:00"),
                     LocalDateTime.parse("2024-09-22T17:00:00")))),
-        Arguments.of(new RecipeSearchCriteria("存在しないレシピ", "存在しない材料"),
+        Arguments.of(new RecipeSearchCriteria(List.of("存在しないレシピ"), null,
+                null, null, null, null, List.of("存在しない材料")),
             List.of())
 
     );
@@ -145,7 +151,8 @@ class RecipeRepositoryTest {
    */
   private static Stream<Arguments> provideGetIngredientsTestCase() {
     return Stream.of(
-        Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null),
+        Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null,
+                null, null, null, null, null),
             List.of(
                 new Ingredient(1, 1, "卵", "3", "個", false),
                 new Ingredient(2, 1, "サラダ油", "適量", null, false),
@@ -154,10 +161,13 @@ class RecipeRepositoryTest {
                 new Ingredient(5, 2, "卵", "1", "個", false),
                 new Ingredient(6, 2, "サラダ油", "適量", null, false),
                 new Ingredient(7, 2, "水", null, null, false))),
-        Arguments.of(List.of(1), new RecipeSearchCriteria("卵焼き", "卵"),
+        Arguments.of(List.of(1), new RecipeSearchCriteria(List.of("卵焼き"), false,
+                LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
+                LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵")),
             List.of(
                 new Ingredient(1, 1, "卵", "3", "個", false))),
-        Arguments.of(List.of(), new RecipeSearchCriteria("存在しないレシピ", "存在しない材料"),
+        Arguments.of(List.of(), new RecipeSearchCriteria(List.of("存在しないレシピ"), null,
+                null, null, null, null, List.of("存在しない材料")),
             List.of())
 
     );
@@ -228,7 +238,8 @@ class RecipeRepositoryTest {
    */
   private static Stream<Arguments> provideGetInstructionsTestCase() {
     return Stream.of(
-        Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null),
+        Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null,
+                null, null, null, null, null),
             List.of(
                 new Instruction(1, 1, 1, "卵を溶いて調味料を混ぜ、卵液を作る", false),
                 new Instruction(2, 1, 2, "フライパンに油をたらし、火にかける", false),

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,9 +104,13 @@ class RecipeServiceTest {
    * @return Argument
    */
   private static Stream<Arguments> provideSearchRecipeTestCase() {
-    return Stream.of(Arguments.of(List.of(1, 2), new RecipeSearchCriteria("卵焼き", null), 2),
-        Arguments.of(List.of(3), new RecipeSearchCriteria(null, "目玉焼き"), 1),
-        Arguments.of(List.of(), new RecipeSearchCriteria("存在しないレシピ", null), 0));
+    return Stream.of(Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null, null,
+            null, null, null, null), 2),
+        Arguments.of(List.of(1), new RecipeSearchCriteria(List.of("卵焼き"), false,
+            LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
+            LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵")), 1),
+        Arguments.of(List.of(), new RecipeSearchCriteria(List.of("存在しないレシピ"), null,
+            null, null, null, null, List.of("存在しない材料")), 0));
   }
 
   @Test
