@@ -25,7 +25,7 @@ CREATE TABLE ingredients (
   id INT NOT NULL AUTO_INCREMENT,
   recipe_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
-  quantity DECIMAL(10, 1),
+  quantity VARCHAR(255) ,
   unit VARCHAR(255),
   arrange BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id),
@@ -34,8 +34,8 @@ CREATE TABLE ingredients (
 
 INSERT INTO ingredients (recipe_id, name, quantity, unit, arrange)
 VALUES
-(1, '卵', 3, '個', FALSE), (1, 'サラダ油', NULL, NULL, FALSE), (1, '醤油', 0.5, '大さじ', FALSE), (1, '砂糖', 1, '大さじ', FALSE),
-(2, '卵', 1, '個', FALSE), (2, 'サラダ油', NULL, NULL, FALSE), (2, '水', NULL, NULL, FALSE);
+(1, '卵', '3', '個', FALSE), (1, 'サラダ油', '適量', NULL, FALSE), (1, '醤油', '1/2', '大さじ', FALSE), (1, '砂糖', '1', '大さじ', FALSE),
+(2, '卵', '1', '個', FALSE), (2, 'サラダ油', '適量', NULL, FALSE), (2, '水', NULL, NULL, FALSE);
 
 
 DROP TABLE IF EXISTS instructions;
