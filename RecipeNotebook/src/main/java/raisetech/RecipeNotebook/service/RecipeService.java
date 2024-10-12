@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import raisetech.RecipeNotebook.converter.RecipeConverter;
@@ -26,6 +27,7 @@ public class RecipeService {
   private final RecipeRepository repository;
   private final RecipeConverter recipeConverter;
 
+  @Autowired
   public RecipeService(RecipeRepository repository, RecipeConverter recipeConverter) {
     this.repository = repository;
     this.recipeConverter = recipeConverter;
