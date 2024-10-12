@@ -37,7 +37,6 @@
         <tr>
           <th>材料</th>
           <th>分量</th>
-          <th>単位</th>
           <th>アレンジ</th>
         </tr>
         </thead>
@@ -45,7 +44,6 @@
         <tr th:each="ingredient : ${recipeDetail.ingredients}">
           <td th:text="${ingredient.name}">卵</td>
           <td th:text="${ingredient.quantity}">3</td>
-          <td th:text="${ingredient.unit}">個</td>
           <td>
             <div class="form-check">
               <input class="form-check-input" type="checkbox" th:checked="${ingredient.arrange}"

@@ -3,10 +3,10 @@ VALUES ('卵焼き', 'test1/path', 'https://------1.com', '2人分', '備考欄1
 INSERT INTO recipes (name, image_path, recipe_source, servings, remark, favorite, created_at, updated_at)
 VALUES ('目玉焼き', 'test2/path', 'https://------2.com', '1人分', '備考欄2', TRUE, '2024-09-23 17:00:00', '2024-10-23 17:00:00');
 
-INSERT INTO ingredients (recipe_id, name, quantity, unit, arrange)
+INSERT INTO ingredients (recipe_id, name, quantity, arrange)
 VALUES
-(1, '卵', '3', '個', FALSE), (1, 'サラダ油', '適量', NULL, FALSE), (1, '醤油', '1/2', '大さじ', FALSE), (1, '砂糖', '1', '大さじ', FALSE),
-(2, '卵', '1', '個', FALSE), (2, 'サラダ油', '適量', NULL, FALSE), (2, '水', NULL, NULL, FALSE);
+(1, '卵', '3個', FALSE), (1, 'サラダ油', '適量', FALSE), (1, '醤油', '大さじ1/2', FALSE), (1, '砂糖', '大さじ1', FALSE),
+(2, '卵', '1個', FALSE), (2, 'サラダ油', '適量', FALSE), (2, '水', NULL, FALSE);
 
 INSERT INTO instructions (recipe_id, step_number, content, arrange)
 VALUES

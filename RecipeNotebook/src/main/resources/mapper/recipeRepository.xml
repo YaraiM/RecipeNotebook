@@ -113,8 +113,8 @@
 
   <!--  レシピの材料の新規登録  -->
   <insert id="registerIngredient" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO ingredients(recipe_id, name, quantity, unit, arrange)
-    values(#{recipeId}, #{name}, #{quantity}, #{unit}, #{arrange})
+    INSERT INTO ingredients(recipe_id, name, quantity, arrange)
+    values(#{recipeId}, #{name}, #{quantity}, #{arrange})
   </insert>
 
   <!--  レシピの調理手順の新規登録  -->
@@ -132,7 +132,7 @@
 
   <!--  レシピの材料の更新  -->
   <update id="updateIngredient">
-    UPDATE ingredients SET name=#{name}, quantity=#{quantity}, unit=#{unit}, arrange=#{arrange}
+    UPDATE ingredients SET name=#{name}, quantity=#{quantity}, arrange=#{arrange}
     WHERE id=#{id}
   </update>
 
