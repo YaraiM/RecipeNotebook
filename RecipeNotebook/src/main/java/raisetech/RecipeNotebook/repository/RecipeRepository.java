@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
+import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 
 @Mapper
 public interface RecipeRepository {
@@ -16,6 +17,14 @@ public interface RecipeRepository {
    * @return レシピ一覧（全件）
    */
   List<Recipe> getAllRecipes();
+
+  /**
+   * 検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件検索になります。
+   *
+   * @param criteria レシピ検索条件
+   * @return レシピ一覧
+   */
+  List<Recipe> getRecipes(RecipeSearchCriteria criteria);
 
   /**
    * IDに紐づくレシピを取得します。
@@ -33,12 +42,40 @@ public interface RecipeRepository {
   List<Ingredient> getAllIngredients();
 
   /**
-   * レシピIDに紐づく材料を取得します。
+   * 複数のレシピIDおよび検索条件に対応する材料一覧を取得します。
+   *
+   * @param recipeIds 複数のレシピID
+   * @param criteria レシピ検索条件
+   * @return 材料一覧
+   */
+  List<Ingredient> getIngredientsByRecipeIds(List<Integer> recipeIds,
+      RecipeSearchCriteria criteria);
+
+  /**
+   * 複数のレシピIDに対応する調理手順一覧を取得します。
+   *
+   * @param recipeIds 複数のレシピID
+   * @param criteria レシピ検索条件
+   * @return 調理手順一覧
+   */
+  List<Instruction> getInstructionsByRecipeIds(List<Integer> recipeIds,
+      RecipeSearchCriteria criteria);
+
+  /**
+   * レシピIDに紐づく材料一覧を取得します。
    *
    * @param recipeId レシピID
-   * @return レシピの材料
+   * @return レシピの材料一覧
    */
   List<Ingredient> getIngredients(int recipeId);
+
+  /**
+   * IDに紐づく材料を取得します。
+   *
+   * @param id 材料のID
+   * @return 材料
+   */
+  Ingredient getIngredient(int id);
 
   /**
    * 調理手順を全件取得します。
@@ -48,12 +85,20 @@ public interface RecipeRepository {
   List<Instruction> getAllInstructions();
 
   /**
-   * レシピIDに紐づく調理手順を取得します。
+   * レシピIDに紐づく調理手順一覧を取得します。
    *
    * @param recipeId レシピID
-   * @return レシピの調理手順
+   * @return レシピの調理手順一覧
    */
   List<Instruction> getInstructions(int recipeId);
+
+  /**
+   * IDに紐づく調理手順を取得します。
+   *
+   * @param id 調理手順のID
+   * @return 調理手順
+   */
+  Instruction getInstruction(int id);
 
   /**
    * レシピの新規登録です。新規レシピをレシピテーブルに追加します。
@@ -99,6 +144,7 @@ public interface RecipeRepository {
 
   /**
    * レシピの削除です。レシピテーブルにおいて、指定したIDに紐づくレコードを削除します。
+   * データベース側でデリートカスケードの設定をしているため、このメソッドが成功するとレシピIDに紐づく材料と調理手順も削除されます。
    *
    * @param id レシピID
    */

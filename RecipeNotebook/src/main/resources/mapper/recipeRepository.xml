@@ -9,6 +9,33 @@
     SELECT * FROM recipes
   </select>
 
+  <!-- 検索条件に紐づくレシピ一覧の取得  -->
+  <select id="getRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
+    SELECT * FROM recipes
+    <where>
+      <if test="recipeNames != null and recipeNames.size() > 0">
+        <foreach item="recipeName" collection="recipeNames" open="(" separator=" AND " close=")">
+          name LIKE CONCAT('%', #{recipeName}, '%')
+        </foreach>
+      </if>
+      <if test="favoriteRecipe != null">
+        AND favorite = #{favoriteRecipe}
+      </if>
+      <if test="createDateFrom != null">
+        AND CAST(created_at AS DATE) >= #{createDateFrom}
+      </if>
+      <if test="createDateTo != null">
+        AND CAST(created_at AS DATE) &lt;= #{createDateTo}
+      </if>
+      <if test="updateDateFrom != null">
+        AND CAST(updated_at AS DATE) >= #{updateDateFrom}
+      </if>
+      <if test="updateDateTo != null">
+        AND CAST(updated_at AS DATE) &lt;= #{updateDateTo}
+      </if>
+    </where>
+  </select>
+
   <!--  レシピの取得  -->
   <select id="getRecipe" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes WHERE id = #{id}
@@ -19,9 +46,34 @@
     SELECT * FROM ingredients
   </select>
 
-  <!--  レシピIDに紐づく材料の取得  -->
+  <!-- 複数のIDおよび検索条件に紐づく材料一覧の取得 -->
+  <select id="getIngredientsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients
+    <where>
+      <if test="recipeIds != null and recipeIds.size() > 0">
+        recipe_id IN
+        <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
+          #{id}
+        </foreach>
+      </if>
+      <if test="criteria.ingredientNames != null and criteria.ingredientNames.size() > 0">
+        <if test="recipeIds != null and recipeIds.size() > 0">AND</if>
+        <foreach item="ingredientName" collection="criteria.ingredientNames" open="("
+          separator=" AND " close=")">
+          name LIKE CONCAT('%', #{ingredientName}, '%')
+        </foreach>
+      </if>
+    </where>
+  </select>
+
+  <!--  レシピIDに紐づく材料一覧の取得  -->
   <select id="getIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
     SELECT * FROM ingredients WHERE recipe_id = #{recipeId}
+  </select>
+
+  <!--  IDに紐づく材料の取得  -->
+  <select id="getIngredient" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients WHERE id = #{id}
   </select>
 
   <!--  調理手順の全件取得  -->
@@ -29,9 +81,27 @@
     SELECT * FROM instructions
   </select>
 
-  <!--  レシピIDに紐づく調理手順の取得  -->
+  <!-- 複数のIDおよび検索条件に紐づく調理手順一覧の取得 -->
+  <select id="getInstructionsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions
+    <where>
+      <if test="recipeIds != null and recipeIds.size() > 0">
+        recipe_id IN
+        <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
+          #{id}
+        </foreach>
+      </if>
+    </where>
+  </select>
+
+  <!--  レシピIDに紐づく調理手順一覧の取得  -->
   <select id="getInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
     SELECT * FROM instructions WHERE recipe_id = #{recipeId}
+  </select>
+
+  <!--  IDに紐づく調理手順の取得  -->
+  <select id="getInstruction" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions WHERE id = #{id}
   </select>
 
   <!--  レシピの新規登録  -->
@@ -87,6 +157,5 @@
   <delete id="deleteInstruction">
     DELETE FROM instructions WHERE id=#{id};
   </delete>
-
 
 </mapper>
