@@ -24,6 +24,6 @@ public class Instruction {
   @NotBlank
   private String content;
 
-  private Boolean arrange;
+  private boolean arrange;
 
 }

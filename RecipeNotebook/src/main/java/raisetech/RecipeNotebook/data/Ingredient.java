@@ -26,6 +26,6 @@ public class Ingredient {
 
   private String unit;
 
-  private Boolean arrange;
+  private boolean arrange;
 
 }
