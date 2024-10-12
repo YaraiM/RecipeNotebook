@@ -62,7 +62,7 @@ class RecipeRepositoryTest {
       assertThat(actualRecipe.getRecipeSource(), is(expectedRecipe.getRecipeSource()));
       assertThat(actualRecipe.getServings(), is(expectedRecipe.getServings()));
       assertThat(actualRecipe.getRemark(), is(expectedRecipe.getRemark()));
-      assertThat(actualRecipe.getFavorite(), is(expectedRecipe.getFavorite()));
+      assertThat(actualRecipe.isFavorite(), is(expectedRecipe.isFavorite()));
     }
   }
 
@@ -140,7 +140,7 @@ class RecipeRepositoryTest {
       assertThat(actualIngredient.getName(), is(expectedIngredient.getName()));
       assertThat(actualIngredient.getQuantity(), is(expectedIngredient.getQuantity()));
       assertThat(actualIngredient.getUnit(), is(expectedIngredient.getUnit()));
-      assertThat(actualIngredient.getArrange(), is(expectedIngredient.getArrange()));
+      assertThat(actualIngredient.isArrange(), is(expectedIngredient.isArrange()));
     }
   }
 
@@ -227,7 +227,7 @@ class RecipeRepositoryTest {
       assertThat(actualInstruction.getRecipeId(), is(expectedInstruction.getRecipeId()));
       assertThat(actualInstruction.getStepNumber(), is(expectedInstruction.getStepNumber()));
       assertThat(actualInstruction.getContent(), is(expectedInstruction.getContent()));
-      assertThat(actualInstruction.getArrange(), is(expectedInstruction.getArrange()));
+      assertThat(actualInstruction.isArrange(), is(expectedInstruction.isArrange()));
     }
   }
 
@@ -422,7 +422,7 @@ class RecipeRepositoryTest {
         () -> assertThat(recipe.getRecipeSource(), is(recipeSource)),
         () -> assertThat(recipe.getServings(), is(servings)),
         () -> assertThat(recipe.getRemark(), is(remark)),
-        () -> assertThat(recipe.getFavorite(), is(favorite)),
+        () -> assertThat(recipe.isFavorite(), is(favorite)),
         () -> assertThat(recipe.getCreatedAt(), is(createdAt)),
         () -> assertThat(recipe.getUpdatedAt(), is(updatedAt)));
   }
@@ -436,7 +436,7 @@ class RecipeRepositoryTest {
         () -> assertThat(ingredient.getName(), is(name)),
         () -> assertThat(ingredient.getQuantity(), is(quantity)),
         () -> assertThat(ingredient.getUnit(), is(unit)),
-        () -> assertThat(ingredient.getArrange(), is(arrange)));
+        () -> assertThat(ingredient.isArrange(), is(arrange)));
   }
 
   /**
@@ -447,7 +447,7 @@ class RecipeRepositoryTest {
     assertAll("Multiple assertions", () -> assertThat(instruction.getRecipeId(), is(recipeId)),
         () -> assertThat(instruction.getStepNumber(), is(stepNumber)),
         () -> assertThat(instruction.getContent(), is(content)),
-        () -> assertThat(instruction.getArrange(), is(arrange)));
+        () -> assertThat(instruction.isArrange(), is(arrange)));
   }
 
   /**
