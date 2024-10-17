@@ -8,6 +8,8 @@ import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 
+//TODO:不要なクラスのため、後程削除する
+
 /**
  * レシピ一覧・材料一覧・調理手順一覧をレシピ詳細情報一覧に変換するコンバーターです。
  */
