@@ -1,21 +1,27 @@
 package raisetech.RecipeNotebook.controller;
 
 import jakarta.validation.Valid;
+import java.net.URI;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.service.RecipeService;
 
-@Controller
+@RestController
+@RequestMapping("/recipes")
 @Validated
 public class RecipeController {
 
@@ -26,40 +32,43 @@ public class RecipeController {
     this.service = service;
   }
 
-  @GetMapping("/recipes")
-  public String getRecipes(RecipeSearchCriteria criteria, Model model) {
+  @GetMapping
+  public ResponseEntity<List<RecipeDetail>> getRecipes(
+      @Valid @ModelAttribute RecipeSearchCriteria criteria) {
     List<RecipeDetail> recipeDetails = service.searchRecipeList(criteria);
-    model.addAttribute("recipeSummaries", recipeDetails);
-    return "recipes";
+    return ResponseEntity.ok(recipeDetails);
   }
 
-  @GetMapping("/recipes/{id}")
-  public String getRecipeDetail(@PathVariable int id, Model model) {
+  @GetMapping("/{id}")
+  public ResponseEntity<RecipeDetail> getRecipeDetail(@PathVariable int id) {
     RecipeDetail recipeDetail = service.searchRecipeDetail(id);
-    model.addAttribute("recipeDetail", recipeDetail);
-    return "recipeDetail";
+    return ResponseEntity.ok(recipeDetail);
   }
 
-  @GetMapping("/recipes/new")
-  public String newRecipeDetail(Model model) {
-    model.addAttribute("recipeDetailInput", new RecipeDetail());
-    return "registerRecipeDetail";
+  @PostMapping("/new")
+  public ResponseEntity<RecipeDetail> registerRecipeDetail
+      (@Valid @RequestBody RecipeDetail recipeDetail, UriComponentsBuilder uriBuilder) {
+    RecipeDetail newRecipeDetail = service.registerRecipeDetail(recipeDetail);
+
+    int newRecipeId = newRecipeDetail.getRecipe().getId();
+    URI location = uriBuilder.path("/recipes/{newRecipeId}").buildAndExpand(newRecipeId).toUri();
+
+    return ResponseEntity.created(location).body(newRecipeDetail);
   }
 
-  //  TODO：▲バリデーションのメッセージを調整する（参考書11.17）⇒例外ハンドラは不要？メッセージプロパティで変更できない？
-  @PostMapping("/recipes/new/validate-input")
-  public String validateRecipeDetail(
-      @Valid @ModelAttribute("recipeDetailInput") RecipeDetail recipeDetailInput,
-      BindingResult bindingResult, Model model) {
-    if (bindingResult.hasErrors()) {
-      return "registerRecipeDetail";
-    }
-    service.registerRecipeDetail(recipeDetailInput);
-    return "registerRecipeDetailConfirm";//TODO:★★入力内容を出力する画面へ遷移　⇒　「確定」または「変更」をできるようにする（参考書11-8）
+  @PutMapping("/{id}/update")
+  public ResponseEntity<RecipeDetail> updateRecipeDetail
+      (@PathVariable int id, @Valid @RequestBody RecipeDetail recipeDetail) {
+    RecipeDetail updatedRecipeDetail = service.updateRecipeDetail(recipeDetail);
+    return ResponseEntity.ok(updatedRecipeDetail);
   }
 
-  @GetMapping("/recipes/new/confirm")
+  @DeleteMapping("/{id}/delete")
+  public ResponseEntity<String> deleteRecipeDetail(@PathVariable int id) {
+    service.deleteRecipe(id);
+    return ResponseEntity.ok("レシピを削除しました");
+  }
 
 }
 
-//TODO:ログイン画面を作成（参考書14章）
+//TODO:ログイン画面を作成　⇒　ユーザーのデータベースが必要。ユーザーとレシピは１対多の関係とし、レシピにユーザーIDを追加する。
