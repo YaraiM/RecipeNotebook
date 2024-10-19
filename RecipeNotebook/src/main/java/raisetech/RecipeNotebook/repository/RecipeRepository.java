@@ -12,7 +12,7 @@ import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 public interface RecipeRepository {
 
   /**
-   * レシピを全件取得します。
+   * TODO:不要　レシピを全件取得します。
    *
    * @return レシピ一覧（全件）
    */
@@ -42,7 +42,7 @@ public interface RecipeRepository {
   List<Ingredient> getAllIngredients();
 
   /**
-   * 複数のレシピIDおよび検索条件に対応する材料一覧を取得します。
+   * TODO:不要　複数のレシピIDおよび検索条件に対応する材料一覧を取得します。
    *
    * @param recipeIds 複数のレシピID
    * @param criteria レシピ検索条件
@@ -78,7 +78,7 @@ public interface RecipeRepository {
   Ingredient getIngredient(int id);
 
   /**
-   * 調理手順を全件取得します。
+   * TODO:不要　調理手順を全件取得します。
    *
    * @return 調理手順一覧（全件）
    */
@@ -99,6 +99,16 @@ public interface RecipeRepository {
    * @return 調理手順
    */
   Instruction getInstruction(int id);
+
+  /**
+   * レシピID一覧に紐づき、かつ指定したキーワードに合致する材料のID一覧を取得します。
+   *
+   * @param recipeIds レシピID一覧
+   * @param ingredientNames 材料名
+   * @return 材料のID一覧
+   */
+  List<Integer> getRecipeIdsWithMatchingIngredients(List<Integer> recipeIds,
+      List<String> ingredientNames);
 
   /**
    * レシピの新規登録です。新規レシピをレシピテーブルに追加します。

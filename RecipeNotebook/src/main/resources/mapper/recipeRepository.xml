@@ -4,7 +4,7 @@
 
 <mapper namespace="raisetech.RecipeNotebook.repository.RecipeRepository">
 
-  <!--  レシピの全件取得  -->
+  <!--  TODO:不要　レシピの全件取得  -->
   <select id="getAllRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes
   </select>
@@ -13,7 +13,7 @@
   <select id="getRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes
     <where>
-      <if test="recipeNames != null and recipeNames.size() > 0">
+      <if test="recipeNames != null and !recipeNames.isEmpty()">
         <foreach item="recipeName" collection="recipeNames" open="(" separator=" AND " close=")">
           name LIKE CONCAT('%', #{recipeName}, '%')
         </foreach>
@@ -41,12 +41,12 @@
     SELECT * FROM recipes WHERE id = #{id}
   </select>
 
-  <!--  材料の全件取得  -->
+  <!--  TODO:不要　材料の全件取得  -->
   <select id="getAllIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
     SELECT * FROM ingredients
   </select>
 
-  <!-- 複数のIDおよび検索条件に紐づく材料一覧の取得 -->
+  <!-- TODO:不要　複数のIDおよび検索条件に紐づく材料一覧の取得 -->
   <select id="getIngredientsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Ingredient">
     SELECT * FROM ingredients
     <where>
@@ -76,12 +76,39 @@
     SELECT * FROM ingredients WHERE id = #{id}
   </select>
 
-  <!--  調理手順の全件取得  -->
+  <!-- キーワード指定した材料名に一致するレシピIDを取得 -->
+  <select id="getRecipeIdsWithMatchingIngredients" resultType="java.lang.Integer">
+    SELECT DISTINCT i.recipe_id
+    FROM ingredients i
+    WHERE i.recipe_id IN
+    <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+    <if test="ingredientNames != null and !ingredientNames.isEmpty()">
+      AND (
+      <foreach item="ingredientName" collection="ingredientNames" separator=" OR ">
+        i.name LIKE CONCAT('%', #{ingredientName}, '%')
+      </foreach>
+      )
+      GROUP BY i.recipe_id
+      <!--  あるレシピIDにおいて、検索キーワードの数と同等かそれ以上の材料IDが抽出された場合に限り集約する（＝複数キーワードに合致するレシピ詳細のみ抽出される）  -->
+      HAVING COUNT(DISTINCT i.name) >= (
+      SELECT COUNT(*)
+      FROM (
+      <foreach item="ingredientName" collection="ingredientNames" separator="UNION ALL">
+        SELECT #{ingredientName} as name
+      </foreach>
+      ) as temp_ingredients
+      )
+    </if>
+  </select>
+
+  <!--  TODO:不要　調理手順の全件取得  -->
   <select id="getAllInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
     SELECT * FROM instructions
   </select>
 
-  <!-- 複数のIDおよび検索条件に紐づく調理手順一覧の取得 -->
+  <!-- TODO:不要　複数のIDおよび検索条件に紐づく調理手順一覧の取得 -->
   <select id="getInstructionsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Instruction">
     SELECT * FROM instructions
     <where>
