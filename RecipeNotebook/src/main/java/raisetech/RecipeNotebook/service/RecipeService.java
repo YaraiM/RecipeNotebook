@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import raisetech.RecipeNotebook.converter.RecipeConverter;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -24,16 +23,14 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 public class RecipeService {
 
   private final RecipeRepository repository;
-  private final RecipeConverter recipeConverter;
 
   @Autowired
-  public RecipeService(RecipeRepository repository, RecipeConverter recipeConverter) {
+  public RecipeService(RecipeRepository repository) {
     this.repository = repository;
-    this.recipeConverter = recipeConverter;
   }
 
   /**
-   * レシピ詳細情報の一覧検索です。
+   * 検索条件に応じてレシピ詳細情報を一覧検索します。
    * @return レシピ詳細情報の一覧
    */
   public List<RecipeDetail> searchRecipeList(RecipeSearchCriteria criteria) {
@@ -47,11 +44,9 @@ public class RecipeService {
         .map(Recipe::getId).collect(Collectors.toList());
 
     // 材料名での検索
-//      TODO:このメソッドでUnsupportedOperationExceptionが発生する
     List<Integer> recipeIdsWithMatchingIngredients =
         repository.getRecipeIdsWithMatchingIngredients(recipeIds, criteria.getIngredientNames());
 
-    //  TODO:ここ以下は正常に動いている（ingredientNamesがnullの場合は正常に動作するので）
     recipeIds = recipeIds.stream()
         .filter(recipeIdsWithMatchingIngredients::contains)
         .collect(Collectors.toList());
@@ -133,17 +128,17 @@ public class RecipeService {
     List<Ingredient> existingIngredients = repository.getIngredients(recipeId);
     List<Instruction> existingInstructions = repository.getInstructions(recipeId);
 
-    // 材料の更新処理
+    // 材料の更新
     Set<Integer> inputIngredientIds = inputRecipeDetail.getIngredients().stream()
         .map(Ingredient::getId)
         .collect(Collectors.toSet());
 
-    // 削除された材料を特定し削除
+    // 材料の削除処理
     existingIngredients.stream()
         .filter(ingredient -> !inputIngredientIds.contains(ingredient.getId()))
         .forEach(ingredient -> repository.deleteIngredient(ingredient.getId()));
 
-    // 新規・更新材料の処理
+    // 材料の追加・更新処理
     inputRecipeDetail.getIngredients().forEach(ingredient -> {
       if (ingredient.getId() == 0) {
         repository.registerIngredient(ingredient);
@@ -155,15 +150,17 @@ public class RecipeService {
       }
     });
 
-    // 調理手順の更新処理
+    // 調理手順の更新
     Set<Integer> inputInstructionIds = inputRecipeDetail.getInstructions().stream()
         .map(Instruction::getId)
         .collect(Collectors.toSet());
 
+    // 調理手順の削除処理
     existingInstructions.stream()
         .filter(instruction -> !inputInstructionIds.contains(instruction.getId()))
         .forEach(instruction -> repository.deleteInstruction(instruction.getId()));
 
+    // 調理手順の追加・更新処理
     inputRecipeDetail.getInstructions().forEach(instruction -> {
       if (instruction.getId() == 0) {
         repository.registerInstruction(instruction);
@@ -176,7 +173,7 @@ public class RecipeService {
       }
     });
 
-    //レシピ本体の更新
+    // レシピ本体の更新
     Recipe inputRecipe = inputRecipeDetail.getRecipe();
     inputRecipe.setUpdatedAt(LocalDateTime.now());
     repository.updateRecipe(inputRecipe);
@@ -202,7 +199,7 @@ public class RecipeService {
   }
 
   /**
-   * 材料を削除するメソッドです。レシピ詳細情報に含まれる特定の材料を削除することを想定しています。
+   * 材料を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の材料を削除することを想定しています。
    *
    * @param id 材料ID
    */
@@ -218,7 +215,7 @@ public class RecipeService {
   }
 
   /**
-   * 調理手順を削除するメソッドです。レシピ詳細情報に含まれる特定の調理手順を削除することを想定しています。
+   * 調理手順を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の調理手順を削除することを想定しています。
    *
    * @param id 調理手順ID
    */

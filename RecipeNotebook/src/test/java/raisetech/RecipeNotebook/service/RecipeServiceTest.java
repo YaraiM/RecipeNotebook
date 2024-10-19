@@ -25,7 +25,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import raisetech.RecipeNotebook.converter.RecipeConverter;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -44,8 +43,7 @@ class RecipeServiceTest {
 
   @BeforeEach
   void setUp() {
-    RecipeConverter recipeConverter = new RecipeConverter(); // converterはモック化せずにインスタンス化
-    sut = new RecipeService(repository, recipeConverter); // sutを手動でインスタンス化（repositoryとconverterを注入）
+    sut = new RecipeService(repository);
   }
 
   @ParameterizedTest

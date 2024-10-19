@@ -4,11 +4,6 @@
 
 <mapper namespace="raisetech.RecipeNotebook.repository.RecipeRepository">
 
-  <!--  TODO:不要　レシピの全件取得  -->
-  <select id="getAllRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
-    SELECT * FROM recipes
-  </select>
-
   <!-- 検索条件に紐づくレシピ一覧の取得  -->
   <select id="getRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes
@@ -39,31 +34,6 @@
   <!--  レシピの取得  -->
   <select id="getRecipe" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes WHERE id = #{id}
-  </select>
-
-  <!--  TODO:不要　材料の全件取得  -->
-  <select id="getAllIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
-    SELECT * FROM ingredients
-  </select>
-
-  <!-- TODO:不要　複数のIDおよび検索条件に紐づく材料一覧の取得 -->
-  <select id="getIngredientsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Ingredient">
-    SELECT * FROM ingredients
-    <where>
-      <if test="recipeIds != null and recipeIds.size() > 0">
-        recipe_id IN
-        <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
-          #{id}
-        </foreach>
-      </if>
-      <if test="criteria.ingredientNames != null and criteria.ingredientNames.size() > 0">
-        <if test="recipeIds != null and recipeIds.size() > 0">AND</if>
-        <foreach item="ingredientName" collection="criteria.ingredientNames" open="("
-          separator=" AND " close=")">
-          name LIKE CONCAT('%', #{ingredientName}, '%')
-        </foreach>
-      </if>
-    </where>
   </select>
 
   <!--  レシピIDに紐づく材料一覧の取得  -->
@@ -101,24 +71,6 @@
       ) as temp_ingredients
       )
     </if>
-  </select>
-
-  <!--  TODO:不要　調理手順の全件取得  -->
-  <select id="getAllInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
-    SELECT * FROM instructions
-  </select>
-
-  <!-- TODO:不要　複数のIDおよび検索条件に紐づく調理手順一覧の取得 -->
-  <select id="getInstructionsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Instruction">
-    SELECT * FROM instructions
-    <where>
-      <if test="recipeIds != null and recipeIds.size() > 0">
-        recipe_id IN
-        <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
-          #{id}
-        </foreach>
-      </if>
-    </where>
   </select>
 
   <!--  レシピIDに紐づく調理手順一覧の取得  -->

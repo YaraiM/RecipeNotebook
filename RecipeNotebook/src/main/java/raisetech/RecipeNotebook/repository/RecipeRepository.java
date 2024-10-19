@@ -12,13 +12,6 @@ import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 public interface RecipeRepository {
 
   /**
-   * TODO:不要　レシピを全件取得します。
-   *
-   * @return レシピ一覧（全件）
-   */
-  List<Recipe> getAllRecipes();
-
-  /**
    * 検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件検索になります。
    *
    * @param criteria レシピ検索条件
@@ -35,33 +28,6 @@ public interface RecipeRepository {
   Recipe getRecipe(int id);
 
   /**
-   * 材料を全件取得します。
-   *
-   * @return 材料一覧（全件）
-   */
-  List<Ingredient> getAllIngredients();
-
-  /**
-   * TODO:不要　複数のレシピIDおよび検索条件に対応する材料一覧を取得します。
-   *
-   * @param recipeIds 複数のレシピID
-   * @param criteria レシピ検索条件
-   * @return 材料一覧
-   */
-  List<Ingredient> getIngredientsByRecipeIds(List<Integer> recipeIds,
-      RecipeSearchCriteria criteria);
-
-  /**
-   * 複数のレシピIDに対応する調理手順一覧を取得します。
-   *
-   * @param recipeIds 複数のレシピID
-   * @param criteria レシピ検索条件
-   * @return 調理手順一覧
-   */
-  List<Instruction> getInstructionsByRecipeIds(List<Integer> recipeIds,
-      RecipeSearchCriteria criteria);
-
-  /**
    * レシピIDに紐づく材料一覧を取得します。
    *
    * @param recipeId レシピID
@@ -76,13 +42,6 @@ public interface RecipeRepository {
    * @return 材料
    */
   Ingredient getIngredient(int id);
-
-  /**
-   * TODO:不要　調理手順を全件取得します。
-   *
-   * @return 調理手順一覧（全件）
-   */
-  List<Instruction> getAllInstructions();
 
   /**
    * レシピIDに紐づく調理手順一覧を取得します。

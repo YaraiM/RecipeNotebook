@@ -30,20 +30,6 @@ class RecipeRepositoryTest {
   @Autowired
   private RecipeRepository sut;
 
-  //  TODO:不要なメソッドなので、後で削除する
-  @Test
-  void レシピを全件取得できること() {
-    List<Recipe> actual = sut.getAllRecipes();
-
-    assertThat(actual.size(), is(2));
-    assertRecipe(actual.get(0), "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
-        false, LocalDateTime.parse("2024-09-22T17:00:00"),
-        LocalDateTime.parse("2024-10-22T17:00:00"));
-    assertRecipe(actual.get(1), "目玉焼き", "test2/path", "https://------2.com", "1人分", "備考欄2",
-        true, LocalDateTime.parse("2024-09-23T17:00:00"),
-        LocalDateTime.parse("2024-10-23T17:00:00"));
-  }
-
   @ParameterizedTest
   @MethodSource("provideGetRecipeTestCase")
   void 検索条件に応じたレシピを検索できること(RecipeSearchCriteria criteria,
@@ -108,21 +94,7 @@ class RecipeRepositoryTest {
         LocalDateTime.parse("2024-09-22T17:00:00"), LocalDateTime.parse("2024-10-22T17:00:00"));
   }
 
-  @Test
-  void 材料を全件取得できること() {
-    List<Ingredient> actual = sut.getAllIngredients();
-
-    assertThat(actual.size(), is(7));
-    assertIngredientDetail(actual.get(0), 1, "卵", "3個", false);
-    assertIngredientDetail(actual.get(1), 1, "サラダ油", "適量", false);
-    assertIngredientDetail(actual.get(2), 1, "醤油", "大さじ1/2", false);
-    assertIngredientDetail(actual.get(3), 1, "砂糖", "大さじ1", false);
-    assertIngredientDetail(actual.get(4), 2, "卵", "1個", false);
-    assertIngredientDetail(actual.get(5), 2, "サラダ油", "適量", false);
-    assertIngredientDetail(actual.get(6), 2, "水", null, false);
-
-  }
-
+  //  TODO:後でメソッド名を変えて修正
   @ParameterizedTest
   @MethodSource("provideGetIngredientsTestCase")
   void 検索条件に応じた材料一覧を検索できること(List<Integer> ids, RecipeSearchCriteria criteria,
@@ -190,65 +162,6 @@ class RecipeRepositoryTest {
 
     assertIngredientDetail(actual, 1, "卵", "3個", false);
 
-  }
-
-  @Test
-  void 調理手順を全件取得できること() {
-    List<Instruction> actual = sut.getAllInstructions();
-
-    assertThat(actual.size(), is(7));
-    assertInstructionDetail(actual.get(0), 1, 1, "卵を溶いて調味料を混ぜ、卵液を作る", false);
-    assertInstructionDetail(actual.get(1), 1, 2, "フライパンに油をたらし、火にかける", false);
-    assertInstructionDetail(actual.get(2), 1, 3, "卵液を1/3くらいフライパンに入れて焼き、巻く",
-        true);
-    assertInstructionDetail(actual.get(3), 1, 4, "3の手順を繰り返して完成", false);
-    assertInstructionDetail(actual.get(4), 2, 1, "フライパンに油をたらし、火にかける", false);
-    assertInstructionDetail(actual.get(5), 2, 2, "フライパンに卵を割り入れる", false);
-    assertInstructionDetail(actual.get(6), 2, 3,
-        "少し焼けたら水を入れ、ふたをして5分、弱火にかけて完成", false);
-
-  }
-
-  @ParameterizedTest
-  @MethodSource("provideGetInstructionsTestCase")
-  void 検索条件に応じた調理手順一覧を検索できること(List<Integer> ids,
-      RecipeSearchCriteria criteria,
-      List<Instruction> expectedInstructions) {
-    List<Instruction> actual = sut.getInstructionsByRecipeIds(ids, criteria);
-
-    assertThat(actual, hasSize(expectedInstructions.size()));
-
-    for (int i = 0; i < actual.size(); i++) {
-      Instruction actualInstruction = actual.get(i);
-      Instruction expectedInstruction = expectedInstructions.get(i);
-
-      assertThat(actualInstruction.getId(), is(expectedInstruction.getId()));
-      assertThat(actualInstruction.getRecipeId(), is(expectedInstruction.getRecipeId()));
-      assertThat(actualInstruction.getStepNumber(), is(expectedInstruction.getStepNumber()));
-      assertThat(actualInstruction.getContent(), is(expectedInstruction.getContent()));
-      assertThat(actualInstruction.isArrange(), is(expectedInstruction.isArrange()));
-    }
-  }
-
-  /**
-   * 調理手順取得のパラメータテストに適用するテストケースです。
-   *
-   * @return Argument
-   */
-  private static Stream<Arguments> provideGetInstructionsTestCase() {
-    return Stream.of(
-        Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null,
-                null, null, null, null, null),
-            List.of(
-                new Instruction(1, 1, 1, "卵を溶いて調味料を混ぜ、卵液を作る", false),
-                new Instruction(2, 1, 2, "フライパンに油をたらし、火にかける", false),
-                new Instruction(3, 1, 3, "卵液を1/3くらいフライパンに入れて焼き、巻く", true),
-                new Instruction(4, 1, 4, "3の手順を繰り返して完成", false),
-                new Instruction(5, 2, 1, "フライパンに油をたらし、火にかける", false),
-                new Instruction(6, 2, 2, "フライパンに卵を割り入れる", false),
-                new Instruction(7, 2, 3, "少し焼けたら水を入れ、ふたをして5分、弱火にかけて完成",
-                    false)))
-    );
   }
 
   @Test
