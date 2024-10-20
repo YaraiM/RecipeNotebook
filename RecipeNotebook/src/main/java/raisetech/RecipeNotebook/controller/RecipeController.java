@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
+import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
 import raisetech.RecipeNotebook.service.RecipeService;
 
 @RestController
@@ -59,6 +60,13 @@ public class RecipeController {
   @PutMapping("/{id}/update")
   public ResponseEntity<RecipeDetail> updateRecipeDetail
       (@PathVariable int id, @Valid @RequestBody RecipeDetail recipeDetail) {
+
+    if (recipeDetail.getRecipe().getId() != id) {
+      throw new RecipeIdMismatchException(
+          "パスで指定したID「" + id + "」と更新対象のレシピのID「" + recipeDetail.getRecipe().getId()
+              + "」は一致させてください");
+    }
+
     RecipeDetail updatedRecipeDetail = service.updateRecipeDetail(recipeDetail);
     return ResponseEntity.ok(updatedRecipeDetail);
   }
@@ -73,3 +81,4 @@ public class RecipeController {
 
 //TODO:ログイン画面を作成　⇒　ユーザーのデータベースが必要。ユーザーとレシピは１対多の関係とし、レシピにユーザーIDを追加する。
 //TODO:Validationの実装
+//TODO:Javadoc,API仕様書の実装

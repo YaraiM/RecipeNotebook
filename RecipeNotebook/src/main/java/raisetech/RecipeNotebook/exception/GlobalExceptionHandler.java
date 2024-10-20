@@ -54,4 +54,18 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
   }
 
+  /**
+   * レシピIDの不整合などが生じた場合に例外処理を行うメソッドです。
+   * RecipeIdMismatchExceptionがスローされたとき、ステータス（NotFound）および指定した例外メッセージを返します。
+   * @param e 例外クラス（レシピIDの不整合）
+   * @return エラーレスポンス（ステータスおよびメッセージ）
+   */
+  @ExceptionHandler
+  public ResponseEntity<ErrorResponse> handleRecipeIdMismatchException(
+      RecipeIdMismatchException e) {
+
+    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
 }
