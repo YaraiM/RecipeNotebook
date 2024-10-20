@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-//  TODO：不要？
-
   /**
    * リクエストパラメータに有効ではない入力形式で入力した場合にエラーメッセージを返すメソッドです。（バリデーション）
    *

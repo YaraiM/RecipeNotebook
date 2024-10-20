@@ -28,6 +28,13 @@ public interface RecipeRepository {
   Recipe getRecipe(int id);
 
   /**
+   * 材料を全件取得します。テストに使用します。
+   *
+   * @return 材料一覧（全件）
+   */
+  List<Ingredient> getAllIngredients();
+
+  /**
    * レシピIDに紐づく材料一覧を取得します。
    *
    * @param recipeId レシピID
@@ -42,6 +49,13 @@ public interface RecipeRepository {
    * @return 材料
    */
   Ingredient getIngredient(int id);
+
+  /**
+   * 調理手順を全件取得します。テストに使用します。
+   *
+   * @return 調理手順一覧（全件）
+   */
+  List<Instruction> getAllInstructions();
 
   /**
    * レシピIDに紐づく調理手順一覧を取得します。

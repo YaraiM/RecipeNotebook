@@ -36,6 +36,11 @@
     SELECT * FROM recipes WHERE id = #{id}
   </select>
 
+  <!--  材料の全件取得  -->
+  <select id="getAllIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
+    SELECT * FROM ingredients
+  </select>
+
   <!--  レシピIDに紐づく材料一覧の取得  -->
   <select id="getIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
     SELECT * FROM ingredients WHERE recipe_id = #{recipeId}
@@ -71,6 +76,11 @@
       ) as temp_ingredients
       )
     </if>
+  </select>
+
+  <!--  調理手順の全件取得  -->
+  <select id="getAllInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
+    SELECT * FROM instructions
   </select>
 
   <!--  レシピIDに紐づく調理手順一覧の取得  -->
