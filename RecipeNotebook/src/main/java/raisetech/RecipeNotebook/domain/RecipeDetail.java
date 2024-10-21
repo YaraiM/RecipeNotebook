@@ -10,6 +10,9 @@ import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
 
+/**
+ * レシピ詳細情報のオブジェクトです。レシピIDに紐づくレシピ、材料一覧、調理手順一覧をまとめます。
+ */
 @Getter
 @Setter
 @NoArgsConstructor

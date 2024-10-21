@@ -4,6 +4,9 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 
+/**
+ * レシピ詳細情報の一覧検索時に指定可能な日付の範囲が有効か判断するためのオブジェクトです。
+ */
 public class DateRangeValidator implements
     ConstraintValidator<DateRangeValidation, RecipeSearchCriteria> {
 

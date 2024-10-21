@@ -21,6 +21,9 @@ import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
 import raisetech.RecipeNotebook.service.RecipeService;
 
+/**
+ * レシピのCRUD処理を行うREST APIとして実行されるControllerです。
+ */
 @RestController
 @RequestMapping("/recipes")
 @Validated
@@ -33,23 +36,42 @@ public class RecipeController {
     this.service = service;
   }
 
+  /**
+   * レシピ詳細情報の一覧検索です。RecipeSearchCriteriaで定義するリクエストパラメータを指定することで条件検索を行えます。
+   *
+   * @param criteria レシピ詳細情報の検索条件
+   * @return レスポンス（ステータスコード200（OK）およびレシピ詳細情報一覧）
+   */
   @GetMapping
-  public ResponseEntity<List<RecipeDetail>> getRecipes(
+  public ResponseEntity<List<RecipeDetail>> searchRecipeDetails(
       @Valid @ModelAttribute RecipeSearchCriteria criteria) {
     List<RecipeDetail> recipeDetails = service.searchRecipeList(criteria);
     return ResponseEntity.ok(recipeDetails);
   }
 
+  /**
+   * レシピ詳細情報の取得です。レシピIDに紐づくレシピ詳細情報を取得します。
+   *
+   * @param id　レシピID
+   * @return レスポンス（ステータスコード200（OK）およびレシピ詳細情報）
+   */
   @GetMapping("/{id}")
   public ResponseEntity<RecipeDetail> getRecipeDetail(@PathVariable int id) {
     RecipeDetail recipeDetail = service.searchRecipeDetail(id);
     return ResponseEntity.ok(recipeDetail);
   }
 
+  /**
+   * レシピ詳細情報の新規作成です。レシピ詳細情報およびパスを新規作成します。
+   *
+   * @param inputRecipeDetail 新規作成するレシピ詳細情報
+   * @param uriBuilder 新規作成時に作成されるURIのビルダー
+   * @return レスポンス（ステータスコード201（CREATED）、新規作成されたURI、新規作成されたレシピ詳細情報）
+   */
   @PostMapping("/new")
-  public ResponseEntity<RecipeDetail> registerRecipeDetail
-      (@Valid @RequestBody RecipeDetail recipeDetail, UriComponentsBuilder uriBuilder) {
-    RecipeDetail newRecipeDetail = service.registerRecipeDetail(recipeDetail);
+  public ResponseEntity<RecipeDetail> createRecipeDetail
+  (@Valid @RequestBody RecipeDetail inputRecipeDetail, UriComponentsBuilder uriBuilder) {
+    RecipeDetail newRecipeDetail = service.createRecipeDetail(inputRecipeDetail);
 
     int newRecipeId = newRecipeDetail.getRecipe().getId();
     URI location = uriBuilder.path("/recipes/{newRecipeId}").buildAndExpand(newRecipeId).toUri();
@@ -57,20 +79,34 @@ public class RecipeController {
     return ResponseEntity.created(location).body(newRecipeDetail);
   }
 
+  /**
+   * レシピ詳細情報の更新です。既存情報の変更や材料・調理手順の追加や削除を行います。
+   *
+   * @param id 更新するレシピのID
+   * @param inputRecipeDetail 更新するレシピ詳細情報
+   * @return レスポンス（ステータスコード200（OK）、更新されたレシピ詳細情報）
+   */
   @PutMapping("/{id}/update")
   public ResponseEntity<RecipeDetail> updateRecipeDetail
-      (@PathVariable int id, @Valid @RequestBody RecipeDetail recipeDetail) {
+  (@PathVariable int id, @Valid @RequestBody RecipeDetail inputRecipeDetail) {
 
-    if (recipeDetail.getRecipe().getId() != id) {
+    if (inputRecipeDetail.getRecipe().getId() != id) {
       throw new RecipeIdMismatchException(
-          "パスで指定したID「" + id + "」と更新対象のレシピのID「" + recipeDetail.getRecipe().getId()
+          "パスで指定したID「" + id + "」と更新対象のレシピのID「" + inputRecipeDetail.getRecipe()
+              .getId()
               + "」は一致させてください");
     }
 
-    RecipeDetail updatedRecipeDetail = service.updateRecipeDetail(recipeDetail);
+    RecipeDetail updatedRecipeDetail = service.updateRecipeDetail(inputRecipeDetail);
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 
+  /**
+   * レシピ詳細情報の削除です。指定したレシピIDに紐づくレシピ詳細情報を削除します。
+   *
+   * @param id 削除するレシピのID
+   * @return レスポンス（ステータスコード200（OK）、削除成功のエラーメッセージ）
+   */
   @DeleteMapping("/{id}/delete")
   public ResponseEntity<String> deleteRecipeDetail(@PathVariable int id) {
     service.deleteRecipe(id);
@@ -79,8 +115,8 @@ public class RecipeController {
 
 }
 
-//TODO:⓪controllerのPRをマージ
 //TODO:①Javadoc,API仕様書の実装
+//TODO:更新メソッドにおいて、リクエストボディのレシピIDがそろっていない場合のバリデーションを行う
 //TODO:②結合テストの実施
 //TODO:③画面の作成
 //TODO:④ログイン機能　⇒　ユーザーのデータベースが必要。ユーザーとレシピは１対多の関係とし、レシピにユーザーIDを追加する。
