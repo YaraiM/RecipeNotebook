@@ -29,7 +29,7 @@ public class Recipe {
 
   private String remark;
 
-  private Boolean favorite;
+  private boolean favorite;
 
   private LocalDateTime createdAt;
 

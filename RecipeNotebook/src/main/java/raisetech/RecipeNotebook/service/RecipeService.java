@@ -1,15 +1,13 @@
 package raisetech.RecipeNotebook.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import raisetech.RecipeNotebook.converter.RecipeConverter;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -25,46 +23,41 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 public class RecipeService {
 
   private final RecipeRepository repository;
-  private final RecipeConverter recipeConverter;
 
   @Autowired
-  public RecipeService(RecipeRepository repository, RecipeConverter recipeConverter) {
+  public RecipeService(RecipeRepository repository) {
     this.repository = repository;
-    this.recipeConverter = recipeConverter;
   }
 
   /**
-   * レシピ詳細情報の一覧検索です。
+   * 検索条件に応じてレシピ詳細情報を一覧検索します。
    * @return レシピ詳細情報の一覧
    */
   public List<RecipeDetail> searchRecipeList(RecipeSearchCriteria criteria) {
+    // レシピを検索
     List<Recipe> recipes = repository.getRecipes(criteria);
-
     if (recipes.isEmpty()) {
       return Collections.emptyList();
     }
 
-    List<Integer> recipeIds = recipes.stream().map(Recipe::getId).toList();
-    List<Ingredient> ingredients = repository.getIngredientsByRecipeIds(recipeIds, criteria);
-    List<Instruction> instructions = repository.getInstructionsByRecipeIds(recipeIds, criteria);
+    List<Integer> recipeIds = recipes.stream()
+        .map(Recipe::getId).collect(Collectors.toList());
 
-    Set<Integer> resultRecipeIds = new LinkedHashSet<>();
-    for (int recipeId : recipeIds) {
-      for (Ingredient ingredient : ingredients) {
-        for (Instruction instruction : instructions) {
-          if (recipeId == ingredient.getRecipeId() & recipeId == instruction.getRecipeId()) {
-            resultRecipeIds.add(recipeId);
-          }
-        }
-      }
+    // 材料名での検索
+    List<Integer> recipeIdsWithMatchingIngredients =
+        repository.getRecipeIdsWithMatchingIngredients(recipeIds, criteria.getIngredientNames());
+
+    recipeIds = recipeIds.stream()
+        .filter(recipeIdsWithMatchingIngredients::contains)
+        .collect(Collectors.toList());
+
+    if (recipeIds.isEmpty()) {
+      return Collections.emptyList();
     }
 
-    List<RecipeDetail> recipeDetails = new ArrayList<>();
-    for (int resultRecipeId : resultRecipeIds) {
-      recipeDetails.add(searchRecipeDetail(resultRecipeId));
-    }
-
-    return recipeDetails;
+    return recipeIds.stream()
+        .map(this::searchRecipeDetail)
+        .collect(Collectors.toList());
 
   }
 
@@ -90,7 +83,7 @@ public class RecipeService {
 
   /**
    * レシピの新規登録です。引数として渡されたレシピ詳細情報オブジェクトに基づいて新規登録を行います。
-   * 登録日時、材料および調理手順に紐づくレシピID、調理手順の番号は自動でと登録されます。
+   * 登録日時、材料および調理手順に紐づくレシピID、調理手順の番号は自動で登録されます。
    *
    * @param recipeDetail 初期情報を除くレシピの詳細情報
    * @return 新規登録されたレシピ詳細情報
@@ -121,39 +114,71 @@ public class RecipeService {
   /**
    * レシピの更新です。引数で渡されたレシピ詳細情報のレシピID・材料ID・調理手順IDにそれぞれ紐づく情報を更新します。
    *
-   * @param recipeDetail レシピ詳細情報
+   * @param inputRecipeDetail レシピ詳細情報
    * @return 更新されたレシピ詳細情報
    */
   @Transactional
-  public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail) {
-    int recipeId = recipeDetail.getRecipe().getId();
+  public RecipeDetail updateRecipeDetail(RecipeDetail inputRecipeDetail) {
+    int recipeId = inputRecipeDetail.getRecipe().getId();
     if (repository.getRecipe(recipeId) == null) {
       throw new ResourceNotFoundException("レシピID「" + recipeId + "」は存在しません");
     }
 
-    for (Ingredient ingredient : recipeDetail.getIngredients()) {
-      int ingredientId = ingredient.getId();
-      if (repository.getIngredient(ingredientId) == null) {
-        throw new ResourceNotFoundException("材料ID「" + ingredientId + "」は存在しません");
+    // 既存のデータを取得
+    List<Ingredient> existingIngredients = repository.getIngredients(recipeId);
+    List<Instruction> existingInstructions = repository.getInstructions(recipeId);
+
+    // 材料の更新
+    Set<Integer> inputIngredientIds = inputRecipeDetail.getIngredients().stream()
+        .map(Ingredient::getId)
+        .collect(Collectors.toSet());
+
+    // 材料の削除処理
+    existingIngredients.stream()
+        .filter(ingredient -> !inputIngredientIds.contains(ingredient.getId()))
+        .forEach(ingredient -> repository.deleteIngredient(ingredient.getId()));
+
+    // 材料の追加・更新処理
+    inputRecipeDetail.getIngredients().forEach(ingredient -> {
+      if (ingredient.getId() == 0) {
+        repository.registerIngredient(ingredient);
+      } else {
+        if (repository.getIngredient(ingredient.getId()) == null) {
+          throw new ResourceNotFoundException("材料ID「" + ingredient.getId() + "」は存在しません");
+        }
+        repository.updateIngredient(ingredient);
       }
-    }
+    });
 
-    for (Instruction instruction : recipeDetail.getInstructions()) {
-      int instructionId = instruction.getId();
-      if (repository.getInstruction(instructionId) == null) {
-        throw new ResourceNotFoundException("調理手順ID「" + instructionId + "」は存在しません");
+    // 調理手順の更新
+    Set<Integer> inputInstructionIds = inputRecipeDetail.getInstructions().stream()
+        .map(Instruction::getId)
+        .collect(Collectors.toSet());
+
+    // 調理手順の削除処理
+    existingInstructions.stream()
+        .filter(instruction -> !inputInstructionIds.contains(instruction.getId()))
+        .forEach(instruction -> repository.deleteInstruction(instruction.getId()));
+
+    // 調理手順の追加・更新処理
+    inputRecipeDetail.getInstructions().forEach(instruction -> {
+      if (instruction.getId() == 0) {
+        repository.registerInstruction(instruction);
+      } else {
+        if (repository.getInstruction(instruction.getId()) == null) {
+          throw new ResourceNotFoundException(
+              "調理手順ID「" + instruction.getId() + "」は存在しません");
+        }
+        repository.updateInstruction(instruction);
       }
-    }
+    });
 
-    Recipe recipe = recipeDetail.getRecipe();
-    recipe.setUpdatedAt(LocalDateTime.now());
-    repository.updateRecipe(recipe);
+    // レシピ本体の更新
+    Recipe inputRecipe = inputRecipeDetail.getRecipe();
+    inputRecipe.setUpdatedAt(LocalDateTime.now());
+    repository.updateRecipe(inputRecipe);
 
-    recipeDetail.getIngredients().forEach(repository::updateIngredient);
-
-    recipeDetail.getInstructions().forEach(repository::updateInstruction);
-
-    return recipeDetail;
+    return inputRecipeDetail;
   }
 
   /**
@@ -174,7 +199,7 @@ public class RecipeService {
   }
 
   /**
-   * 材料を削除するメソッドです。レシピ詳細情報に含まれる特定の材料を削除することを想定しています。
+   * 材料を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の材料を削除することを想定しています。
    *
    * @param id 材料ID
    */
@@ -190,7 +215,7 @@ public class RecipeService {
   }
 
   /**
-   * 調理手順を削除するメソッドです。レシピ詳細情報に含まれる特定の調理手順を削除することを想定しています。
+   * 調理手順を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の調理手順を削除することを想定しています。
    *
    * @param id 調理手順ID
    */

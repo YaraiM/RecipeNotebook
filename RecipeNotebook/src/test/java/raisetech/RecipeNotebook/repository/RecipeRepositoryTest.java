@@ -30,20 +30,6 @@ class RecipeRepositoryTest {
   @Autowired
   private RecipeRepository sut;
 
-  //  TODO:不要なメソッドなので、後で削除する
-  @Test
-  void レシピを全件取得できること() {
-    List<Recipe> actual = sut.getAllRecipes();
-
-    assertThat(actual.size(), is(2));
-    assertRecipe(actual.get(0), "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
-        false, LocalDateTime.parse("2024-09-22T17:00:00"),
-        LocalDateTime.parse("2024-10-22T17:00:00"));
-    assertRecipe(actual.get(1), "目玉焼き", "test2/path", "https://------2.com", "1人分", "備考欄2",
-        true, LocalDateTime.parse("2024-09-23T17:00:00"),
-        LocalDateTime.parse("2024-10-23T17:00:00"));
-  }
-
   @ParameterizedTest
   @MethodSource("provideGetRecipeTestCase")
   void 検索条件に応じたレシピを検索できること(RecipeSearchCriteria criteria,
@@ -62,7 +48,7 @@ class RecipeRepositoryTest {
       assertThat(actualRecipe.getRecipeSource(), is(expectedRecipe.getRecipeSource()));
       assertThat(actualRecipe.getServings(), is(expectedRecipe.getServings()));
       assertThat(actualRecipe.getRemark(), is(expectedRecipe.getRemark()));
-      assertThat(actualRecipe.getFavorite(), is(expectedRecipe.getFavorite()));
+      assertThat(actualRecipe.isFavorite(), is(expectedRecipe.isFavorite()));
     }
   }
 
@@ -93,6 +79,14 @@ class RecipeRepositoryTest {
                     false,
                     LocalDateTime.parse("2024-09-22T17:00:00"),
                     LocalDateTime.parse("2024-09-22T17:00:00")))),
+        Arguments.of(new RecipeSearchCriteria(List.of("卵", "焼"), false,
+                LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
+                LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵", "砂糖")),
+            List.of(
+                new Recipe(1, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
+                    false,
+                    LocalDateTime.parse("2024-09-22T17:00:00"),
+                    LocalDateTime.parse("2024-09-22T17:00:00")))),
         Arguments.of(new RecipeSearchCriteria(List.of("存在しないレシピ"), null,
                 null, null, null, null, List.of("存在しない材料")),
             List.of())
@@ -108,40 +102,19 @@ class RecipeRepositoryTest {
         LocalDateTime.parse("2024-09-22T17:00:00"), LocalDateTime.parse("2024-10-22T17:00:00"));
   }
 
-  @Test
-  void 材料を全件取得できること() {
-    List<Ingredient> actual = sut.getAllIngredients();
-
-    assertThat(actual.size(), is(7));
-    assertIngredientDetail(actual.get(0), 1, "卵", "3", "個", false);
-    assertIngredientDetail(actual.get(1), 1, "サラダ油", "適量", null, false);
-    assertIngredientDetail(actual.get(2), 1, "醤油", "1/2", "大さじ", false);
-    assertIngredientDetail(actual.get(3), 1, "砂糖", "1", "大さじ", false);
-    assertIngredientDetail(actual.get(4), 2, "卵", "1", "個", false);
-    assertIngredientDetail(actual.get(5), 2, "サラダ油", "適量", null, false);
-    assertIngredientDetail(actual.get(6), 2, "水", null, null, false);
-
-  }
-
   @ParameterizedTest
-  @MethodSource("provideGetIngredientsTestCase")
-  void 検索条件に応じた材料一覧を検索できること(List<Integer> ids, RecipeSearchCriteria criteria,
-      List<Ingredient> expectedIngredients) {
-    List<Ingredient> actual = sut.getIngredientsByRecipeIds(ids, criteria);
+  @MethodSource("provideGetRecipeIdsWithMatchingIngredientsTestCase")
+  void レシピIDに紐づきかつ指定したキーワードに合致する材料のID一覧が取得できること(
+      List<Integer> recipeIds, List<String> ingredientNames,
+      List<Integer> expectedIds) {
+    List<Integer> actual = sut.getRecipeIdsWithMatchingIngredients(recipeIds, ingredientNames);
 
-    assertThat(actual, hasSize(expectedIngredients.size()));
+    assertThat(actual, hasSize(expectedIds.size()));
 
     for (int i = 0; i < actual.size(); i++) {
-      Ingredient actualIngredient = actual.get(i);
-      Ingredient expectedIngredient = expectedIngredients.get(i);
-
-      assertThat(actualIngredient.getId(), is(expectedIngredient.getId()));
-      assertThat(actualIngredient.getRecipeId(), is(expectedIngredient.getRecipeId()));
-      assertThat(actualIngredient.getName(), is(expectedIngredient.getName()));
-      assertThat(actualIngredient.getQuantity(), is(expectedIngredient.getQuantity()));
-      assertThat(actualIngredient.getUnit(), is(expectedIngredient.getUnit()));
-      assertThat(actualIngredient.getArrange(), is(expectedIngredient.getArrange()));
+      assertThat(actual.get(i), is(expectedIds.get(i)));
     }
+
   }
 
   /**
@@ -149,28 +122,13 @@ class RecipeRepositoryTest {
    *
    * @return Argument
    */
-  private static Stream<Arguments> provideGetIngredientsTestCase() {
+  private static Stream<Arguments> provideGetRecipeIdsWithMatchingIngredientsTestCase() {
     return Stream.of(
-        Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null,
-                null, null, null, null, null),
-            List.of(
-                new Ingredient(1, 1, "卵", "3", "個", false),
-                new Ingredient(2, 1, "サラダ油", "適量", null, false),
-                new Ingredient(3, 1, "醤油", "1/2", "大さじ", false),
-                new Ingredient(4, 1, "砂糖", "1", "大さじ", false),
-                new Ingredient(5, 2, "卵", "1", "個", false),
-                new Ingredient(6, 2, "サラダ油", "適量", null, false),
-                new Ingredient(7, 2, "水", null, null, false))),
-        Arguments.of(List.of(1), new RecipeSearchCriteria(List.of("卵焼き"), false,
-                LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
-                LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵")),
-            List.of(
-                new Ingredient(1, 1, "卵", "3", "個", false))),
-        Arguments.of(List.of(), new RecipeSearchCriteria(List.of("存在しないレシピ"), null,
-                null, null, null, null, List.of("存在しない材料")),
-            List.of())
-
-    );
+        Arguments.of(List.of(1, 2), List.of(), List.of(1, 2),
+            Arguments.of(List.of(1, 2), List.of("砂糖")), List.of(1),
+            Arguments.of(List.of(1, 2), List.of("卵", "水")), List.of(2),
+            Arguments.of(List.of(1, 2), List.of("存在しない材料"), List.of())
+        ));
   }
 
   @Test
@@ -178,10 +136,10 @@ class RecipeRepositoryTest {
     List<Ingredient> actual = sut.getIngredients(1);
 
     assertThat(actual.size(), is(4));
-    assertIngredientDetail(actual.get(0), 1, "卵", "3", "個", false);
-    assertIngredientDetail(actual.get(1), 1, "サラダ油", "適量", null, false);
-    assertIngredientDetail(actual.get(2), 1, "醤油", "1/2", "大さじ", false);
-    assertIngredientDetail(actual.get(3), 1, "砂糖", "1", "大さじ", false);
+    assertIngredientDetail(actual.get(0), 1, "卵", "3個", false);
+    assertIngredientDetail(actual.get(1), 1, "サラダ油", "適量", false);
+    assertIngredientDetail(actual.get(2), 1, "醤油", "大さじ1/2", false);
+    assertIngredientDetail(actual.get(3), 1, "砂糖", "大さじ1", false);
 
   }
 
@@ -189,67 +147,8 @@ class RecipeRepositoryTest {
   void IDに紐づく材料を取得できること() {
     Ingredient actual = sut.getIngredient(1);
 
-    assertIngredientDetail(actual, 1, "卵", "3", "個", false);
+    assertIngredientDetail(actual, 1, "卵", "3個", false);
 
-  }
-
-  @Test
-  void 調理手順を全件取得できること() {
-    List<Instruction> actual = sut.getAllInstructions();
-
-    assertThat(actual.size(), is(7));
-    assertInstructionDetail(actual.get(0), 1, 1, "卵を溶いて調味料を混ぜ、卵液を作る", false);
-    assertInstructionDetail(actual.get(1), 1, 2, "フライパンに油をたらし、火にかける", false);
-    assertInstructionDetail(actual.get(2), 1, 3, "卵液を1/3くらいフライパンに入れて焼き、巻く",
-        true);
-    assertInstructionDetail(actual.get(3), 1, 4, "3の手順を繰り返して完成", false);
-    assertInstructionDetail(actual.get(4), 2, 1, "フライパンに油をたらし、火にかける", false);
-    assertInstructionDetail(actual.get(5), 2, 2, "フライパンに卵を割り入れる", false);
-    assertInstructionDetail(actual.get(6), 2, 3,
-        "少し焼けたら水を入れ、ふたをして5分、弱火にかけて完成", false);
-
-  }
-
-  @ParameterizedTest
-  @MethodSource("provideGetInstructionsTestCase")
-  void 検索条件に応じた調理手順一覧を検索できること(List<Integer> ids,
-      RecipeSearchCriteria criteria,
-      List<Instruction> expectedInstructions) {
-    List<Instruction> actual = sut.getInstructionsByRecipeIds(ids, criteria);
-
-    assertThat(actual, hasSize(expectedInstructions.size()));
-
-    for (int i = 0; i < actual.size(); i++) {
-      Instruction actualInstruction = actual.get(i);
-      Instruction expectedInstruction = expectedInstructions.get(i);
-
-      assertThat(actualInstruction.getId(), is(expectedInstruction.getId()));
-      assertThat(actualInstruction.getRecipeId(), is(expectedInstruction.getRecipeId()));
-      assertThat(actualInstruction.getStepNumber(), is(expectedInstruction.getStepNumber()));
-      assertThat(actualInstruction.getContent(), is(expectedInstruction.getContent()));
-      assertThat(actualInstruction.getArrange(), is(expectedInstruction.getArrange()));
-    }
-  }
-
-  /**
-   * 調理手順取得のパラメータテストに適用するテストケースです。
-   *
-   * @return Argument
-   */
-  private static Stream<Arguments> provideGetInstructionsTestCase() {
-    return Stream.of(
-        Arguments.of(List.of(1, 2), new RecipeSearchCriteria(null, null,
-                null, null, null, null, null),
-            List.of(
-                new Instruction(1, 1, 1, "卵を溶いて調味料を混ぜ、卵液を作る", false),
-                new Instruction(2, 1, 2, "フライパンに油をたらし、火にかける", false),
-                new Instruction(3, 1, 3, "卵液を1/3くらいフライパンに入れて焼き、巻く", true),
-                new Instruction(4, 1, 4, "3の手順を繰り返して完成", false),
-                new Instruction(5, 2, 1, "フライパンに油をたらし、火にかける", false),
-                new Instruction(6, 2, 2, "フライパンに卵を割り入れる", false),
-                new Instruction(7, 2, 3, "少し焼けたら水を入れ、ふたをして5分、弱火にかけて完成",
-                    false)))
-    );
   }
 
   @Test
@@ -276,9 +175,10 @@ class RecipeRepositoryTest {
   @Test
   void レシピをデータベースに追加できること() {
     Recipe recipe = createSampleRecipe();
+    RecipeSearchCriteria criteria = new RecipeSearchCriteria();
     sut.registerRecipe(recipe);
 
-    Recipe actual = sut.getAllRecipes().getLast(); // DB上のIDの値にかかわらず、最後に追加されたレコードを検証できるようにしている。
+    Recipe actual = sut.getRecipes(criteria).getLast(); // DB上のIDの値にかかわらず、最後に追加されたレコードを検証できるようにしている。
     assertRecipe(actual, "ゆで卵", "test3/path", "https://------3.com", "1人分", "備考欄3", true,
         LocalDateTime.parse("2024-09-24T17:00:00"), null);
 
@@ -298,9 +198,9 @@ class RecipeRepositoryTest {
 
     List<Ingredient> actual = sut.getIngredients(
         recipe.getId());  //　MySQLの仕様でオートインクリメントされたレシピID値はロールバック後も使用されないため、固定の数値（3）ではなくrecipeのIDを直接参照する。
-    assertIngredientDetail(actual.get(0), recipe.getId(), "卵", "1", "個",
+    assertIngredientDetail(actual.get(0), recipe.getId(), "卵", "1個",
         false);
-    assertIngredientDetail(actual.get(1), recipe.getId(), "水", null, null, false);
+    assertIngredientDetail(actual.get(1), recipe.getId(), "水", null, false);
 
   }
 
@@ -351,14 +251,13 @@ class RecipeRepositoryTest {
     Ingredient ingredient = new Ingredient();
     ingredient.setId(1);
     ingredient.setName("卵rev");
-    ingredient.setQuantity("4");
-    ingredient.setUnit("個rev");
+    ingredient.setQuantity("4個");
     ingredient.setArrange(true);
 
     sut.updateIngredient(ingredient);
 
     List<Ingredient> actual = sut.getIngredients(1);
-    assertIngredientDetail(actual.get(0), 1, "卵rev", "4", "個rev", true);
+    assertIngredientDetail(actual.get(0), 1, "卵rev", "4個", true);
 
   }
 
@@ -380,8 +279,9 @@ class RecipeRepositoryTest {
   @Test
   void 指定したIDのレシピを削除できること() {
     sut.deleteRecipe(1);
+    RecipeSearchCriteria criteria = new RecipeSearchCriteria();
 
-    List<Recipe> actualAll = sut.getAllRecipes();
+    List<Recipe> actualAll = sut.getRecipes(criteria);
     Recipe actual = sut.getRecipe(1);
 
     assertAll("Multiple assertions", () -> assertThat(actualAll, hasSize(1)),
@@ -422,7 +322,7 @@ class RecipeRepositoryTest {
         () -> assertThat(recipe.getRecipeSource(), is(recipeSource)),
         () -> assertThat(recipe.getServings(), is(servings)),
         () -> assertThat(recipe.getRemark(), is(remark)),
-        () -> assertThat(recipe.getFavorite(), is(favorite)),
+        () -> assertThat(recipe.isFavorite(), is(favorite)),
         () -> assertThat(recipe.getCreatedAt(), is(createdAt)),
         () -> assertThat(recipe.getUpdatedAt(), is(updatedAt)));
   }
@@ -431,12 +331,11 @@ class RecipeRepositoryTest {
    * 材料のアサーションを行うヘルパーメソッドです。
    */
   private void assertIngredientDetail(Ingredient ingredient, int recipeId, String name,
-      String quantity, String unit, Boolean arrange) {
+      String quantity, Boolean arrange) {
     assertAll("Multiple assertions", () -> assertThat(ingredient.getRecipeId(), is(recipeId)),
         () -> assertThat(ingredient.getName(), is(name)),
         () -> assertThat(ingredient.getQuantity(), is(quantity)),
-        () -> assertThat(ingredient.getUnit(), is(unit)),
-        () -> assertThat(ingredient.getArrange(), is(arrange)));
+        () -> assertThat(ingredient.isArrange(), is(arrange)));
   }
 
   /**
@@ -447,7 +346,7 @@ class RecipeRepositoryTest {
     assertAll("Multiple assertions", () -> assertThat(instruction.getRecipeId(), is(recipeId)),
         () -> assertThat(instruction.getStepNumber(), is(stepNumber)),
         () -> assertThat(instruction.getContent(), is(content)),
-        () -> assertThat(instruction.getArrange(), is(arrange)));
+        () -> assertThat(instruction.isArrange(), is(arrange)));
   }
 
   /**
@@ -475,14 +374,12 @@ class RecipeRepositoryTest {
 
     Ingredient ingredient1 = new Ingredient();
     ingredient1.setName("卵");
-    ingredient1.setQuantity("1");
-    ingredient1.setUnit("個");
+    ingredient1.setQuantity("1個");
     ingredient1.setArrange(false);
 
     Ingredient ingredient2 = new Ingredient();
     ingredient2.setName("水");
     ingredient2.setQuantity(null);
-    ingredient2.setUnit(null);
     ingredient2.setArrange(false);
 
     ingredients.add(ingredient1);

@@ -4,16 +4,11 @@
 
 <mapper namespace="raisetech.RecipeNotebook.repository.RecipeRepository">
 
-  <!--  レシピの全件取得  -->
-  <select id="getAllRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
-    SELECT * FROM recipes
-  </select>
-
   <!-- 検索条件に紐づくレシピ一覧の取得  -->
   <select id="getRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes
     <where>
-      <if test="recipeNames != null and recipeNames.size() > 0">
+      <if test="recipeNames != null and !recipeNames.isEmpty()">
         <foreach item="recipeName" collection="recipeNames" open="(" separator=" AND " close=")">
           name LIKE CONCAT('%', #{recipeName}, '%')
         </foreach>
@@ -46,26 +41,6 @@
     SELECT * FROM ingredients
   </select>
 
-  <!-- 複数のIDおよび検索条件に紐づく材料一覧の取得 -->
-  <select id="getIngredientsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Ingredient">
-    SELECT * FROM ingredients
-    <where>
-      <if test="recipeIds != null and recipeIds.size() > 0">
-        recipe_id IN
-        <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
-          #{id}
-        </foreach>
-      </if>
-      <if test="criteria.ingredientNames != null and criteria.ingredientNames.size() > 0">
-        <if test="recipeIds != null and recipeIds.size() > 0">AND</if>
-        <foreach item="ingredientName" collection="criteria.ingredientNames" open="("
-          separator=" AND " close=")">
-          name LIKE CONCAT('%', #{ingredientName}, '%')
-        </foreach>
-      </if>
-    </where>
-  </select>
-
   <!--  レシピIDに紐づく材料一覧の取得  -->
   <select id="getIngredients" resultType="raisetech.RecipeNotebook.data.Ingredient">
     SELECT * FROM ingredients WHERE recipe_id = #{recipeId}
@@ -76,22 +51,36 @@
     SELECT * FROM ingredients WHERE id = #{id}
   </select>
 
+  <!-- キーワード指定した材料名に一致するレシピIDを取得 -->
+  <select id="getRecipeIdsWithMatchingIngredients" resultType="java.lang.Integer">
+    SELECT DISTINCT i.recipe_id
+    FROM ingredients i
+    WHERE i.recipe_id IN
+    <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+    <if test="ingredientNames != null and !ingredientNames.isEmpty()">
+      AND (
+      <foreach item="ingredientName" collection="ingredientNames" separator=" OR ">
+        i.name LIKE CONCAT('%', #{ingredientName}, '%')
+      </foreach>
+      )
+      GROUP BY i.recipe_id
+      <!--  あるレシピIDにおいて、検索キーワードの数と同等かそれ以上の材料IDが抽出された場合に限り集約する（＝複数キーワードに合致するレシピ詳細のみ抽出される）  -->
+      HAVING COUNT(DISTINCT i.name) >= (
+      SELECT COUNT(*)
+      FROM (
+      <foreach item="ingredientName" collection="ingredientNames" separator="UNION ALL">
+        SELECT #{ingredientName} as name
+      </foreach>
+      ) as temp_ingredients
+      )
+    </if>
+  </select>
+
   <!--  調理手順の全件取得  -->
   <select id="getAllInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
     SELECT * FROM instructions
-  </select>
-
-  <!-- 複数のIDおよび検索条件に紐づく調理手順一覧の取得 -->
-  <select id="getInstructionsByRecipeIds" resultType="raisetech.RecipeNotebook.data.Instruction">
-    SELECT * FROM instructions
-    <where>
-      <if test="recipeIds != null and recipeIds.size() > 0">
-        recipe_id IN
-        <foreach item="id" collection="recipeIds" open="(" separator="," close=")">
-          #{id}
-        </foreach>
-      </if>
-    </where>
   </select>
 
   <!--  レシピIDに紐づく調理手順一覧の取得  -->
@@ -113,8 +102,8 @@
 
   <!--  レシピの材料の新規登録  -->
   <insert id="registerIngredient" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO ingredients(recipe_id, name, quantity, unit, arrange)
-    values(#{recipeId}, #{name}, #{quantity}, #{unit}, #{arrange})
+    INSERT INTO ingredients(recipe_id, name, quantity, arrange)
+    values(#{recipeId}, #{name}, #{quantity}, #{arrange})
   </insert>
 
   <!--  レシピの調理手順の新規登録  -->
@@ -132,7 +121,7 @@
 
   <!--  レシピの材料の更新  -->
   <update id="updateIngredient">
-    UPDATE ingredients SET name=#{name}, quantity=#{quantity}, unit=#{unit}, arrange=#{arrange}
+    UPDATE ingredients SET name=#{name}, quantity=#{quantity}, arrange=#{arrange}
     WHERE id=#{id}
   </update>
 

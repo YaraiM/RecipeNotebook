@@ -7,12 +7,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import raisetech.RecipeNotebook.exception.DateRangeValidation;
 
 @Schema(description = "レシピ詳細情報検索時に指定可能なパラメータ")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@DateRangeValidation
 public class RecipeSearchCriteria {
 
   @Schema(description = "レシピの名前によるキーワード検索（部分一致）")

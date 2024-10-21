@@ -16,7 +16,6 @@ CREATE TABLE ingredients (
   recipe_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
   quantity VARCHAR(255) ,
-  unit VARCHAR(255),
   arrange BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE

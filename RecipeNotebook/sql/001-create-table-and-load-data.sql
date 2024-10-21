@@ -26,16 +26,15 @@ CREATE TABLE ingredients (
   recipe_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
   quantity VARCHAR(255) ,
-  unit VARCHAR(255),
   arrange BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY(id),
   FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 );
 
-INSERT INTO ingredients (recipe_id, name, quantity, unit, arrange)
+INSERT INTO ingredients (recipe_id, name, quantity, arrange)
 VALUES
-(1, '卵', '3', '個', FALSE), (1, 'サラダ油', '適量', NULL, FALSE), (1, '醤油', '1/2', '大さじ', FALSE), (1, '砂糖', '1', '大さじ', FALSE),
-(2, '卵', '1', '個', FALSE), (2, 'サラダ油', '適量', NULL, FALSE), (2, '水', NULL, NULL, FALSE);
+(1, '卵', '3個', FALSE), (1, 'サラダ油', '適量', FALSE), (1, '醤油', '大さじ1/2', FALSE), (1, '砂糖', '大さじ1', FALSE),
+(2, '卵', '1個', FALSE), (2, 'サラダ油', '適量', FALSE), (2, '水', NULL, FALSE);
 
 
 DROP TABLE IF EXISTS instructions;
