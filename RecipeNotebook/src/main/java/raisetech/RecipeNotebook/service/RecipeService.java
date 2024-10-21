@@ -125,7 +125,12 @@ public class RecipeService {
     }
 
     //入力されたレシピ詳細情報の材料および調理手順のレシピIDにレシピIDをセット
-    //TODO:ここに、レシピIDをリクエストされた材料および調理手順に追加するロジックを加えれば、リクエストボディの材料・調理手順を入力する必要がなくなり、バリデーションも不要になる。
+    for (Ingredient ingredient : recipeDetail.getIngredients()) {
+      ingredient.setRecipeId(recipeId);
+    }
+    for (Instruction instruction : recipeDetail.getInstructions()) {
+      instruction.setRecipeId(recipeId);
+    }
 
     // 既存のデータを取得
     List<Ingredient> existingIngredients = repository.getIngredients(recipeId);
