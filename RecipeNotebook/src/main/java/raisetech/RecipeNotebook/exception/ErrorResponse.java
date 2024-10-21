@@ -1,10 +1,12 @@
 package raisetech.RecipeNotebook.exception;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Schema(description = "例外発生時のレスポンス")
 @Getter
 public class ErrorResponse {
 

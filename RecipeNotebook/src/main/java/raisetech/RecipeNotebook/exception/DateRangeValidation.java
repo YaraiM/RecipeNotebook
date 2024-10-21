@@ -8,6 +8,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * レシピ詳細情報の一覧検索時に指定可能な日付の範囲に関するバリデーションを行うカスタムアノテーションです。
+ */
 @Documented
 @Constraint(validatedBy = DateRangeValidator.class)
 @Target({ElementType.TYPE})

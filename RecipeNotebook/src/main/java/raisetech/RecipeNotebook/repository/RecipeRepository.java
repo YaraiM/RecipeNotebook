@@ -12,7 +12,7 @@ import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 public interface RecipeRepository {
 
   /**
-   * 検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件検索になります。
+   * 検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件取得になります。
    *
    * @param criteria レシピ検索条件
    * @return レシピ一覧
@@ -127,7 +127,7 @@ public interface RecipeRepository {
 
   /**
    * レシピの削除です。レシピテーブルにおいて、指定したIDに紐づくレコードを削除します。
-   * データベース側でデリートカスケードの設定をしているため、このメソッドが成功するとレシピIDに紐づく材料と調理手順も削除されます。
+   * データベース側でデリートカスケードの設定をしているため、このメソッドが成功するとレシピIDに紐づく材料と調理手順がすべて削除されます。
    *
    * @param id レシピID
    */

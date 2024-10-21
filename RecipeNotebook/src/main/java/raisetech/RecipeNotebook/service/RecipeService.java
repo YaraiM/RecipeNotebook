@@ -30,7 +30,7 @@ public class RecipeService {
   }
 
   /**
-   * 検索条件に応じてレシピ詳細情報を一覧検索します。
+   * 検索条件に応じてレシピ詳細情報一覧を取得します。
    * @return レシピ詳細情報の一覧
    */
   public List<RecipeDetail> searchRecipeList(RecipeSearchCriteria criteria) {
@@ -82,14 +82,14 @@ public class RecipeService {
   }
 
   /**
-   * レシピの新規登録です。引数として渡されたレシピ詳細情報オブジェクトに基づいて新規登録を行います。
+   * レシピの新規作成です。引数として渡されたレシピ詳細情報に基づいて新規登録を行います。
    * 登録日時、材料および調理手順に紐づくレシピID、調理手順の番号は自動で登録されます。
    *
-   * @param recipeDetail 初期情報を除くレシピの詳細情報
-   * @return 新規登録されたレシピ詳細情報
+   * @param recipeDetail レシピの詳細情報
+   * @return 新規作成されるレシピ詳細情報
    */
   @Transactional
-  public RecipeDetail registerRecipeDetail(RecipeDetail recipeDetail) {
+  public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail) {
     Recipe recipe = recipeDetail.getRecipe();
     recipe.setCreatedAt(LocalDateTime.now());
     repository.registerRecipe(recipe);
@@ -114,14 +114,22 @@ public class RecipeService {
   /**
    * レシピの更新です。引数で渡されたレシピ詳細情報のレシピID・材料ID・調理手順IDにそれぞれ紐づく情報を更新します。
    *
-   * @param inputRecipeDetail レシピ詳細情報
-   * @return 更新されたレシピ詳細情報
+   * @param recipeDetail レシピ詳細情報
+   * @return 更新されるレシピ詳細情報
    */
   @Transactional
-  public RecipeDetail updateRecipeDetail(RecipeDetail inputRecipeDetail) {
-    int recipeId = inputRecipeDetail.getRecipe().getId();
+  public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail) {
+    int recipeId = recipeDetail.getRecipe().getId();
     if (repository.getRecipe(recipeId) == null) {
       throw new ResourceNotFoundException("レシピID「" + recipeId + "」は存在しません");
+    }
+
+    //入力されたレシピ詳細情報の材料および調理手順のレシピIDにレシピIDをセット
+    for (Ingredient ingredient : recipeDetail.getIngredients()) {
+      ingredient.setRecipeId(recipeId);
+    }
+    for (Instruction instruction : recipeDetail.getInstructions()) {
+      instruction.setRecipeId(recipeId);
     }
 
     // 既存のデータを取得
@@ -129,7 +137,7 @@ public class RecipeService {
     List<Instruction> existingInstructions = repository.getInstructions(recipeId);
 
     // 材料の更新
-    Set<Integer> inputIngredientIds = inputRecipeDetail.getIngredients().stream()
+    Set<Integer> inputIngredientIds = recipeDetail.getIngredients().stream()
         .map(Ingredient::getId)
         .collect(Collectors.toSet());
 
@@ -139,7 +147,7 @@ public class RecipeService {
         .forEach(ingredient -> repository.deleteIngredient(ingredient.getId()));
 
     // 材料の追加・更新処理
-    inputRecipeDetail.getIngredients().forEach(ingredient -> {
+    recipeDetail.getIngredients().forEach(ingredient -> {
       if (ingredient.getId() == 0) {
         repository.registerIngredient(ingredient);
       } else {
@@ -151,7 +159,7 @@ public class RecipeService {
     });
 
     // 調理手順の更新
-    Set<Integer> inputInstructionIds = inputRecipeDetail.getInstructions().stream()
+    Set<Integer> inputInstructionIds = recipeDetail.getInstructions().stream()
         .map(Instruction::getId)
         .collect(Collectors.toSet());
 
@@ -161,7 +169,7 @@ public class RecipeService {
         .forEach(instruction -> repository.deleteInstruction(instruction.getId()));
 
     // 調理手順の追加・更新処理
-    inputRecipeDetail.getInstructions().forEach(instruction -> {
+    recipeDetail.getInstructions().forEach(instruction -> {
       if (instruction.getId() == 0) {
         repository.registerInstruction(instruction);
       } else {
@@ -174,16 +182,15 @@ public class RecipeService {
     });
 
     // レシピ本体の更新
-    Recipe inputRecipe = inputRecipeDetail.getRecipe();
+    Recipe inputRecipe = recipeDetail.getRecipe();
     inputRecipe.setUpdatedAt(LocalDateTime.now());
     repository.updateRecipe(inputRecipe);
 
-    return inputRecipeDetail;
+    return recipeDetail;
   }
 
   /**
    * レシピを削除するメソッドです。データベース側の設定により、レシピIDに紐づく材料と調理手順も削除されます。
-   * したがって、レシピ詳細情報を削除することを意味します。
    *
    * @param id レシピID
    */
@@ -195,11 +202,10 @@ public class RecipeService {
     }
 
     repository.deleteRecipe(id);
-
   }
 
   /**
-   * 材料を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の材料を削除することを想定しています。
+   * 材料を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の材料を削除するために使用します。
    *
    * @param id 材料ID
    */
@@ -215,7 +221,7 @@ public class RecipeService {
   }
 
   /**
-   * 調理手順を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の調理手順を削除することを想定しています。
+   * 調理手順を削除するメソッドです。レシピ更新の際、レシピ詳細情報に含まれる特定の調理手順を削除するために使用します。
    *
    * @param id 調理手順ID
    */
