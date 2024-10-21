@@ -144,7 +144,7 @@ class RecipeServiceTest {
 
     LocalDateTime testStartedTime = LocalDateTime.now();
 
-    RecipeDetail actual = sut.registerRecipeDetail(recipeDetail);
+    RecipeDetail actual = sut.createRecipeDetail(recipeDetail);
     LocalDateTime actualCreatedAt = actual.getRecipe().getCreatedAt();
 
     verify(repository, times(1)).registerRecipe(recipe);

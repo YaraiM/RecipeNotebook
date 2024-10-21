@@ -85,7 +85,7 @@ class RecipeControllerTest {
       throws Exception {
     int newRecipeId = 2;
     RecipeDetail mockRecipeDetail = createTestRecipeDetail(newRecipeId);
-    when(service.registerRecipeDetail(any(RecipeDetail.class))).thenReturn(mockRecipeDetail);
+    when(service.createRecipeDetail(any(RecipeDetail.class))).thenReturn(mockRecipeDetail);
 
     mockMvc.perform(post("/recipes/new")
             .contentType(MediaType.APPLICATION_JSON)
@@ -142,7 +142,7 @@ class RecipeControllerTest {
             "http://localhost/recipes/" + mockRecipeDetail.getRecipe().getId()))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-    verify(service, times(1)).registerRecipeDetail(any(RecipeDetail.class));
+    verify(service, times(1)).createRecipeDetail(any(RecipeDetail.class));
   }
 
   @Test
