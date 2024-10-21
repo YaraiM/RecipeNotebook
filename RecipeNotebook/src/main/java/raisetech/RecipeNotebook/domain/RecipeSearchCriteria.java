@@ -12,7 +12,7 @@ import raisetech.RecipeNotebook.exception.DateRangeValidation;
 /**
  * レシピ詳細情報の一覧検索時に指定可能なパラメータをまとめたオブジェクトです。
  */
-@Schema(description = "レシピ詳細情報検索時に指定可能なパラメータ")
+@Schema(description = "レシピ詳細情報の一覧検索時に指定可能なパラメータ")
 @Getter
 @Setter
 @NoArgsConstructor
