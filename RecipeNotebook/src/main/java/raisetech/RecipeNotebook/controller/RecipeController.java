@@ -79,6 +79,10 @@ public class RecipeController {
 
 }
 
-//TODO:ログイン画面を作成　⇒　ユーザーのデータベースが必要。ユーザーとレシピは１対多の関係とし、レシピにユーザーIDを追加する。
-//TODO:Validationの実装
-//TODO:Javadoc,API仕様書の実装
+//TODO:⓪controllerのPRをマージ
+//TODO:①Javadoc,API仕様書の実装
+//TODO:②結合テストの実施
+//TODO:③画面の作成
+//TODO:④ログイン機能　⇒　ユーザーのデータベースが必要。ユーザーとレシピは１対多の関係とし、レシピにユーザーIDを追加する。
+//TODO:⑤タグ付け・タグ検索機能
+//TODO:⑥栄養素の計算補助機能
