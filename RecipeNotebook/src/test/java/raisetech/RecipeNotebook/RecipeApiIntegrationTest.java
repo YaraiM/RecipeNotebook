@@ -795,5 +795,3 @@ public class RecipeApiIntegrationTest {
   }
 
 }
-
-//TODO:MySQLのidの自動付番機能で同じ値が二度とつかわれないことに起因してアサーションが失敗する⇒IDの検証はexistsとhasSizeで検証
