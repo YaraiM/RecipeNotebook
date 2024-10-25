@@ -20,6 +20,18 @@ public class Recipe {
 
   private int id;
 
+  public Recipe(String name, String imagePath, String recipeSource, String servings, String remark,
+      boolean favorite, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    this.name = name;
+    this.imagePath = imagePath;
+    this.recipeSource = recipeSource;
+    this.servings = servings;
+    this.remark = remark;
+    this.favorite = favorite;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+  }
+
   @NotBlank
   private String name;
 

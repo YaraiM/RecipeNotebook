@@ -19,6 +19,13 @@ public class Instruction {
 
   private int id;
 
+  public Instruction(int recipeId, int stepNumber, String content, boolean arrange) {
+    this.recipeId = recipeId;
+    this.stepNumber = stepNumber;
+    this.content = content;
+    this.arrange = arrange;
+  }
+
   private int recipeId;
 
   private int stepNumber;
