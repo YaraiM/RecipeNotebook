@@ -68,12 +68,9 @@
       GROUP BY i.recipe_id
       <!--  あるレシピIDにおいて、検索キーワードの数と同等かそれ以上の材料IDが抽出された場合に限り集約する（＝複数キーワードに合致するレシピ詳細のみ抽出される）  -->
       HAVING COUNT(DISTINCT i.name) >= (
-      SELECT COUNT(*)
-      FROM (
-      <foreach item="ingredientName" collection="ingredientNames" separator="UNION ALL">
-        SELECT #{ingredientName} as name
+      <foreach item="ingredientName" collection="ingredientNames" open="" separator=" + " close="">
+        1
       </foreach>
-      ) as temp_ingredients
       )
     </if>
   </select>

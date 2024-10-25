@@ -19,6 +19,13 @@ public class Ingredient {
 
   private int id;
 
+  public Ingredient(int recipeId, String name, String quantity, boolean arrange) {
+    this.recipeId = recipeId;
+    this.name = name;
+    this.quantity = quantity;
+    this.arrange = arrange;
+  }
+
   private int recipeId;
 
   @NotBlank
