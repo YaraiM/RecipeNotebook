@@ -158,6 +158,8 @@ public class RecipeController {
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 
+//  TODO:お気に入り入れ替え用のエンドポイント/recipes/{id}/favoriteを用意する必要がある
+
   /**
    * レシピ詳細情報の削除です。指定したレシピIDに紐づくレシピ詳細情報を削除します。
    *
