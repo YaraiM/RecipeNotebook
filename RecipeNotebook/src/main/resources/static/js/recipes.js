@@ -28,9 +28,8 @@ function setupSearchForm() {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(form);
-    const params = new URLSearchParams();
+        const params = new URLSearchParams();
 
-        // 各フォームフィールドの処理
         formData.forEach((value, key) => {
             if (value && value.trim() !== '') {
                 // 全角スペース、半角スペース、複数のスペースを1つのスペースに正規化
@@ -60,9 +59,9 @@ function loadRecipes(searchParams = new URLSearchParams()) {
             if (!response.ok) throw new Error('レシピの取得に失敗しました');
             return response.json();
         })
-        .then(recipes => {
-            displayRecipes(recipes);
-            updateRecipeCount(recipes.length);
+        .then(recipeDetails => {
+            displayRecipes(recipeDetails);
+            updateRecipeCount(recipeDetails.length);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -74,11 +73,11 @@ function loadRecipes(searchParams = new URLSearchParams()) {
         });
 }
 
-function displayRecipes(recipes) {
+function displayRecipes(recipeDetails) {
     const container = document.getElementById('recipeContainer');
     container.innerHTML = '';
 
-    recipes.forEach(recipeDetail => {
+    recipeDetails.forEach(recipeDetail => {
         const recipe = recipeDetail.recipe;
         const col = document.createElement('div');
         col.className = 'col';
