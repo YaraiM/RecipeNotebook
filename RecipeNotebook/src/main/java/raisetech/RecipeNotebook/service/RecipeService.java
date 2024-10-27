@@ -190,6 +190,23 @@ public class RecipeService {
   }
 
   /**
+   * レシピのお気に入りフラグを更新するメソッドです。
+   *
+   * @param id レシピID
+   * @param favorite レシピのお気に入りフラグ
+   */
+  @Transactional
+  public void updateFavoriteStatus(int id, boolean favorite) {
+
+    if (repository.getRecipe(id) == null) {
+      throw new ResourceNotFoundException("レシピID「" + id + "」は存在しません");
+    }
+
+    repository.updateFavoriteStatus(id, favorite);
+
+  }
+
+  /**
    * レシピを削除するメソッドです。データベース側の設定により、レシピIDに紐づく材料と調理手順も削除されます。
    *
    * @param id レシピID

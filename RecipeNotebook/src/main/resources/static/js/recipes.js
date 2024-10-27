@@ -87,14 +87,15 @@ function displayRecipes(recipes) {
         const favoriteClass = recipe.favorite ? 'favorite-active' : 'favorite-inactive';
 
         col.innerHTML = `
-            <div class="card h-100">
+            <div class="card h-100 position-relative">
+            <button onclick="toggleFavorite(${recipe.id})"
+                    class="favorite-button ${favoriteClass}"
+                    data-id="${recipe.id}"
+                    title="お気に入り切り替え">
+                ${favoriteIcon}
+            </button>
                 <img src="${recipe.imagePath}" class="card-img-top" alt="${recipe.name}">
                 <div class="card-actions">
-                    <button onclick="toggleFavorite(${recipe.id})"
-                            class="favorite-button ${favoriteClass}"
-                            title="お気に入り切り替え">
-                        ${favoriteIcon}
-                    </button>
                     <button onclick="location.href='/recipes/${recipe.id}/update'"
                             class="edit-button" title="編集">
                         ✎
@@ -121,24 +122,37 @@ function displayRecipes(recipes) {
 }
 
 function toggleFavorite(recipeId) {
+    const favoriteButton = document.querySelector(`.favorite-button[data-id='${recipeId}']`);
+    const isCurrentlyFavorite = favoriteButton.classList.contains('favorite-active');
+    const newFavorite = !isCurrentlyFavorite;
+
+    console.log(`Recipe ID: ${recipeId}, New Favorite: ${newFavorite}`);  // デバッグ
+
+    favoriteButton.innerText = newFavorite ? '★' : '☆';
+    favoriteButton.classList.toggle('favorite-active', newFavorite);
+    favoriteButton.classList.toggle('favorite-inactive', !newFavorite);
+
     fetch(`/recipes/${recipeId}/favorite`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ favorite: newFavorite })
     })
     .then(response => {
         if (!response.ok) throw new Error('お気に入りの更新に失敗しました');
-        return response.json();
+        return response.text();
     })
-    .then(() => {
-        // 現在の検索条件で再読み込み
-        const searchParams = new URLSearchParams(new FormData(document.getElementById('searchForm')));
-        loadRecipes(searchParams);
+    .then(message => {
+        console.log('Success:', message);
     })
     .catch(error => {
         console.error('Error:', error);
         alert('お気に入りの更新に失敗しました');
+        // エラー時に元の状態に戻す
+        favoriteButton.innerText = isCurrentlyFavorite ? '★' : '☆';
+        favoriteButton.classList.toggle('favorite-active', isCurrentlyFavorite);
+        favoriteButton.classList.toggle('favorite-inactive', !isCurrentlyFavorite);
     });
 }
 

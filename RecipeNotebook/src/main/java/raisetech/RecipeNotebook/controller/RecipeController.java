@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -158,13 +159,26 @@ public class RecipeController {
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 
-//  TODO:お気に入り入れ替え用のエンドポイント/recipes/{id}/favoriteを用意する必要がある
+  /**
+   * レシピのお気に入りフラグの更新です。指定したレシピIDに紐づくお気に入りフラグを更新します。
+   *
+   * @param id レシピID
+   * @param request JSONをMapに変換したお気に入りフラグ（"favorite": true/false)
+   * @return レスポンス（ステータスコード200（OK）、更新成功のメッセージ）
+   */
+  @PutMapping("/{id}/favorite")
+  public ResponseEntity<String> updateFavoriteStatus(@PathVariable int id,
+      @RequestBody Map<String, Boolean> request) {
+    Boolean favorite = request.get("favorite");
+    service.updateFavoriteStatus(id, favorite);
+    return ResponseEntity.ok("お気に入りを変更しました");
+  }
 
   /**
    * レシピ詳細情報の削除です。指定したレシピIDに紐づくレシピ詳細情報を削除します。
    *
    * @param id 削除するレシピのID
-   * @return レスポンス（ステータスコード200（OK）、削除成功のエラーメッセージ）
+   * @return レスポンス（ステータスコード200（OK）、削除成功のメッセージ）
    */
   @Operation(summary = "レシピ詳細情報の削除", description = "指定したレシピIDに紐づくレシピ詳細情報を削除します。")
   @ApiResponses(value = {

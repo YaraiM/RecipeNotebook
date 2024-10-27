@@ -38,12 +38,16 @@
 }
 
 .favorite-button {
-    background: none;
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.8);
     border: none;
-    font-size: 1.5rem;
+    border-radius: 50%;
+    font-size: 24px;
     cursor: pointer;
-    padding: 0 5px;
-    transition: transform 0.2s;
+    z-index: 10;
+    transition: background-color 0.2s;
 }
 
 .favorite-button:hover {
