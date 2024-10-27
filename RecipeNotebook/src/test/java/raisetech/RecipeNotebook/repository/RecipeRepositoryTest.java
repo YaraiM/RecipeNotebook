@@ -276,6 +276,8 @@ class RecipeRepositoryTest {
 
   }
 
+  //  TODO：お気に入りフラグの更新機能をテスト
+
   @Test
   void 指定したIDのレシピを削除できること() {
     sut.deleteRecipe(1);

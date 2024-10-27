@@ -655,6 +655,8 @@ public class RecipeApiIntegrationTest {
         .andExpect(jsonPath("$.message").value("調理手順ID「999」は存在しません"));
   }
 
+  //  TODO：お気に入りフラグの切り替え機能をテスト
+
   @Test
   void レシピの削除_正常系_存在するIDを指定した場合にレシピおよび紐づく材料と調理手順が削除されメッセージが返ってくること()
       throws Exception {

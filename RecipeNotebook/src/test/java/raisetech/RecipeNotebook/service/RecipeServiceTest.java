@@ -324,6 +324,8 @@ class RecipeServiceTest {
 
   }
 
+  //  TODO：お気に入りフラグの切り替え機能をテスト
+
   @Test
   void レシピの削除_正常系_IDに紐づくレシピ削除メソッドが実行されること() {
     Recipe recipe = createMockRecipes(List.of(1)).getFirst();

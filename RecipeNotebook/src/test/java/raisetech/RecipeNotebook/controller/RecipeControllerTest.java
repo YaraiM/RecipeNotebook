@@ -328,6 +328,8 @@ class RecipeControllerTest {
 
   }
 
+//  TODO：お気に入りフラグの切り替え機能をテスト
+
   @Test
   void レシピの削除_エンドポイントでサービスの処理が適切に呼び出され処理成功のレスポンスとメッセージが返ってくること()
       throws Exception {
