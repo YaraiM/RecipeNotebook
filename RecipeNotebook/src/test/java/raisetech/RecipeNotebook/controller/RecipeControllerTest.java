@@ -32,6 +32,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -85,7 +86,8 @@ class RecipeControllerTest {
       throws Exception {
     int newRecipeId = 2;
     RecipeDetail mockRecipeDetail = createTestRecipeDetail(newRecipeId);
-    when(service.createRecipeDetail(any(RecipeDetail.class))).thenReturn(mockRecipeDetail);
+    when(service.createRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class))).thenReturn(
+        mockRecipeDetail);
 
     mockMvc.perform(post("/recipes/new")
             .contentType(MediaType.APPLICATION_JSON)
@@ -142,7 +144,7 @@ class RecipeControllerTest {
             "http://localhost/recipes/" + mockRecipeDetail.getRecipe().getId()))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-    verify(service, times(1)).createRecipeDetail(any(RecipeDetail.class));
+    verify(service, times(1)).createRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class));
   }
 
   @Test

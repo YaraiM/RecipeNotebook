@@ -38,11 +38,14 @@ class RecipeServiceTest {
   @Mock
   private RecipeRepository repository;
 
+  @Mock
+  private FileStorageService fileStorageService;
+
   private RecipeService sut; // Mockitoを使用時は@Autowiredが適切に動作しない場合がある
 
   @BeforeEach
   void setUp() {
-    sut = new RecipeService(repository);
+    sut = new RecipeService(repository, fileStorageService);
   }
 
   @ParameterizedTest
@@ -144,7 +147,7 @@ class RecipeServiceTest {
 
     LocalDateTime testStartedTime = LocalDateTime.now();
 
-    RecipeDetail actual = sut.createRecipeDetail(recipeDetail);
+    RecipeDetail actual = sut.createRecipeDetail(recipeDetail, null);
     LocalDateTime actualCreatedAt = actual.getRecipe().getCreatedAt();
 
     verify(repository, times(1)).registerRecipe(recipe);
