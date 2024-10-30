@@ -13,6 +13,9 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      GITHUB_WORKSPACE: ${{ github.workspace }}
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -28,11 +31,11 @@ jobs:
         run: chmod +x RecipeNotebook/gradlew
 
       - name: Build with Gradle Wrapper
-        run: ./gradlew build
+        run: ./gradlew build -Dspring.profiles.active=ci
         working-directory: RecipeNotebook
 
       - name: Test with Gradle Wrapper
-        run: ./gradlew test --info
+        run: ./gradlew test --info -Dspring.profiles.active=ci
         working-directory: RecipeNotebook
 
       - name: Upload test results
