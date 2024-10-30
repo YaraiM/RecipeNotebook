@@ -17,7 +17,15 @@ public class FileStorageService {
   @Value("${app.upload.dir}")
   private String uploadDir;
 
+  @Value("${app.feature.someClassEnabled:true}")
+  private boolean activeProfile;
+
   public String storeFile(MultipartFile file) {
+
+    // CI環境時はアップロード操作を行わないよう設定
+    if (!activeProfile) {
+      return "/images/no_image.jpg";
+    }
 
     try {
       if (file != null && !file.isEmpty()) {

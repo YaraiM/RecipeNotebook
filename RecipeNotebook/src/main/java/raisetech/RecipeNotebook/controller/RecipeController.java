@@ -8,16 +8,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,21 +47,6 @@ public class RecipeController {
   @Autowired
   public RecipeController(RecipeService recipeService) {
     this.recipeService = recipeService;
-  }
-
-  @Value("${app.upload.dir}")
-  private String uploadDir;
-
-  /**
-   * アプリケーション起動時にアップロードディレクトリを作成します。
-   */
-  @PostConstruct
-  public void init() {
-    try {
-      Files.createDirectories(Paths.get(uploadDir));
-    } catch (IOException e) {
-      throw new RuntimeException("Could not create upload directory!", e);
-    }
   }
 
   /**
