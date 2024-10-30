@@ -22,7 +22,7 @@ public class FileStorageService {
 
   public String storeFile(MultipartFile file) {
 
-    // CI環境時はアップロード操作を行わないよう設定
+    // CI環境時はアップロード操作を行わず、imagesディレクトリのno_imageのパスを返すよう設定
     if (!activeProfile) {
       return "/images/no_image.jpg";
     }
@@ -47,6 +47,22 @@ public class FileStorageService {
 
     } catch (IOException e) {
       throw new FileStorageException("ファイルの保存に失敗しました");
+    }
+  }
+
+  public void deleteFile(String imagePath) {
+    // CI環境時は削除操作を行わないよう設定
+    if (activeProfile) {
+
+      try {
+        Path uploadPath = Paths.get(uploadDir);
+        String fileName = imagePath.substring(imagePath.lastIndexOf("/") + 1);
+        Path filePath = uploadPath.resolve(fileName);
+        Files.delete(filePath);
+      } catch (IOException e) {
+        throw new FileStorageException(
+            "ファイルの削除に失敗しました。画像ファイルが存在しない可能性があります");
+      }
     }
   }
 }

@@ -219,10 +219,16 @@ public class RecipeService {
   @Transactional
   public void deleteRecipe(int id) {
 
-    if (repository.getRecipe(id) == null) {
+    Recipe deletedRecipe = repository.getRecipe(id);
+
+    if (deletedRecipe == null) {
       throw new ResourceNotFoundException("レシピID「" + id + "」は存在しません");
     }
 
+    String imagePathForDeletedRecipe = deletedRecipe.getImagePath();
+    if (imagePathForDeletedRecipe.contains("/uploads/")) {
+      fileStorageService.deleteFile(imagePathForDeletedRecipe);
+    }
     repository.deleteRecipe(id);
   }
 
