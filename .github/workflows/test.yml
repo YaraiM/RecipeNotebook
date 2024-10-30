@@ -13,9 +13,6 @@ jobs:
     permissions:
       contents: read
 
-    env:
-      GITHUB_WORKSPACE: ${{ github.workspace }}
-
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
