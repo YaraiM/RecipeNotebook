@@ -7,10 +7,10 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
   /**
@@ -37,7 +37,23 @@ public class GlobalExceptionHandler {
         errors);
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
 
+  @ExceptionHandler(InvalidJsonFormatException.class)
+  public ResponseEntity<ErrorResponse> handleInvalidJsonFormatException(
+      InvalidJsonFormatException ex) {
+    List<Map<String, String>> errors = new ArrayList<>();
+    Map<String, String> error = new HashMap<>();
+    error.put("field", "recipeDetail");
+    error.put("message", "JSONの形式が不正です: " + ex.getMessage());
+    errors.add(error);
+
+    ErrorResponse errorResponse = new ErrorResponse(
+        HttpStatus.BAD_REQUEST,
+        "JSONパースエラーです。",
+        errors
+    );
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
 
   /**
@@ -66,6 +82,15 @@ public class GlobalExceptionHandler {
 
     ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<ErrorResponse> handleFileStorageException(
+      FileStorageException e) {
+
+    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+        e.getMessage());
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
   }
 
 }

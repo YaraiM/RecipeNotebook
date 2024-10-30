@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -23,10 +24,12 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 public class RecipeService {
 
   private final RecipeRepository repository;
+  private final FileStorageService fileStorageService;
 
   @Autowired
-  public RecipeService(RecipeRepository repository) {
+  public RecipeService(RecipeRepository repository, FileStorageService fileStorageService) {
     this.repository = repository;
+    this.fileStorageService = fileStorageService;
   }
 
   /**
@@ -89,8 +92,10 @@ public class RecipeService {
    * @return 新規作成されるレシピ詳細情報
    */
   @Transactional
-  public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail) {
+  public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
     Recipe recipe = recipeDetail.getRecipe();
+    String imagePath = fileStorageService.storeFile(file);
+    recipeDetail.getRecipe().setImagePath(imagePath);
     recipe.setCreatedAt(LocalDateTime.now());
     repository.registerRecipe(recipe);
 

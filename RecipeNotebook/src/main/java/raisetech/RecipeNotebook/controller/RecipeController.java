@@ -1,5 +1,6 @@
 package raisetech.RecipeNotebook.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -12,12 +13,9 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +35,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.ErrorResponse;
+import raisetech.RecipeNotebook.exception.InvalidJsonFormatException;
 import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
 import raisetech.RecipeNotebook.service.RecipeService;
 
@@ -48,11 +47,11 @@ import raisetech.RecipeNotebook.service.RecipeService;
 @Validated
 public class RecipeController {
 
-  private final RecipeService service;
+  private final RecipeService recipeService;
 
   @Autowired
-  public RecipeController(RecipeService service) {
-    this.service = service;
+  public RecipeController(RecipeService recipeService) {
+    this.recipeService = recipeService;
   }
 
   @Value("${app.upload.dir}")
@@ -92,7 +91,7 @@ public class RecipeController {
   @GetMapping
   public ResponseEntity<List<RecipeDetail>> searchRecipeDetails(
       @Valid @ModelAttribute RecipeSearchCriteria criteria) {
-    List<RecipeDetail> recipeDetails = service.searchRecipeList(criteria);
+    List<RecipeDetail> recipeDetails = recipeService.searchRecipeList(criteria);
     return ResponseEntity.ok(recipeDetails);
   }
 
@@ -115,7 +114,7 @@ public class RecipeController {
   })
   @GetMapping("/{id}")
   public ResponseEntity<RecipeDetail> getRecipeDetail(@PathVariable int id) {
-    RecipeDetail recipeDetail = service.searchRecipeDetail(id);
+    RecipeDetail recipeDetail = recipeService.searchRecipeDetail(id);
     return ResponseEntity.ok(recipeDetail);
   }
 
@@ -136,6 +135,10 @@ public class RecipeController {
       @ApiResponse(responseCode = "400", description = "無効な入力形式の値をリクエストした場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
+      ),
+      @ApiResponse(responseCode = "500", description = "ファイルのアップロードに失敗した場合のレスポンス",
+          content = @Content(mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class))
       )
   })
   @PostMapping("/new")
@@ -144,37 +147,19 @@ public class RecipeController {
       @RequestParam(value = "file", required = false) MultipartFile file,
       UriComponentsBuilder uriBuilder) {
 
+    RecipeDetail inputRecipeDetail;
     try {
-      RecipeDetail inputRecipeDetail = new ObjectMapper().readValue(inputRecipeDetailJson,
-          RecipeDetail.class);
-
-      if (file != null && !file.isEmpty()) {
-        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path uploadPath = Paths.get(uploadDir);
-
-        if (!Files.exists(uploadPath)) {
-          Files.createDirectories(uploadPath);
-        }
-
-        Path filePath = uploadPath.resolve(filename);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        String imagePath = "/uploads/" + filename;
-        inputRecipeDetail.getRecipe().setImagePath(imagePath);
-      } else {
-        inputRecipeDetail.getRecipe().setImagePath("/images/no_image.jpg");
-      }
-
-      RecipeDetail newRecipeDetail = service.createRecipeDetail(inputRecipeDetail);
-
-      URI location = uriBuilder.path("/recipes/{newRecipeId}")
-          .buildAndExpand(newRecipeDetail.getRecipe().getId()).toUri();
-
-      return ResponseEntity.created(location).body(newRecipeDetail);
-
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to store file", e);
+      inputRecipeDetail = new ObjectMapper().readValue(inputRecipeDetailJson, RecipeDetail.class);
+    } catch (JsonProcessingException e) {
+      throw new InvalidJsonFormatException("Invalid JSON format: " + e.getMessage());
     }
+
+    RecipeDetail newRecipeDetail = recipeService.createRecipeDetail(inputRecipeDetail, file);
+
+    URI location = uriBuilder.path("/recipes/{newRecipeId}")
+        .buildAndExpand(newRecipeDetail.getRecipe().getId()).toUri();
+
+    return ResponseEntity.created(location).body(newRecipeDetail);
   }
 
   /**
@@ -210,7 +195,7 @@ public class RecipeController {
               + "」は一致させてください");
     }
 
-    RecipeDetail updatedRecipeDetail = service.updateRecipeDetail(inputRecipeDetail);
+    RecipeDetail updatedRecipeDetail = recipeService.updateRecipeDetail(inputRecipeDetail);
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 
@@ -227,7 +212,7 @@ public class RecipeController {
   public ResponseEntity<String> updateFavoriteStatus(@PathVariable int id,
       @RequestBody Map<String, Boolean> request) {
     Boolean favorite = request.get("favorite");
-    service.updateFavoriteStatus(id, favorite);
+    recipeService.updateFavoriteStatus(id, favorite);
     return ResponseEntity.ok("お気に入りを変更しました");
   }
 
@@ -250,7 +235,7 @@ public class RecipeController {
   })
   @DeleteMapping("/{id}/delete")
   public ResponseEntity<String> deleteRecipeDetail(@PathVariable int id) {
-    service.deleteRecipe(id);
+    recipeService.deleteRecipe(id);
     return ResponseEntity.ok("レシピを削除しました");
   }
 
