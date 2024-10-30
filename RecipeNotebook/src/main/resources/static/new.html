@@ -13,11 +13,10 @@
 
 <body class="py-5">
 <div class="container">
-  <h1 class="text-center mb-4">レシピ新規作成フォーム</h1>
+  <h1 class="mb-4">レシピ新規作成フォーム</h1>
 
   <div class="recipe-form">
-    <form id="recipeForm" action="/recipes/new/validate-input" method="post"
-          onsubmit="submitRecipeForm(event)">
+    <form id="newRecipeForm" enctype="multipart/form-data">
 
       <!-- レシピ名 -->
       <div class="mb-3">
@@ -25,10 +24,10 @@
         <input type="text" class="form-control" id="name" name="recipe.name" required/>
       </div>
 
-      <!-- 画像パス -->
+      <!-- 画像のアップロード -->
       <div class="mb-3">
-        <label for="imagePath" class="form-label">レシピ画像</label>
-        <input type="text" class="form-control" id="imagePath" name="recipe.imagePath"/>
+        <label for="imageFile" class="form-label">レシピ画像</label>
+        <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*"/>
       </div>
 
       <!-- 情報元 -->
@@ -76,15 +75,23 @@
       </h4>
       <div id="instructionsContainer"></div>
 
-      <div class="text-center mt-4">
-        <button type="submit" class="btn btn-primary">入力内容を確認</button>
+      <div class="row justify-content-center mt-4">
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary">確定</button>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-secondary" onclick="location.href='recipes.html';">
+            レシピ一覧に戻る
+          </button>
+        </div>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/static/js/recipes.js"></script> <!-- recipes用JavaScriptの読み込み -->
+<script src="/js/recipes.js"></script>
+
 </body>
 </html>

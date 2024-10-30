@@ -1,16 +1,25 @@
 package raisetech.RecipeNotebook.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,7 +30,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
@@ -42,6 +53,21 @@ public class RecipeController {
   @Autowired
   public RecipeController(RecipeService service) {
     this.service = service;
+  }
+
+  @Value("${app.upload.dir}")
+  private String uploadDir;
+
+  /**
+   * アプリケーション起動時にアップロードディレクトリを作成します。
+   */
+  @PostConstruct
+  public void init() {
+    try {
+      Files.createDirectories(Paths.get(uploadDir));
+    } catch (IOException e) {
+      throw new RuntimeException("Could not create upload directory!", e);
+    }
   }
 
   /**
@@ -96,7 +122,8 @@ public class RecipeController {
   /**
    * レシピ詳細情報の新規作成です。レシピ詳細情報およびパスを新規作成します。
    *
-   * @param inputRecipeDetail 新規作成するレシピ詳細情報
+   * @param inputRecipeDetailJson 新規作成するレシピ詳細情報(JSON形式)
+   * @param file レシピ画像ファイル
    * @param uriBuilder 新規作成時に作成されるURIのビルダー
    * @return レスポンス（ステータスコード201（CREATED）、新規作成されたURI、新規作成されたレシピ詳細情報）
    */
@@ -113,13 +140,41 @@ public class RecipeController {
   })
   @PostMapping("/new")
   public ResponseEntity<RecipeDetail> createRecipeDetail
-  (@Valid @RequestBody RecipeDetail inputRecipeDetail, UriComponentsBuilder uriBuilder) {
-    RecipeDetail newRecipeDetail = service.createRecipeDetail(inputRecipeDetail);
+  (@Valid @RequestParam("recipeDetail") String inputRecipeDetailJson,
+      @RequestParam(value = "file", required = false) MultipartFile file,
+      UriComponentsBuilder uriBuilder) {
 
-    int newRecipeId = newRecipeDetail.getRecipe().getId();
-    URI location = uriBuilder.path("/recipes/{newRecipeId}").buildAndExpand(newRecipeId).toUri();
+    try {
+      RecipeDetail inputRecipeDetail = new ObjectMapper().readValue(inputRecipeDetailJson,
+          RecipeDetail.class);
 
-    return ResponseEntity.created(location).body(newRecipeDetail);
+      if (file != null && !file.isEmpty()) {
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        Path uploadPath = Paths.get(uploadDir);
+
+        if (!Files.exists(uploadPath)) {
+          Files.createDirectories(uploadPath);
+        }
+
+        Path filePath = uploadPath.resolve(filename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        String imagePath = "/uploads/" + filename;
+        inputRecipeDetail.getRecipe().setImagePath(imagePath);
+      } else {
+        inputRecipeDetail.getRecipe().setImagePath("/images/no_image.jpg");
+      }
+
+      RecipeDetail newRecipeDetail = service.createRecipeDetail(inputRecipeDetail);
+
+      URI location = uriBuilder.path("/recipes/{newRecipeId}")
+          .buildAndExpand(newRecipeDetail.getRecipe().getId()).toUri();
+
+      return ResponseEntity.created(location).body(newRecipeDetail);
+
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to store file", e);
+    }
   }
 
   /**
@@ -158,6 +213,8 @@ public class RecipeController {
     RecipeDetail updatedRecipeDetail = service.updateRecipeDetail(inputRecipeDetail);
     return ResponseEntity.ok(updatedRecipeDetail);
   }
+
+  //TODO:API仕様書の追加
 
   /**
    * レシピのお気に入りフラグの更新です。指定したレシピIDに紐づくお気に入りフラグを更新します。
