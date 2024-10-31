@@ -550,7 +550,7 @@ function displayValidationError(fieldName, message) {
 
       formField.parentNode.insertBefore(errorElement, formField.nextSibling);
       formField.classList.add('is-invalid');
-      formField.addEventListener('focus', function() {
+      formField.addEventListener('input', function() {
           errorElement.remove();
           formField.classList.remove('is-invalid');
       });
