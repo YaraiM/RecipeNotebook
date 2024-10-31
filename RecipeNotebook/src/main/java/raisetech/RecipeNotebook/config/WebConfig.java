@@ -16,8 +16,10 @@ public class WebConfig implements WebMvcConfigurer {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    // /uploads/** へのリクエストを実際のアップロードディレクトリにマッピング
-    registry.addResourceHandler("/uploads/**")
-        .addResourceLocations("file:" + uploadDir);
+    if (activeProfile) {
+      // /uploads/** へのリクエストを実際のアップロードディレクトリにマッピング
+      registry.addResourceHandler("/uploads/**")
+          .addResourceLocations("file:" + uploadDir);
+    }
   }
 }
