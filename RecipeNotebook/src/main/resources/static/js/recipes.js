@@ -33,12 +33,6 @@ function setupDatepickers() {
 function setupSearchForm() {
     const form = document.getElementById('searchForm');
 
-    form.querySelector('button[type="reset"]').addEventListener('click', function() {
-        setTimeout(() => {
-            loadRecipes();
-        }, 0);
-    });
-
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(form);
@@ -51,11 +45,15 @@ function setupSearchForm() {
 
                 if (key === 'favoriteRecipe') {
                     params.append(key, 'true');
-                } else if (key === 'recipeNames' || key === 'ingredientNames') {
+                }
+
+                if (key === 'recipeNames' || key === 'ingredientNames') {
                     // スペース区切りの値を配列として扱う
                     const values = normalizedValue.split(' ');
                     values.forEach(v => params.append(key, v));
-                } else {
+                }
+
+                if (key !== 'favoriteRecipe' && key !== 'recipeNames' && key !== 'ingredientNames') {
                     params.append(key, value.trim());
                 }
             }
@@ -279,6 +277,9 @@ function setupFormButtons() {
 function setupFormSubmission() {
     const form = document.getElementById('newRecipeForm');
     if (form) {
+        // ブラウザのデフォルトのフォームバリデーションを無効化
+        form.setAttribute('novalidate', 'true');
+
         form.removeAttribute('action');
         form.addEventListener('submit', submitNewRecipeForm);
     }
@@ -318,7 +319,7 @@ function createIngredientHtml() {
     return `
         <div class="ingredient mb-3 row">
             <div class="col-md-5">
-                <input class="form-control" type="text" name="ingredient.name.${nextIndex}" placeholder="材料名" required/>
+                <input class="form-control" type="text" name="ingredient.name.${nextIndex}" placeholder="材料名"/>
             </div>
             <div class="col-md-3">
                 <input class="form-control" type="text" name="ingredient.quantity.${nextIndex}" placeholder="分量"/>
@@ -349,7 +350,7 @@ function createInstructionHtml() {
             </div>
             <div class="col-md-6">
                 <textarea class="form-control" name="instruction.content.${nextIndex}"
-                         placeholder="手順内容" required></textarea>
+                         placeholder="手順内容"></textarea>
             </div>
             <div class="col-md-2">
                 <div class="form-check">
@@ -415,7 +416,10 @@ function updateStepNumbers() {
 function submitNewRecipeForm(event) {
     event.preventDefault();
 
-    if (!validateForm()) {
+    const validationErrors = validateForm();
+
+    if (validationErrors.length > 0) {
+        handleValidationErrors(validationErrors);
         return;
     }
 
@@ -458,8 +462,9 @@ function submitNewRecipeForm(event) {
     })
     .then(response => {
         if (!response.ok) {
-            return response.text().then(text => {
-                throw new Error(`サーバーエラー (${response.status}): ${text}`);
+            return response.json().then(data => {
+                handleValidationErrors(data.errors);
+                throw new Error('バリデーションエラー');
             });
         }
         return response.json();
@@ -474,35 +479,82 @@ function submitNewRecipeForm(event) {
     });
 }
 
-// レシピ新規作成画面：必須項目のバリデーション
+// レシピ新規作成画面：フォームのバリデーション
 function validateForm() {
-    const recipeName = document.getElementById('name').value;
+    clearValidationErrors();
+    const errors = [];
+
+    const recipeName = document.getElementById('name').value.trim();
     if (!recipeName) {
-        alert('レシピ名は必須です');
-        return false;
+        errors.push({
+            field: `recipe.name`,
+            message: 'レシピ名は必須です'
+        });
     }
 
-    // 材料のチェック
     const ingredients = document.querySelectorAll('.ingredient');
-    for (let i = 0; i < ingredients.length; i++) {
-        const name = ingredients[i].querySelector('input[name^="ingredient.name"]').value;
+    ingredients.forEach((ingredient, index) => {
+        const nameInput = ingredient.querySelector('input[name^="ingredient.name"]');
+        const name = nameInput ? nameInput.value.trim() : '';
         if (!name) {
-            alert('材料名は必須です');
-            return false;
+            errors.push({
+               field: `ingredient.name.${index + 1}`,
+               message: `材料名は必須です`
+            });
         }
-    }
+    });
 
-    // 手順のチェック
     const instructions = document.querySelectorAll('.instruction');
-    for (let i = 0; i < instructions.length; i++) {
-        const content = instructions[i].querySelector('textarea[name^="instruction.content"]').value;
+    instructions.forEach((instruction, index) => {
+        const contentInput = instruction.querySelector('textarea[name^="instruction.content"]');
+        const content = contentInput ? contentInput.value.trim() : '';
         if (!content) {
-            alert('手順内容は必須です');
-            return false;
+            errors.push({
+                field: `instruction.content.${index + 1}`,
+                message: `調理手順は必須です`
+            });
         }
+    });
+
+    return errors;
+}
+
+// レシピ新規作成画面：バリデーションエラー発生時のハンドリング
+function handleValidationErrors(errors) {
+    errors.forEach(error => {
+        displayValidationError(error.field, error.message);
+    });
+}
+
+// レシピ新規作成画面：既存のバリデーションエラーの削除
+function clearValidationErrors() {
+    document.querySelectorAll('[data-error-for]').forEach(element => element.remove());
+    document.querySelectorAll('.is-invalid').forEach(element => {
+        element.classList.remove('is-invalid');
+    });
+}
+
+// レシピ新規作成画面：バリデーションエラーの表示
+function displayValidationError(fieldName, message) {
+    const existingError = document.querySelector(`[data-error-for="${fieldName}"]`);
+    if (existingError) {
+        existingError.remove();
     }
 
-    return true;
+    const formField = document.querySelector(`[name="${fieldName}"]`);
+    if (formField) {
+      const errorElement = document.createElement('div');
+      errorElement.className = 'text-danger mt-1';
+      errorElement.setAttribute('data-error-for', fieldName);
+      errorElement.textContent = message;
+
+      formField.parentNode.insertBefore(errorElement, formField.nextSibling);
+      formField.classList.add('is-invalid');
+      formField.addEventListener('focus', function() {
+          errorElement.remove();
+          formField.classList.remove('is-invalid');
+      });
+    }
 }
 
 // レシピ新規作成画面：入力された材料情報の取得
@@ -537,5 +589,4 @@ function getInstructions() {
     return instructions;
 }
 
-// TODO:画像をアップデート機能、デフォルトでNO＿DATAが表示されるようにする機能。
 // TODO:バリデーションエラーはサーバーサイドからJSONのエラーメッセージを受け取り、それをフロントエンドのフォームに表示させたい。
