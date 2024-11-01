@@ -67,6 +67,7 @@ function loadRecipes(searchParams = new URLSearchParams()) {
     const container = document.getElementById('recipeContainer');
     container.innerHTML = '<div class="loading">読み込み中...</div>';
 
+    // TODO:GrobalExceptionHandllerから返ってくるJSONを返す形に修正
     fetch(`/recipes?${searchParams.toString()}`)
         .then(response => {
             if (!response.ok) throw new Error('レシピの取得に失敗しました');
@@ -107,7 +108,9 @@ function displayRecipes(recipeDetails) {
                     title="お気に入り切り替え">
                 ${favoriteIcon}
             </button>
-                <img src="${recipe.imagePath}" class="card-img-top" alt="${recipe.name}">
+                <div class="card-img-top" >
+                  <img src="${recipe.imagePath}" class="img-fit-contain" alt="${recipe.name}">
+                </div>
                 <div class="card-actions">
                     <button onclick="location.href='/update.html'"
                             class="edit-button" title="編集">
@@ -134,7 +137,7 @@ function displayRecipes(recipeDetails) {
     });
 }
 
-// レシピ一覧画面：各レシピのお気に入り状態の切り替え
+// レシピ一覧画面：各レシピのお気に入り状態の切り替え　TODO:GrobalExceptionHandllerから返ってくるJSONを返す形に修正
 function toggleFavorite(recipeId) {
     const favoriteButton = document.querySelector(`.favorite-button[data-id='${recipeId}']`);
     const isCurrentlyFavorite = favoriteButton.classList.contains('favorite-active');
@@ -319,7 +322,7 @@ function createIngredientHtml() {
     return `
         <div class="ingredient mb-3 row">
             <div class="col-md-5">
-                <input class="form-control" type="text" name="ingredient.name.${nextIndex}" placeholder="材料名"/>
+                <input class="form-control" type="text" name="ingredient.name.${nextIndex}" placeholder="材料名（必須）"/>
             </div>
             <div class="col-md-3">
                 <input class="form-control" type="text" name="ingredient.quantity.${nextIndex}" placeholder="分量"/>
@@ -350,7 +353,7 @@ function createInstructionHtml() {
             </div>
             <div class="col-md-6">
                 <textarea class="form-control" name="instruction.content.${nextIndex}"
-                         placeholder="手順内容"></textarea>
+                         placeholder="手順内容（必須）"></textarea>
             </div>
             <div class="col-md-2">
                 <div class="form-check">
@@ -406,39 +409,30 @@ function updateStepNumbers() {
         const stepNumberInput = instruction.querySelector('input[name^="instruction.stepNumber"]');
         if (stepNumberInput) {
             stepNumberInput.value = index + 1;
-            // name属性も更新
             stepNumberInput.name = `instruction.stepNumber.${index + 1}`;
         }
     });
 }
 
 // レシピ新規作成画面：新規レシピ詳細情報の登録
-function submitNewRecipeForm(event) {
+async function submitNewRecipeForm(event) {
     event.preventDefault();
 
-    const validationErrors = validateForm();
-
-    if (validationErrors.length > 0) {
-        handleValidationErrors(validationErrors);
-        return;
-    }
-
-    const formData = new FormData();
-    // ファイル追加
     const fileInput = document.getElementById('imageFile');
+    let base64Image = null;
     if (fileInput && fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        // ファイルサイズチェック (例: 5MB制限)
+        // ファイルサイズチェック　TODO:バックエンドから制御したい
         if (file.size > 5 * 1024 * 1024) {
             alert('画像ファイルは5MB以下にしてください');
             return;
         }
-        // MIMEタイプチェック
+        // MIMEタイプチェック　TODO:バックエンドから制御したい
         if (!file.type.startsWith('image/')) {
             alert('画像ファイルのみアップロード可能です');
             return;
         }
-        formData.append('file', file);
+        base64Image = await convertToBase64(file);
     }
 
     const recipeDetail = {
@@ -450,21 +444,26 @@ function submitNewRecipeForm(event) {
             favorite: document.getElementById('favorite').checked
         },
         ingredients: getIngredients(),
-        instructions: getInstructions()
+        instructions: getInstructions(),
     };
 
-    // recipeDetailをBlob形式でformDataに追加
-    formData.append('recipeDetail', JSON.stringify(recipeDetail));
+    const recipeDetailWithImageData = {
+        recipeDetail: recipeDetail,
+        imageData: base64Image
+    }
 
     fetch('/recipes/new', {
         method: 'POST',
-        body: formData
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(recipeDetailWithImageData)
     })
     .then(response => {
         if (!response.ok) {
             return response.json().then(data => {
                 handleValidationErrors(data.errors);
-                throw new Error('バリデーションエラー');
+                throw new Error(data.message);
             });
         }
         return response.json();
@@ -473,16 +472,25 @@ function submitNewRecipeForm(event) {
         showToast('レシピを保存しました');
         window.location.href = '/recipes.html';
     })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('保存に失敗しました。再度お試しください。');
+    .catch(errorMessage => {
+        console.error(errorMessage);
+        alert('入力内容に不備があります。入力フォームを確認してください。');
     });
 }
 
-// レシピ新規作成画面：フォームのバリデーション
+// レシピの新規作成画面：ファイルをBase64に変換する関数
+async function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// レシピ新規作成画面：フォームのバリデーション　TODO:バックエンドからerrorsが返ってこればこれは不要
 function validateForm() {
     clearValidationErrors();
-    const errors = [];
 
     const recipeName = document.getElementById('name').value.trim();
     if (!recipeName) {
@@ -522,11 +530,23 @@ function validateForm() {
 // レシピ新規作成画面：バリデーションエラー発生時のハンドリング
 function handleValidationErrors(errors) {
     errors.forEach(error => {
-        displayValidationError(error.field, error.message);
+        let convertedField;
+        if (error.field === 'recipeDetail.recipe.name') {
+            convertedField = 'recipe.name';
+        } else if (/^recipeDetail\.ingredients\[\d+\]\.name$/.test(error.field)) {
+            const index = parseInt(error.field.match(/\[(\d+)\]/)[1], 10) + 1;
+            convertedField = `ingredient.name.${index}`;
+        } else if (/^recipeDetail\.instructions\[\d+\]\.content$/.test(error.field)) {
+            const index = parseInt(error.field.match(/\[(\d+)\]/)[1], 10) + 1;
+            convertedField = `instruction.content.${index}`;
+        } else {
+            convertedField = null;
+        }
+        displayValidationError(convertedField, error.message);
     });
 }
 
-// レシピ新規作成画面：既存のバリデーションエラーの削除
+// レシピ新規作成画面：既存のバリデーションエラーの削除　TODO:バックエンドからerrorsが返ってこればこれは不要
 function clearValidationErrors() {
     document.querySelectorAll('[data-error-for]').forEach(element => element.remove());
     document.querySelectorAll('.is-invalid').forEach(element => {
@@ -541,7 +561,7 @@ function displayValidationError(fieldName, message) {
         existingError.remove();
     }
 
-    const formField = document.querySelector(`[name="${fieldName}"]`);
+    const formField = document.querySelector(`[name="${fieldName}"]`); //TODO:ここのnameをHTMLのnameと揃える必要あり
     if (formField) {
       const errorElement = document.createElement('div');
       errorElement.className = 'text-danger mt-1';

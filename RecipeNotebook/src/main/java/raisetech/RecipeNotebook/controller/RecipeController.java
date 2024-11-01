@@ -1,7 +1,5 @@
 package raisetech.RecipeNotebook.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,14 +21,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
+import raisetech.RecipeNotebook.domain.RecipeDetailWithImageData;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.ErrorResponse;
-import raisetech.RecipeNotebook.exception.InvalidJsonFormatException;
 import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
 import raisetech.RecipeNotebook.service.RecipeService;
 
@@ -101,8 +98,7 @@ public class RecipeController {
   /**
    * レシピ詳細情報の新規作成です。レシピ詳細情報およびパスを新規作成します。
    *
-   * @param inputRecipeDetailJson 新規作成するレシピ詳細情報(JSON形式)
-   * @param file レシピ画像ファイル
+   * @param inputRecipeDetailWithImageData 新規作成するレシピ詳細情報(JSON形式)
    * @param uriBuilder 新規作成時に作成されるURIのビルダー
    * @return レスポンス（ステータスコード201（CREATED）、新規作成されたURI、新規作成されたレシピ詳細情報）
    */
@@ -123,16 +119,11 @@ public class RecipeController {
   })
   @PostMapping("/new")
   public ResponseEntity<RecipeDetail> createRecipeDetail
-  (@Valid @RequestParam("recipeDetail") String inputRecipeDetailJson,
-      @RequestParam(value = "file", required = false) MultipartFile file,
+  (@Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData,
       UriComponentsBuilder uriBuilder) {
 
-    RecipeDetail inputRecipeDetail;
-    try {
-      inputRecipeDetail = new ObjectMapper().readValue(inputRecipeDetailJson, RecipeDetail.class);
-    } catch (JsonProcessingException e) {
-      throw new InvalidJsonFormatException("Invalid JSON format: " + e.getMessage());
-    }
+    MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
+    RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
 
     RecipeDetail newRecipeDetail = recipeService.createRecipeDetail(inputRecipeDetail, file);
 
