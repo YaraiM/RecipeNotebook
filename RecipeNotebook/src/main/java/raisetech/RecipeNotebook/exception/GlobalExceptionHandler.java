@@ -32,27 +32,9 @@ public class GlobalExceptionHandler {
       errors.add(error);
     });
 
-    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
-        "バリデーションエラーです。",
-        errors);
-
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-  }
-
-  @ExceptionHandler(InvalidJsonFormatException.class)
-  public ResponseEntity<ErrorResponse> handleInvalidJsonFormatException(
-      InvalidJsonFormatException ex) {
-    List<Map<String, String>> errors = new ArrayList<>();
-    Map<String, String> error = new HashMap<>();
-    error.put("field", "recipeDetail");
-    error.put("message", "JSONの形式が不正です: " + ex.getMessage());
-    errors.add(error);
-
     ErrorResponse errorResponse = new ErrorResponse(
-        HttpStatus.BAD_REQUEST,
-        "JSONパースエラーです。",
-        errors
-    );
+        HttpStatus.BAD_REQUEST, "バリデーションエラーです。", errors);
+
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
 

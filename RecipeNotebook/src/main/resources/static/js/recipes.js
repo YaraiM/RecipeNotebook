@@ -35,6 +35,8 @@ function setupSearchForm() {
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+
+        clearValidationErrors()
         const formData = new FormData(form);
         const params = new URLSearchParams();
 
@@ -67,21 +69,25 @@ function loadRecipes(searchParams = new URLSearchParams()) {
     const container = document.getElementById('recipeContainer');
     container.innerHTML = '<div class="loading">読み込み中...</div>';
 
-    // TODO:GrobalExceptionHandllerから返ってくるJSONを返す形に修正
     fetch(`/recipes?${searchParams.toString()}`)
         .then(response => {
-            if (!response.ok) throw new Error('レシピの取得に失敗しました');
+            if (!response.ok) {
+                return response.json().then(data => {
+                    handleValidationErrors(data.errors);
+                    throw new Error(data.message);
+                });
+            }
             return response.json();
         })
         .then(recipeDetails => {
             displayRecipes(recipeDetails);
             updateRecipeCount(recipeDetails.length);
         })
-        .catch(error => {
-            console.error('Error:', error);
+        .catch(errorMessage => {
+            console.error(errorMessage);
             container.innerHTML = `
                 <div class="alert alert-danger" role="alert">
-                    ${error.message || 'レシピの取得に失敗しました。再度お試しください。'}
+                    不正な検索条件が指定されています。
                 </div>
             `;
         });
@@ -137,7 +143,7 @@ function displayRecipes(recipeDetails) {
     });
 }
 
-// レシピ一覧画面：各レシピのお気に入り状態の切り替え　TODO:GrobalExceptionHandllerから返ってくるJSONを返す形に修正
+// レシピ一覧画面：各レシピのお気に入り状態の切り替え
 function toggleFavorite(recipeId) {
     const favoriteButton = document.querySelector(`.favorite-button[data-id='${recipeId}']`);
     const isCurrentlyFavorite = favoriteButton.classList.contains('favorite-active');
@@ -488,46 +494,7 @@ async function convertToBase64(file) {
     });
 }
 
-// レシピ新規作成画面：フォームのバリデーション　TODO:バックエンドからerrorsが返ってこればこれは不要
-function validateForm() {
-    clearValidationErrors();
-
-    const recipeName = document.getElementById('name').value.trim();
-    if (!recipeName) {
-        errors.push({
-            field: `recipe.name`,
-            message: 'レシピ名は必須です'
-        });
-    }
-
-    const ingredients = document.querySelectorAll('.ingredient');
-    ingredients.forEach((ingredient, index) => {
-        const nameInput = ingredient.querySelector('input[name^="ingredient.name"]');
-        const name = nameInput ? nameInput.value.trim() : '';
-        if (!name) {
-            errors.push({
-               field: `ingredient.name.${index + 1}`,
-               message: `材料名は必須です`
-            });
-        }
-    });
-
-    const instructions = document.querySelectorAll('.instruction');
-    instructions.forEach((instruction, index) => {
-        const contentInput = instruction.querySelector('textarea[name^="instruction.content"]');
-        const content = contentInput ? contentInput.value.trim() : '';
-        if (!content) {
-            errors.push({
-                field: `instruction.content.${index + 1}`,
-                message: `調理手順は必須です`
-            });
-        }
-    });
-
-    return errors;
-}
-
-// レシピ新規作成画面：バリデーションエラー発生時のハンドリング
+// バリデーションエラー発生時のハンドリング
 function handleValidationErrors(errors) {
     errors.forEach(error => {
         let convertedField;
@@ -540,13 +507,13 @@ function handleValidationErrors(errors) {
             const index = parseInt(error.field.match(/\[(\d+)\]/)[1], 10) + 1;
             convertedField = `instruction.content.${index}`;
         } else {
-            convertedField = null;
+            convertedField = error.field;
         }
         displayValidationError(convertedField, error.message);
     });
 }
 
-// レシピ新規作成画面：既存のバリデーションエラーの削除　TODO:バックエンドからerrorsが返ってこればこれは不要
+// レシピ新規作成画面：既存のバリデーションエラーの削除
 function clearValidationErrors() {
     document.querySelectorAll('[data-error-for]').forEach(element => element.remove());
     document.querySelectorAll('.is-invalid').forEach(element => {
@@ -554,14 +521,14 @@ function clearValidationErrors() {
     });
 }
 
-// レシピ新規作成画面：バリデーションエラーの表示
+// バリデーションエラーの表示
 function displayValidationError(fieldName, message) {
     const existingError = document.querySelector(`[data-error-for="${fieldName}"]`);
     if (existingError) {
         existingError.remove();
     }
 
-    const formField = document.querySelector(`[name="${fieldName}"]`); //TODO:ここのnameをHTMLのnameと揃える必要あり
+    const formField = document.querySelector(`[name="${fieldName}"]`);
     if (formField) {
       const errorElement = document.createElement('div');
       errorElement.className = 'text-danger mt-1';
@@ -608,5 +575,3 @@ function getInstructions() {
 
     return instructions;
 }
-
-// TODO:バリデーションエラーはサーバーサイドからJSONのエラーメッセージを受け取り、それをフロントエンドのフォームに表示させたい。
