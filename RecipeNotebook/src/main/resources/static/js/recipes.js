@@ -288,7 +288,6 @@ function setupFormSubmission() {
     if (form) {
         // ブラウザのデフォルトのフォームバリデーションを無効化
         form.setAttribute('novalidate', 'true');
-
         form.removeAttribute('action');
         form.addEventListener('submit', submitNewRecipeForm);
     }
@@ -297,11 +296,6 @@ function setupFormSubmission() {
 // レシピ新規作成画面：材料フォームの追加
 function addIngredientForm() {
     const container = document.getElementById('ingredientsContainer');
-    if (!container) {
-        console.error('Ingredients container not found');
-        return;
-    }
-
     const ingredientHtml = createIngredientHtml();
     container.insertAdjacentHTML('beforeend', ingredientHtml);
     setupRemoveButtons();
@@ -310,11 +304,6 @@ function addIngredientForm() {
 // レシピ新規作成画面：手順フォームの追加
 function addInstructionForm() {
     const container = document.getElementById('instructionsContainer');
-    if (!container) {
-        console.error('Instructions container not found');
-        return;
-    }
-
     const instructionHtml = createInstructionHtml();
     container.insertAdjacentHTML('beforeend', instructionHtml);
     setupRemoveButtons();
@@ -431,20 +420,6 @@ async function submitNewRecipeForm(event) {
         base64Image = await convertToBase64(fileInput.files[0]);
     }
 
-//    if (fileInput && fileInput.files.length > 0) {
-//        const file = fileInput.files[0];
-//        // ファイルサイズチェック　TODO:バックエンドから制御したい
-//        if (file.size > 5 * 1024 * 1024) {
-//            alert('画像ファイルは5MB以下にしてください');
-//            return;
-//        }
-//        // MIMEタイプチェック　TODO:バックエンドから制御したい
-//        if (!file.type.startsWith('image/')) {
-//            alert('画像ファイルのみアップロード可能です');
-//            return;
-//        }
-//    }
-
     const recipeDetail = {
         recipe: {
             name: document.getElementById('name').value,
@@ -471,7 +446,6 @@ async function submitNewRecipeForm(event) {
     })
     .then(response => response.json().then(responseJson => {
         if (!response.ok) { // 200番台以外はエラーハンドリング
-            console.log(responseJson);
             if (responseJson.message && responseJson.message.includes('バリデーション')) {
                 handleValidationErrors(responseJson.errors);
                 throw new Error(responseJson.message);
