@@ -115,3 +115,47 @@
 .datepicker {
     z-index: 1050 !important;
 }
+
+.recipe-header {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.recipe-image {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-info {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.recipe-meta {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.btn-group-custom {
+    margin-top: 30px;
+    padding: 20px;
+    border-top: 1px solid #dee2e6;
+}

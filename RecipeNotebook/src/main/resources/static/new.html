@@ -8,90 +8,107 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
         rel="stylesheet">
-  <link href="/css/recipes.css" rel="stylesheet">
+  <link href="css/recipes.css" rel="stylesheet">
 </head>
 
-<body class="py-5">
-<div class="container">
-  <h1 class="mb-4">レシピ新規作成フォーム</h1>
+<body class="bg-light">
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-sm">
+        <div class="card-body p-0">
+          <div class="recipe-header">
+            <h1 class="display-5 mb-4 text-center">レシピ新規作成フォーム</h1>
 
-  <div class="recipe-form">
-    <form id="newRecipeForm" enctype="multipart/form-data">
+            <div class="recipe-form justify-content-center mb-4">
+              <form id="newRecipeForm" enctype="multipart/form-data">
 
-      <!-- レシピ名 -->
-      <div class="mb-3">
-        <label for="name" class="form-label">レシピ名（必須）</label>
-        <input type="text" class="form-control" id="name" name="recipe.name"/>
-      </div>
+                <!-- レシピ名 -->
+                <div class="mb-3">
+                  <label for="name" class="form-label">レシピ名（必須）</label>
+                  <input type="text" class="form-control" id="name" name="recipe.name"/>
+                </div>
 
-      <!-- 画像のアップロード -->
-      <div class="mb-3">
-        <label for="imageFile" class="form-label">レシピ画像（ファイルサイズ：5MB以下までOK）</label>
-        <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*"/>
-      </div>
+                <!-- 画像のアップロード -->
+                <div class="mb-3">
+                  <label for="imageFile"
+                         class="form-label">レシピ画像（ファイルサイズ：5MB以下までOK）</label>
+                  <input type="file" class="form-control" id="imageFile" name="imageFile"
+                         accept="image/*"/>
+                </div>
 
-      <!-- 情報元 -->
-      <div class="mb-3">
-        <label for="recipeSource" class="form-label">レシピ情報元</label>
-        <input type="text" class="form-control" id="recipeSource" name="recipe.recipeSource"/>
-      </div>
+                <!-- 情報元 -->
+                <div class="mb-3">
+                  <label for="recipeSource" class="form-label">レシピ情報元</label>
+                  <input type="text" class="form-control" id="recipeSource"
+                         name="recipe.recipeSource"/>
+                </div>
 
-      <!-- 人数 -->
-      <div class="mb-3">
-        <label for="servings" class="form-label">何人分</label>
-        <input type="text" class="form-control" id="servings" name="recipe.servings"/>
-      </div>
+                <!-- 人数 -->
+                <div class="mb-3">
+                  <label for="servings" class="form-label">何人分</label>
+                  <input type="text" class="form-control" id="servings" name="recipe.servings"/>
+                </div>
 
-      <!-- 備考 -->
-      <div class="mb-3">
-        <label for="remark" class="form-label">備考</label>
-        <input type="text" class="form-control" id="remark" name="recipe.remark"/>
-      </div>
+                <!-- 備考 -->
+                <div class="mb-3">
+                  <label for="remark" class="form-label">備考</label>
+                  <input type="text" class="form-control" id="remark" name="recipe.remark"/>
+                </div>
 
-      <!-- お気に入りチェックボックス -->
-      <div class="mb-3 form-check">
-        <input class="form-check-input" type="checkbox" id="favorite" name="recipe.favorite"/>
-        <label class="form-check-label" for="favorite">お気に入り</label>
-      </div>
+                <!-- お気に入りチェックボックス -->
+                <div class="mb-3 form-check">
+                  <input class="form-check-input" type="checkbox" id="favorite"
+                         name="recipe.favorite"/>
+                  <label class="form-check-label" for="favorite">お気に入り</label>
+                </div>
 
-      <hr>
+                <hr>
 
-      <!-- 材料追加 -->
-      <h4 class="mb-3">
-        材料
-        <button type="button" class="btn btn-sm btn-outline-primary" id="addIngredient">材料を追加
-        </button>
-      </h4>
-      <div id="ingredientsContainer"></div>
+                <!-- 材料追加 -->
+                <p class="mb-3">材料
+                  <button type="button" class="btn btn-sm btn-outline-primary ms-2"
+                          id="addIngredient">材料を追加
+                  </button>
+                </p>
+                <div id="ingredientsContainer"></div>
 
-      <hr>
+                <hr>
 
-      <!-- 調理手順追加 -->
-      <h4 class="mb-3">
-        調理手順
-        <button type="button" class="btn btn-sm btn-outline-primary" id="addInstruction">
-          手順を追加
-        </button>
-      </h4>
-      <div id="instructionsContainer"></div>
+                <!-- 調理手順追加 -->
+                <p class="mb-3">
+                  調理手順
+                  <button type="button" class="btn btn-sm btn-outline-primary ms-2"
+                          id="addInstruction">
+                    手順を追加
+                  </button>
+                </p>
+                <div id="instructionsContainer"></div>
 
-      <div class="row justify-content-center mt-4">
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary">確定</button>
+                <div class="row justify-content-center mt-4">
+                  <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">確定</button>
+                  </div>
+                  <div class="col-auto">
+                    <button type="button" class="btn btn-secondary"
+                            onclick="location.href='recipes.html';">
+                      レシピ一覧に戻る
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-        <div class="col-auto">
-          <button type="button" class="btn btn-secondary" onclick="location.href='recipes.html';">
-            レシピ一覧に戻る
-          </button>
-        </div>
       </div>
-    </form>
+    </div>
   </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module" src="/js/recipes.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="js/recipes.js"></script>
 
 </body>
 </html>

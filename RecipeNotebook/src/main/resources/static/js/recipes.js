@@ -1,18 +1,65 @@
 // DOMContentLoaded時の初期化処理
 document.addEventListener('DOMContentLoaded', function() {
-    initializeAllForms();
+    initializeModal();
+    initializeAllViews();
 });
 
-// すべてのフォームを初期化
-function initializeAllForms() {
-    // 検索フォーム
+// モーダルの初期化
+function initializeModal() {
+    const modalElement = document.getElementById('deleteModal');
+    if (modalElement) {
+        window.deleteModal = new bootstrap.Modal(modalElement);
+
+        // 確認ボタンのイベントリスナーを設定
+        document.getElementById('confirmDelete')?.addEventListener('click', function() {
+            if (window.deleteTargetId === null) return;
+
+            fetch(`/recipes/${window.deleteTargetId}/delete`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('削除に失敗しました');
+                return response.text();
+            })
+            .then(() => {
+                window.deleteModal.hide();
+
+                const　currentPath = window.location.pathname;
+                if (currentPath.includes('detail.html')) {
+                    window.location.href = '/recipes.html';
+                } else {
+                    loadRecipes();
+                }
+
+                showToast('レシピを削除しました');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('削除に失敗しました。再度お試しください。');
+            })
+            .finally(() => {
+                window.deleteTargetId = null;
+            });
+        });
+    }
+}
+
+// 削除の確認
+function confirmDelete(id) {
+    window.deleteTargetId = id;
+    window.deleteModal.show();
+}
+
+// 画面の初期化
+function initializeAllViews() {
+    // 検索・レシピ一覧画面
     if (document.getElementById('searchForm')) {
         setupSearchForm();
         setupDatepickers();
         loadRecipes();
     }
 
-    // 新規登録フォーム
+    // 新規登録画面
     if (document.getElementById('newRecipeForm')) {
         initializeNewRecipeForm();
     }
@@ -122,7 +169,7 @@ function displayRecipes(recipeDetails) {
                             class="edit-button" title="編集">
                         ✎
                     </button>
-                    <button onclick="confirmDelete(${recipe.id})"
+                    <button onclick="window.confirmDelete(${recipe.id})"
                             class="delete-button" title="削除">
                         ×
                     </button>
@@ -135,7 +182,10 @@ function displayRecipes(recipeDetails) {
                             更新日: ${formatDate(recipe.updatedAt)}
                         </small>
                     </p>
-                    <a href="/detail.html" class="btn btn-outline-primary">詳細</a>
+                    <button onclick="location.href='detail.html?id=${recipe.id}'"
+                            class="btn btn-outline-primary" title="詳細">
+                        詳細
+                    </button>
                 </div>
             </div>
         `;
@@ -190,39 +240,6 @@ function updateRecipeCount(count) {
     countElement.textContent = `全${count}件`;
 }
 
-// 削除モーダル
-let deleteTargetId = null;
-const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-
-function confirmDelete(id) {
-    deleteTargetId = id;
-    deleteModal.show();
-}
-
-document.getElementById('confirmDelete').addEventListener('click', function() {
-    if (deleteTargetId === null) return;
-
-    fetch(`/recipes/${deleteTargetId}/delete`, {
-        method: 'DELETE'
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('削除に失敗しました');
-        return response.text();
-    })
-    .then(() => {
-        deleteModal.hide();
-        loadRecipes();
-        showToast('レシピを削除しました');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('削除に失敗しました。再度お試しください。');
-    })
-    .finally(() => {
-        deleteTargetId = null;
-    });
-});
-
 //　トースト設定
 function showToast(message) {
     const toast = document.createElement('div');
@@ -240,7 +257,129 @@ function showToast(message) {
         </div>
     `;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => toast.remove(), 5000);
+}
+
+// レシピ詳細画面：レシピ詳細画面の読み込み
+function loadRecipeDetail(recipeId) {
+    fetch(`/recipes/${recipeId}`)
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message);
+                });
+            }
+            return response.json();
+        })
+        .then(recipeDetail => {
+            displayRecipe(recipeDetail);
+        })
+        .catch(errorMessage => {
+            console.error(errorMessage);
+            alert('レシピの取得に失敗しました。再度お試しください')
+        });
+}
+
+// レシピ詳細画面：レシピ詳細画面の表示
+function displayRecipe(recipeDetail) {
+    const container = document.getElementById('displayRecipeDetail');
+
+    container.innerHTML = '';
+
+    const recipe = recipeDetail.recipe;
+    const ingredients = recipeDetail.ingredients;
+    const instructions = recipeDetail.instructions;
+
+    container.innerHTML = `
+        <div class="recipe-header text-center">
+            <h1 class="display-5 mb-4">${recipe.name || ''}</h1>
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-8">
+                    <img src="${recipe.imagePath || ''}"
+                         class="recipe-image img-fluid"
+                         alt="${recipe.name}">
+                </div>
+            </div>
+        </div>
+
+        <div class="recipe-info">
+            <div class="row align-items-center mb-4">
+                <div class="col-sm-6">
+                    <h5 class="text-muted mb-1">情報元</h5>
+                    <p class="mb-0">${recipe.recipeSource || '記載なし'}</p>
+                </div>
+                <div class="col-sm-6">
+                    <h5 class="text-muted mb-1">分量</h5>
+                    <p class="mb-0">${recipe.servings || '記載なし'}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="recipe-info">
+            <h4 class="mb-3">材料</h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 35%">材料</th>
+                            <th style="width: 35%">分量</th>
+                            <th style="width: 30%">アレンジ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ingredients.map(ingredient => `
+                            <tr>
+                                <td>${ingredient.name || ''}</td>
+                                <td>${ingredient.quantity || ''}</td>
+                                <td>${ingredient.arrange || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="recipe-info">
+            <h4 class="mb-3">調理手順</h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 15%">手順</th>
+                            <th style="width: 55%">内容</th>
+                            <th style="width: 30%">アレンジ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${instructions.map(instruction => `
+                            <tr>
+                                <td>${instruction.stepNumber || ''}</td>
+                                <td>${instruction.content || ''}</td>
+                                <td>${instruction.arrange || ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        ${recipe.remark ? `
+            <div class="recipe-info">
+                <h4 class="mb-3">備考</h4>
+                <p class="mb-0">${recipe.remark}</p>
+            </div>
+        ` : ''}
+
+        <div class="recipe-meta ms-3">
+            <p class="mb-1">作成日：${formatDate(recipe.createdAt)}</p>
+            <p class="mb-0">更新日：${formatDate(recipe.updatedAt)}</p>
+        </div>
+    `;
+
+    const deleteButton = document.querySelector('.btn-outline-danger');
+    if (deleteButton) {
+        deleteButton.onclick = () => window.confirmDelete(recipe.id);
+    }
 }
 
 // レシピ新規作成画面：新規作成画面の初期化処理を追加
