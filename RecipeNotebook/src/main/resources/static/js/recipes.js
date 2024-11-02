@@ -426,20 +426,24 @@ async function submitNewRecipeForm(event) {
 
     const fileInput = document.getElementById('imageFile');
     let base64Image = null;
+
     if (fileInput && fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        // ファイルサイズチェック　TODO:バックエンドから制御したい
-        if (file.size > 5 * 1024 * 1024) {
-            alert('画像ファイルは5MB以下にしてください');
-            return;
-        }
-        // MIMEタイプチェック　TODO:バックエンドから制御したい
-        if (!file.type.startsWith('image/')) {
-            alert('画像ファイルのみアップロード可能です');
-            return;
-        }
-        base64Image = await convertToBase64(file);
+        base64Image = await convertToBase64(fileInput.files[0]);
     }
+
+//    if (fileInput && fileInput.files.length > 0) {
+//        const file = fileInput.files[0];
+//        // ファイルサイズチェック　TODO:バックエンドから制御したい
+//        if (file.size > 5 * 1024 * 1024) {
+//            alert('画像ファイルは5MB以下にしてください');
+//            return;
+//        }
+//        // MIMEタイプチェック　TODO:バックエンドから制御したい
+//        if (!file.type.startsWith('image/')) {
+//            alert('画像ファイルのみアップロード可能です');
+//            return;
+//        }
+//    }
 
     const recipeDetail = {
         recipe: {
@@ -465,22 +469,28 @@ async function submitNewRecipeForm(event) {
         },
         body: JSON.stringify(recipeDetailWithImageData)
     })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => {
-                handleValidationErrors(data.errors);
-                throw new Error(data.message);
-            });
+    .then(response => response.json().then(responseJson => {
+        if (!response.ok) { // 200番台以外はエラーハンドリング
+            console.log(responseJson);
+            if (responseJson.message && responseJson.message.includes('バリデーション')) {
+                handleValidationErrors(responseJson.errors);
+                throw new Error(responseJson.message);
+            } else if (responseJson.message &&
+                      (responseJson.message.includes('ファイルのサイズ') ||
+                       responseJson.message.includes('画像ファイルのみ'))) {
+                throw new Error(responseJson.message);
+            } else {
+                throw new Error('予期しないエラーが発生しました');
+            }
         }
-        return response.json();
-    })
+        return responseJson;
+    }))
     .then(recipeDetail => {
         showToast('レシピを保存しました');
         window.location.href = '/recipes.html';
     })
     .catch(errorMessage => {
-        console.error(errorMessage);
-        alert('入力内容に不備があります。入力フォームを確認してください。');
+        alert(errorMessage);
     });
 }
 

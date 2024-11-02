@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
   /**
-   * リクエストパラメータに有効ではない入力形式で入力した場合にエラーメッセージを返すメソッドです。（バリデーション）
+   * リクエストパラメータに有効ではない入力形式で入力した場合の例外をハンドリングするメソッドです。。（バリデーション）
    *
    * @param ex 例外クラス（有効ではない入力形式）
    * @return 入力違反が発生したフィールドとエラーメッセージ
@@ -33,13 +33,13 @@ public class GlobalExceptionHandler {
     });
 
     ErrorResponse errorResponse = new ErrorResponse(
-        HttpStatus.BAD_REQUEST, "バリデーションエラーです。", errors);
+        HttpStatus.BAD_REQUEST, "バリデーションエラーです。入力フォームを確認してください", errors);
 
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
 
   /**
-   * 存在しないIDなどを指定した場合に例外処理を行うメソッドです。
+   * 存在しないIDなどを指定した場合に例外をハンドリングするメソッドです。
    * ResourceNotFoundExceptionがスローされたとき、ステータス（NotFound）および指定した例外メッセージを返します。
    * @param e 例外クラス（リソースが存在しない）
    * @return エラーレスポンス（ステータスおよびメッセージ）
@@ -53,8 +53,8 @@ public class GlobalExceptionHandler {
   }
 
   /**
-   * レシピIDの不整合などが生じた場合に例外処理を行うメソッドです。
-   * RecipeIdMismatchExceptionがスローされたとき、ステータス（NotFound）および指定した例外メッセージを返します。
+   * レシピIDの不整合などが生じた場合に例外をハンドリングするメソッドです。
+   * RecipeIdMismatchExceptionがスローされたとき、ステータス（BadRequest）および指定した例外メッセージを返します。
    * @param e 例外クラス（レシピIDの不整合）
    * @return エラーレスポンス（ステータスおよびメッセージ）
    */
@@ -66,6 +66,45 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
 
+  /**
+   * 5MBを超える画像をアップロードしようとした場合の例外をハンドリングするメソッドです。
+   * 既存クラスのFileSizeLimitExceededExceptionがスローされたとき、ステータス（BadRequest）および指定した例外メッセージを返します。
+   *
+   * @param e 例外クラス（画像以外のファイル形式を指定）
+   * @return エラーレスポンス（ステータスおよびメッセージ）
+   */
+  @ExceptionHandler
+  public ResponseEntity<ErrorResponse> handleFileSizeLimitExceededCustomException(
+      FileSizeLimitExceededCustomException e) {
+
+    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE,
+        e.getMessage());
+    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(errorResponse);
+  }
+
+  /**
+   * 画像以外のファイル形式をアップロードしようとした場合の例外をハンドリングするメソッドです。
+   * InvalidFileTypeExceptionがスローされたとき、ステータス（BadRequest）および指定した例外メッセージを返します。
+   *
+   * @param e 例外クラス（画像以外のファイル形式を指定）
+   * @return エラーレスポンス（ステータスおよびメッセージ）
+   */
+  @ExceptionHandler
+  public ResponseEntity<ErrorResponse> handleInvalidFileTypeException(
+      InvalidFileTypeException e) {
+
+    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
+        e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
+  /**
+   * 何らかの理由で画像のアップロードに失敗した場合に例外をハンドリングするメソッドです。
+   * FileStorageExceptionがスローされたとき、ステータス（INTERNAL_SERVER_ERROR）および指定した例外メッセージを返します。
+   *
+   * @param e 例外クラス（画像のアップロードに失敗）
+   * @return エラーレスポンス（ステータスおよびメッセージ）
+   */
   @ExceptionHandler
   public ResponseEntity<ErrorResponse> handleFileStorageException(
       FileStorageException e) {

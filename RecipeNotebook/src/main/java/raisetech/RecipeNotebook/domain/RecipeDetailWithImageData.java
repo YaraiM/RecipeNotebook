@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.util.Base64;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +16,8 @@ import lombok.Setter;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
+import raisetech.RecipeNotebook.exception.FileSizeLimitExceededCustomException;
+import raisetech.RecipeNotebook.exception.InvalidFileTypeException;
 
 /**
  * レシピ詳細情報にBase64の画像データを付与したオブジェクトです。
@@ -40,9 +43,28 @@ public class RecipeDetailWithImageData {
       String base64Image = imageData.split(",")[1];
       byte[] imageBytes = Base64.getDecoder().decode(base64Image);
 
+      if (imageBytes.length > 5 * 1024 * 1024) {
+        throw new FileSizeLimitExceededCustomException(
+            "画像ファイルのサイズが大きすぎます。5MB以下にしてください");
+      }
+
+      String mimeType = getMimeType(imageBytes);
+      if (mimeType == null || !mimeType.startsWith("image/")) {
+        throw new InvalidFileTypeException("画像ファイルのみアップロード可能です");
+      }
+
       return new CustomMultipartFile(imageBytes);
+
     } catch (Exception e) {
-      throw new RuntimeException("Base64イメージの変換に失敗", e);
+      throw new RuntimeException("Base64イメージの変換に失敗しました", e);
+    }
+  }
+
+  private String getMimeType(byte[] imageBytes) {
+    try (InputStream is = new ByteArrayInputStream(imageBytes)) {
+      return URLConnection.guessContentTypeFromStream(is);
+    } catch (IOException e) {
+      return "application/octet-stream";
     }
   }
 
