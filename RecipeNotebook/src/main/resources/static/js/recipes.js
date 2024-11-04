@@ -60,6 +60,11 @@ function initializeAllViews() {
         loadRecipes();
     }
 
+    // レシピ詳細画面(recipeIdはdetail.html内で定義)
+    if (document.getElementById('displayRecipeDetail')) {
+        loadRecipeDetail(recipeId)
+    }
+
     // 新規登録画面
     if (document.getElementById('newRecipeForm')) {
         initializeNewRecipeForm();
@@ -166,7 +171,7 @@ function displayRecipes(recipeDetails) {
                   <img src="${recipe.imagePath}" class="img-fit-contain" alt="${recipe.name}">
                 </div>
                 <div class="card-actions">
-                    <button onclick="location.href='/recipes/update'"
+                    <button onclick="location.href='/recipes/${recipe.id}/update'"
                             class="edit-button" title="編集">
                         ✎
                     </button>
@@ -426,7 +431,6 @@ function addInitialForms() {
         addIngredientForm();
     }
 
-    // 手順の初期フォームを追加
     const instructionsContainer = document.getElementById('instructionsContainer');
     if (instructionsContainer && instructionsContainer.children.length === 0) {
         addInstructionForm();
