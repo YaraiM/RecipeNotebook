@@ -30,7 +30,8 @@ function initializeModal() {
                 } else {
                     loadRecipes();
                 }
-
+            })
+            .then(() => {
                 showToast('レシピを削除しました');
             })
             .catch(error => {
@@ -290,7 +291,16 @@ function displayRecipe(recipeDetail) {
     const ingredients = recipeDetail.ingredients;
     const instructions = recipeDetail.instructions;
 
+    const favoriteIcon = recipe.favorite ? '★' : '☆';
+    const favoriteClass = recipe.favorite ? 'favorite-active' : 'favorite-inactive';
+
     container.innerHTML = `
+        <button onclick="toggleFavorite(${recipe.id})"
+                class="favorite-button ${favoriteClass}"
+                data-id="${recipe.id}"
+                title="お気に入り切り替え">
+            ${favoriteIcon}
+        </button>
         <div class="recipe-header text-center">
             <h1 class="display-5 mb-4">${recipe.name || ''}</h1>
             <div class="row justify-content-center mb-4">
@@ -331,7 +341,17 @@ function displayRecipe(recipeDetail) {
                             <tr>
                                 <td>${ingredient.name || ''}</td>
                                 <td>${ingredient.quantity || ''}</td>
-                                <td>${ingredient.arrange || ''}</td>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               ${ingredient.arrange ? 'checked' : ''}
+                                               disabled>
+                                        <label class="form-check-label">
+                                            ${ingredient.arrange ? 'アレンジあり' : 'アレンジなし'}
+                                        </label>
+                                    </div>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -355,7 +375,17 @@ function displayRecipe(recipeDetail) {
                             <tr>
                                 <td>${instruction.stepNumber || ''}</td>
                                 <td>${instruction.content || ''}</td>
-                                <td>${instruction.arrange || ''}</td>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               ${instruction.arrange ? 'checked' : ''}
+                                               disabled>
+                                        <label class="form-check-label">
+                                            ${instruction.arrange ? 'アレンジあり' : 'アレンジなし'}
+                                        </label>
+                                    </div>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -599,8 +629,9 @@ async function submitNewRecipeForm(event) {
         return responseJson;
     }))
     .then(recipeDetail => {
+        const recipeId = recipeDetail.recipe.id;
+        window.location.href = `/recipes/${recipeId}/detail`;
         showToast('レシピを保存しました');
-        window.location.href = '/recipes';
     })
     .catch(errorMessage => {
         alert(errorMessage);
