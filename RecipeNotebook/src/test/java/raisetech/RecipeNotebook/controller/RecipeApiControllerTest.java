@@ -41,8 +41,8 @@ import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
 import raisetech.RecipeNotebook.service.RecipeService;
 
-@WebMvcTest(RecipeController.class)
-class RecipeControllerTest {
+@WebMvcTest(RecipeApiController.class)
+class RecipeApiControllerTest {
 
   @Autowired
   MockMvc mockMvc;

@@ -14,7 +14,7 @@ function initializeModal() {
         document.getElementById('confirmDelete')?.addEventListener('click', function() {
             if (window.deleteTargetId === null) return;
 
-            fetch(`/recipes/${window.deleteTargetId}/delete`, {
+            fetch(`/api/recipes/${window.deleteTargetId}/delete`, {
                 method: 'DELETE'
             })
             .then(response => {
@@ -25,8 +25,8 @@ function initializeModal() {
                 window.deleteModal.hide();
 
                 const　currentPath = window.location.pathname;
-                if (currentPath.includes('detail.html')) {
-                    window.location.href = '/recipes.html';
+                if (currentPath.includes('detail')) {
+                    window.location.href = '/recipes';
                 } else {
                     loadRecipes();
                 }
@@ -116,7 +116,7 @@ function loadRecipes(searchParams = new URLSearchParams()) {
     const container = document.getElementById('recipeContainer');
     container.innerHTML = '<div class="loading">読み込み中...</div>';
 
-    fetch(`/recipes?${searchParams.toString()}`)
+    fetch(`/api/recipes?${searchParams.toString()}`)
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
@@ -165,7 +165,7 @@ function displayRecipes(recipeDetails) {
                   <img src="${recipe.imagePath}" class="img-fit-contain" alt="${recipe.name}">
                 </div>
                 <div class="card-actions">
-                    <button onclick="location.href='/update.html'"
+                    <button onclick="location.href='/recipes/update'"
                             class="edit-button" title="編集">
                         ✎
                     </button>
@@ -182,7 +182,7 @@ function displayRecipes(recipeDetails) {
                             更新日: ${formatDate(recipe.updatedAt)}
                         </small>
                     </p>
-                    <button onclick="location.href='detail.html?id=${recipe.id}'"
+                    <button onclick="location.href='/recipes/detail?id=${recipe.id}'"
                             class="btn btn-outline-primary" title="詳細">
                         詳細
                     </button>
@@ -203,7 +203,7 @@ function toggleFavorite(recipeId) {
     favoriteButton.classList.toggle('favorite-active', newFavorite);
     favoriteButton.classList.toggle('favorite-inactive', !newFavorite);
 
-    fetch(`/recipes/${recipeId}/favorite`, {
+    fetch(`/api/recipes/${recipeId}/favorite`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -262,7 +262,7 @@ function showToast(message) {
 
 // レシピ詳細画面：レシピ詳細画面の読み込み
 function loadRecipeDetail(recipeId) {
-    fetch(`/recipes/${recipeId}`)
+    fetch(`/api/recipes/${recipeId}`)
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
@@ -576,7 +576,7 @@ async function submitNewRecipeForm(event) {
         imageData: base64Image
     }
 
-    fetch('/recipes/new', {
+    fetch('/api/recipes/new', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -600,7 +600,7 @@ async function submitNewRecipeForm(event) {
     }))
     .then(recipeDetail => {
         showToast('レシピを保存しました');
-        window.location.href = '/recipes.html';
+        window.location.href = '/recipes';
     })
     .catch(errorMessage => {
         alert(errorMessage);

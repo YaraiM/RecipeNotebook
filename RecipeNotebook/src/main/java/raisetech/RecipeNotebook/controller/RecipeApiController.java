@@ -35,14 +35,14 @@ import raisetech.RecipeNotebook.service.RecipeService;
  * レシピのCRUD処理を行うREST APIとして実行されるControllerです。
  */
 @RestController
-@RequestMapping("/recipes")
+@RequestMapping("/api/recipes")
 @Validated
-public class RecipeController {
+public class RecipeApiController {
 
   private final RecipeService recipeService;
 
   @Autowired
-  public RecipeController(RecipeService recipeService) {
+  public RecipeApiController(RecipeService recipeService) {
     this.recipeService = recipeService;
   }
 
