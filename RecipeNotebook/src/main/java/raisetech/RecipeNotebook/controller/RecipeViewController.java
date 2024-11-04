@@ -2,6 +2,7 @@ package raisetech.RecipeNotebook.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 public class RecipeViewController {
@@ -11,8 +12,8 @@ public class RecipeViewController {
     return "recipes";
   }
 
-  @GetMapping("/recipes/detail")
-  public String showRecipeDetail() {
+  @GetMapping("/recipes/{id}/detail")
+  public String showRecipeDetail(@PathVariable int id) {
     return "detail";
   }
 
@@ -22,8 +23,8 @@ public class RecipeViewController {
   }
 
   // レシピ更新画面
-  @GetMapping("/recipes/update")
-  public String showUpdateForm() {
+  @GetMapping("/recipes/{id}/update")
+  public String showUpdateForm(@PathVariable int id) {
     return "update";
   }
 

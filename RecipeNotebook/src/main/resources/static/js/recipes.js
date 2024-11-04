@@ -182,7 +182,7 @@ function displayRecipes(recipeDetails) {
                             更新日: ${formatDate(recipe.updatedAt)}
                         </small>
                     </p>
-                    <button onclick="location.href='/recipes/detail?id=${recipe.id}'"
+                    <button onclick="location.href='/recipes/${recipe.id}/detail'"
                             class="btn btn-outline-primary" title="詳細">
                         詳細
                     </button>

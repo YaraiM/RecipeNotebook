@@ -64,8 +64,8 @@
 <script src="/js/recipes.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const recipeId = urlParams.get('id');
+      const path = window.location.pathname;
+      const recipeId = path.split("/")[2];
       loadRecipeDetail(recipeId);
   });
 </script>
