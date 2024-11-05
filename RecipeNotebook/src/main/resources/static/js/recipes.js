@@ -602,8 +602,10 @@ async function submitRecipeForm(event) {
         base64Image = await convertToBase64(fileInput.files[0]);
     }
 
+    const idInput = document.getElementById('recipeId');
     const recipeDetail = {
         recipe: {
+            id: idInput ? idInput.value : null,
             name: document.getElementById('name').value,
             recipeSource: document.getElementById('recipeSource').value,
             servings: document.getElementById('servings').value,
@@ -619,8 +621,15 @@ async function submitRecipeForm(event) {
         imageData: base64Image
     }
 
-    fetch('/api/recipes/new', {
-        method: 'POST',
+    const isNewRecipe = !recipeDetail.recipe.id;
+    const endpoint = isNewRecipe
+        ? '/api/recipes/new'
+        : `/api/recipes/${recipeDetail.recipe.id}/update`;
+
+    const method = isNewRecipe ? 'POST' : 'PUT';
+
+    fetch(endpoint, {
+        method: method,
         headers: {
             'Content-Type': 'application/json',
         },
@@ -743,6 +752,7 @@ function getInstructions() {
     return instructions;
 }
 
+// レシピ編集画面：入力フォームに既存の詳細情報を入力した状態で表示
 function displayPreFilledRecipe(recipeDetail) {
     const container = document.getElementById('recipeForm');
 

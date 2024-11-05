@@ -137,7 +137,7 @@ public class RecipeApiController {
    * レシピ詳細情報の更新です。既存情報の変更や材料・調理手順の追加や削除を行います。
    *
    * @param id 更新するレシピのID
-   * @param inputRecipeDetail 更新するレシピ詳細情報
+   * @param inputRecipeDetailWithImageData 更新するレシピ詳細情報
    * @return レスポンス（ステータスコード200（OK）、更新されたレシピ詳細情報）
    */
   @Operation(summary = "レシピ詳細情報の更新", description = "既存情報の変更や材料・調理手順の追加や削除を行います。")
@@ -157,16 +157,21 @@ public class RecipeApiController {
   })
   @PutMapping("/{id}/update")
   public ResponseEntity<RecipeDetail> updateRecipeDetail
-  (@PathVariable int id, @Valid @RequestBody RecipeDetail inputRecipeDetail) {
+  (@PathVariable int id,
+      @Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData) {
 
-    if (inputRecipeDetail.getRecipe().getId() != id) {
+    if (inputRecipeDetailWithImageData.getRecipeDetail().getRecipe().getId() != id) {
       throw new RecipeIdMismatchException(
-          "パスで指定したID「" + id + "」と更新対象のレシピのID「" + inputRecipeDetail.getRecipe()
+          "パスで指定したID「" + id + "」と更新対象のレシピのID「"
+              + inputRecipeDetailWithImageData.getRecipeDetail().getRecipe()
               .getId()
               + "」は一致させてください");
     }
 
-    RecipeDetail updatedRecipeDetail = recipeService.updateRecipeDetail(inputRecipeDetail);
+    MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
+    RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
+
+    RecipeDetail updatedRecipeDetail = recipeService.updateRecipeDetail(inputRecipeDetail, file);
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 

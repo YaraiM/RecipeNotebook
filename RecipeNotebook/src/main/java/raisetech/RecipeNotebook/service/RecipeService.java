@@ -123,7 +123,7 @@ public class RecipeService {
    * @return 更新されるレシピ詳細情報
    */
   @Transactional
-  public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail) {
+  public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
     int recipeId = recipeDetail.getRecipe().getId();
     if (repository.getRecipe(recipeId) == null) {
       throw new ResourceNotFoundException("レシピID「" + recipeId + "」は存在しません");
@@ -188,6 +188,8 @@ public class RecipeService {
 
     // レシピ本体の更新
     Recipe inputRecipe = recipeDetail.getRecipe();
+    String imagePath = fileStorageService.storeFile(file);
+    inputRecipe.setImagePath(imagePath);
     inputRecipe.setUpdatedAt(LocalDateTime.now());
     repository.updateRecipe(inputRecipe);
 
