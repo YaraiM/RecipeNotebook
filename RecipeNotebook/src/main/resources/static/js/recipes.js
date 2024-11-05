@@ -25,7 +25,7 @@ function initializeModal() {
                 window.deleteModal.hide();
 
                 const　currentPath = window.location.pathname;
-                if (currentPath.includes('detail')) {
+                if (currentPath.includes('detail') || currentPath.includes('update')) {
                     window.location.href = '/recipes';
                 } else {
                     loadRecipes();
@@ -62,12 +62,22 @@ function initializeAllViews() {
 
     // レシピ詳細画面(recipeIdはdetail.html内で定義)
     if (document.getElementById('displayRecipeDetail')) {
-        loadRecipeDetail(recipeId)
+        const path = window.location.pathname;
+        const recipeId = path.split("/")[2];
+        loadRecipeDetail(recipeId);
+        navigateToEdit(recipeId);
     }
 
-    // 新規登録画面
-    if (document.getElementById('newRecipeForm')) {
-        initializeNewRecipeForm();
+    // レシピ新規作成・編集画面
+    if (document.getElementById('recipeForm')) {
+        initializeRecipeForm();
+
+        const path = window.location.pathname;
+        if(path.includes('/update')) {
+            const recipeId = path.split("/")[2];
+            loadRecipeDetail(recipeId);
+            navigateToRecipeDetail(recipeId);
+        }
     }
 }
 
@@ -266,7 +276,7 @@ function showToast(message) {
     setTimeout(() => toast.remove(), 5000);
 }
 
-// レシピ詳細画面：レシピ詳細画面の読み込み
+// レシピ詳細情報の読み込み
 function loadRecipeDetail(recipeId) {
     fetch(`/api/recipes/${recipeId}`)
         .then(response => {
@@ -279,6 +289,7 @@ function loadRecipeDetail(recipeId) {
         })
         .then(recipeDetail => {
             displayRecipe(recipeDetail);
+            displayPreFilledRecipe(recipeDetail);
         })
         .catch(errorMessage => {
             console.error(errorMessage);
@@ -289,6 +300,8 @@ function loadRecipeDetail(recipeId) {
 // レシピ詳細画面：レシピ詳細画面の表示
 function displayRecipe(recipeDetail) {
     const container = document.getElementById('displayRecipeDetail');
+
+    if (!container) return;
 
     container.innerHTML = '';
 
@@ -417,14 +430,14 @@ function displayRecipe(recipeDetail) {
     }
 }
 
-// レシピ新規作成画面：新規作成画面の初期化処理を追加
-function initializeNewRecipeForm() {
+// レシピ新規作成・編集画面：フォームの初期化処理を追加
+function initializeRecipeForm() {
     addInitialForms();
     setupFormButtons();
     setupFormSubmission();
 }
 
-// レシピ新規作成画面：初期フォームの追加
+// レシピ新規作成・編集画面：材料・調理手順フォームの追加
 function addInitialForms() {
     const ingredientsContainer = document.getElementById('ingredientsContainer');
     if (ingredientsContainer && ingredientsContainer.children.length === 0) {
@@ -437,7 +450,7 @@ function addInitialForms() {
     }
 }
 
-// レシピ新規作成画面：材料・調理手順追加フォームボタンの設定
+// レシピ新規作成・編集画面：材料・調理手順追加フォームボタンの設定
 function setupFormButtons() {
     const addIngredientBtn = document.getElementById('addIngredient');
     const addInstructionBtn = document.getElementById('addInstruction');
@@ -455,18 +468,18 @@ function setupFormButtons() {
     }
 }
 
-// レシピ新規作成画面：フォーム送信の設定
+// レシピ新規作成・編集画面：フォーム送信の設定
 function setupFormSubmission() {
-    const form = document.getElementById('newRecipeForm');
+    const form = document.getElementById('recipeForm');
     if (form) {
-        // ブラウザのデフォルトのフォームバリデーションを無効化
+        // ブラウザのデフォルトのフォームバリデーションを無効化（バックエンドでのバリデーションを行うため）
         form.setAttribute('novalidate', 'true');
         form.removeAttribute('action');
-        form.addEventListener('submit', submitNewRecipeForm);
+        form.addEventListener('submit', submitRecipeForm);
     }
 }
 
-// レシピ新規作成画面：材料フォームの追加
+// レシピ新規作成・編集画面：材料フォームの追加
 function addIngredientForm() {
     const container = document.getElementById('ingredientsContainer');
     const ingredientHtml = createIngredientHtml();
@@ -474,7 +487,7 @@ function addIngredientForm() {
     setupRemoveButtons();
 }
 
-// レシピ新規作成画面：手順フォームの追加
+// レシピ新規作成・編集画面：手順フォームの追加
 function addInstructionForm() {
     const container = document.getElementById('instructionsContainer');
     const instructionHtml = createInstructionHtml();
@@ -482,7 +495,7 @@ function addInstructionForm() {
     setupRemoveButtons();
 }
 
-// レシピ新規作成画面：材料のHTML作成
+// レシピ新規作成・編集画面：材料のHTML作成
 function createIngredientHtml() {
     const ingredients = document.querySelectorAll('.ingredient');
     const nextIndex = ingredients.length + 1;
@@ -508,7 +521,7 @@ function createIngredientHtml() {
     `;
 }
 
-// レシピ新規作成画面：手順のHTML作成
+// レシピ新規作成・編集画面：手順のHTML作成
 function createInstructionHtml() {
     const instructions = document.querySelectorAll('.instruction');
     const nextIndex = instructions.length + 1;
@@ -536,7 +549,7 @@ function createInstructionHtml() {
     `;
 }
 
-// レシピ新規作成画面：削除ボタンのセットアップ
+// レシピ新規作成・編集画面：削除ボタンのセットアップ
 function setupRemoveButtons() {
     // 材料の削除ボタン
     document.querySelectorAll('.remove-ingredient').forEach(button => {
@@ -550,7 +563,7 @@ function setupRemoveButtons() {
     });
 }
 
-// レシピ新規作成画面：材料削除のハンドラー関数
+// レシピ新規作成・編集画面：材料削除のハンドラー関数
 function handleIngredientRemove() {
     const ingredients = document.querySelectorAll('.ingredient');
     if (ingredients.length > 1) {
@@ -560,7 +573,7 @@ function handleIngredientRemove() {
     }
 }
 
-// レシピ新規作成画面：手順削除のハンドラー関数
+// レシピ新規作成・編集画面：手順削除のハンドラー関数
 function handleInstructionRemove() {
     const instructions = document.querySelectorAll('.instruction');
     if (instructions.length > 1) {
@@ -571,7 +584,7 @@ function handleInstructionRemove() {
     }
 }
 
-// レシピ新規作成画面：手順番号の更新
+// レシピ新規作成・編集画面：手順番号の更新
 function updateStepNumbers() {
     document.querySelectorAll('.instruction').forEach((instruction, index) => {
         const stepNumberInput = instruction.querySelector('input[name^="instruction.stepNumber"]');
@@ -582,8 +595,8 @@ function updateStepNumbers() {
     });
 }
 
-// レシピ新規作成画面：新規レシピ詳細情報の登録
-async function submitNewRecipeForm(event) {
+// レシピ新規作成・編集画面：フォーム情報の送信
+async function submitRecipeForm(event) {
     event.preventDefault();
 
     const fileInput = document.getElementById('imageFile');
@@ -642,7 +655,7 @@ async function submitNewRecipeForm(event) {
     });
 }
 
-// レシピの新規作成画面：ファイルをBase64に変換する関数
+// レシピ新規作成・編集画面：ファイルをBase64に変換する関数
 async function convertToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -671,7 +684,7 @@ function handleValidationErrors(errors) {
     });
 }
 
-// レシピ新規作成画面：既存のバリデーションエラーの削除
+// 既存のバリデーションエラーの削除
 function clearValidationErrors() {
     document.querySelectorAll('[data-error-for]').forEach(element => element.remove());
     document.querySelectorAll('.is-invalid').forEach(element => {
@@ -702,7 +715,7 @@ function displayValidationError(fieldName, message) {
     }
 }
 
-// レシピ新規作成画面：入力された材料情報の取得
+// レシピ新規作成・編集画面：入力された材料情報の取得
 function getIngredients() {
     const ingredients = [];
     const ingredientContainers = document.querySelectorAll('.ingredient');
@@ -718,7 +731,7 @@ function getIngredients() {
     return ingredients;
 }
 
-// レシピ新規作成画面：入力された調理手順の取得
+// レシピ新規作成・編集画面：入力された調理手順の取得
 function getInstructions() {
     const instructions = [];
     const instructionContainers = document.querySelectorAll('.instruction');
@@ -733,3 +746,52 @@ function getInstructions() {
 
     return instructions;
 }
+
+function displayPreFilledRecipe(recipeDetail) {
+    const container = document.getElementById('recipeForm');
+
+    if (!container) return;
+
+    document.getElementById('recipeId').value = recipeDetail.recipe.id;
+    document.getElementById('name').value = recipeDetail.recipe.name;
+    document.getElementById('recipeSource').value = recipeDetail.recipe.recipeSource;
+    document.getElementById('servings').value = recipeDetail.recipe.servings;
+    document.getElementById('remark').value = recipeDetail.recipe.remark;
+    document.getElementById('favorite').checked = recipeDetail.recipe.favorite;
+
+    recipeDetail.ingredients.forEach((ingredient, index) => {
+        if (index < recipeDetail.ingredients.length - 1) {
+            addIngredientForm();
+        }
+        const ingredientInputs = document.querySelectorAll(`.ingredient:nth-child(${index + 1}) input, .ingredient:nth-child(${index + 1}) textarea`);
+        ingredientInputs[0].value = ingredient.name;
+        ingredientInputs[1].value = ingredient.quantity;
+        ingredientInputs[2].checked = ingredient.arrange;
+    });
+
+    recipeDetail.instructions.forEach((instruction, index) => {
+        if (index < recipeDetail.instructions.length - 1) {
+            addInstructionForm();
+        }
+        const instructionInputs = document.querySelectorAll(`.instruction:nth-child(${index + 1}) input, .instruction:nth-child(${index + 1}) textarea`);
+        instructionInputs[0].value = instruction.stepNumber;
+        instructionInputs[1].value = instruction.content;
+        instructionInputs[2].checked = instruction.arrange;
+    });
+}
+
+// レシピ詳細情報へのリダイレクト
+function navigateToRecipeDetail(recipeId) {
+    document.getElementById('toRecipeDetail').addEventListener('click', () => {
+        window.location.href = `/recipes/${recipeId}/detail`;
+    });
+}
+
+// レシピ編集画面へのリダイレクト
+function navigateToEdit(recipeId) {
+    document.getElementById('toEdit').addEventListener('click', () => {
+        window.location.href = `/recipes/${recipeId}/update`;
+    });
+}
+
+//TODO:画像ファイルの事前入力、updateとnewのfetchを分岐（updateはまだ設定していない）、updateページの「詳細画面に戻る」が効かない
