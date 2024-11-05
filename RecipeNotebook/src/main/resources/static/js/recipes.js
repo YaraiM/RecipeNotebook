@@ -170,8 +170,8 @@ function displayRecipes(recipeDetails) {
         const favoriteClass = recipe.favorite ? 'favorite-active' : 'favorite-inactive';
 
         col.innerHTML = `
-            <div class="card h-100 position-relative">
-            <button onclick="toggleFavorite(${recipe.id})"
+            <div class="card h-100 position-relative" onclick="location.href='/recipes/${recipe.id}/detail'">
+            <button onclick="event.stopPropagation(); toggleFavorite(${recipe.id})"
                     class="favorite-button ${favoriteClass}"
                     data-id="${recipe.id}"
                     title="お気に入り切り替え">
@@ -181,11 +181,11 @@ function displayRecipes(recipeDetails) {
                   <img src="${recipe.imagePath}" class="img-fit-contain" alt="${recipe.name}">
                 </div>
                 <div class="card-actions">
-                    <button onclick="location.href='/recipes/${recipe.id}/update'"
+                    <button onclick="event.stopPropagation(); location.href='/recipes/${recipe.id}/update'"
                             class="edit-button" title="編集">
                         ✎
                     </button>
-                    <button onclick="window.confirmDelete(${recipe.id})"
+                    <button onclick="event.stopPropagation(); window.confirmDelete(${recipe.id})"
                             class="delete-button" title="削除">
                         ×
                     </button>
@@ -198,10 +198,6 @@ function displayRecipes(recipeDetails) {
                             更新日: ${formatDate(recipe.updatedAt)}
                         </small>
                     </p>
-                    <button onclick="location.href='/recipes/${recipe.id}/detail'"
-                            class="btn btn-outline-primary" title="詳細">
-                        詳細
-                    </button>
                 </div>
             </div>
         `;
@@ -794,4 +790,4 @@ function navigateToEdit(recipeId) {
     });
 }
 
-//TODO:画像ファイルの事前入力、updateとnewのfetchを分岐（updateはまだ設定していない）、updateページの「詳細画面に戻る」が効かない
+//TODO:画像ファイルの事前入力、updateとnewのfetchを分岐（updateはまだ設定していない）
