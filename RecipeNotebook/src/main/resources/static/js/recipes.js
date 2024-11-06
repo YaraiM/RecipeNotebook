@@ -760,6 +760,7 @@ function displayPreFilledRecipe(recipeDetail) {
 
     document.getElementById('recipeId').value = recipeDetail.recipe.id;
     document.getElementById('name').value = recipeDetail.recipe.name;
+    document.getElementById('imagePath').src = recipeDetail.recipe.imagePath;
     document.getElementById('recipeSource').value = recipeDetail.recipe.recipeSource;
     document.getElementById('servings').value = recipeDetail.recipe.servings;
     document.getElementById('remark').value = recipeDetail.recipe.remark;
@@ -800,4 +801,4 @@ function navigateToEdit(recipeId) {
     });
 }
 
-//TODO:画像ファイルの事前入力、updateとnewのfetchを分岐（updateはまだ設定していない）
+//TODO:画像ファイルの事前入力(済)。docker起動時にuploadファイル全部消せないか？

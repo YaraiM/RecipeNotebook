@@ -31,10 +31,17 @@
                   <input type="text" class="form-control" id="name" name="recipe.name"/>
                 </div>
 
+                <!-- アップロード済みの画像の表示 -->
+                <div class="justify-content-center mb-3">
+                  <label for="imagePath" class="form-label">レシピ画像</label>
+                  <img class="recipe-small-image img-fluid d-block mx-auto" id="imagePath"
+                       alt="レシピ画像">
+                </div>
+
                 <!-- 画像のアップロード -->
                 <div class="mb-3">
                   <label for="imageFile"
-                         class="form-label">レシピ画像（ファイルサイズ：5MB以下までOK）</label>
+                         class="form-label">レシピ画像を変更したい場合はファイルを選択（ファイルサイズ：5MB以下までOK）</label>
                   <input type="file" class="form-control" id="imageFile" name="imageFile"
                          accept="image/*"/>
                 </div>

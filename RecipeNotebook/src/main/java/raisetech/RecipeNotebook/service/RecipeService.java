@@ -188,8 +188,16 @@ public class RecipeService {
 
     // レシピ本体の更新
     Recipe inputRecipe = recipeDetail.getRecipe();
-    String imagePath = fileStorageService.storeFile(file);
-    inputRecipe.setImagePath(imagePath);
+
+    String existingImagePath = repository.getRecipe(recipeId).getImagePath();
+    if (file != null && !file.isEmpty()) {
+      fileStorageService.deleteFile(existingImagePath);
+      String updateImagePath = fileStorageService.storeFile(file);
+      inputRecipe.setImagePath(updateImagePath);
+    } else {
+      inputRecipe.setImagePath(existingImagePath);
+    }
+
     inputRecipe.setUpdatedAt(LocalDateTime.now());
     repository.updateRecipe(inputRecipe);
 
