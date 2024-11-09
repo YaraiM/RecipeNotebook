@@ -800,5 +800,3 @@ function navigateToEdit(recipeId) {
         window.location.href = `/recipes/${recipeId}/update`;
     });
 }
-
-//TODO:画像ファイルの事前入力(済)。docker起動時にuploadファイル全部消せないか？
