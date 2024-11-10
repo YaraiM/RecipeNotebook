@@ -129,7 +129,7 @@ public class RecipeService {
       throw new ResourceNotFoundException("レシピID「" + recipeId + "」は存在しません");
     }
 
-    //入力されたレシピ詳細情報の材料および調理手順のレシピIDにレシピIDをセット
+    // 入力されたレシピ詳細情報の材料および調理手順のレシピIDにレシピIDをセット
     for (Ingredient ingredient : recipeDetail.getIngredients()) {
       ingredient.setRecipeId(recipeId);
     }

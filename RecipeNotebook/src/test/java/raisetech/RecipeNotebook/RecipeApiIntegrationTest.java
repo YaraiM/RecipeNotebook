@@ -60,7 +60,7 @@ public class RecipeApiIntegrationTest {
   void レシピの一覧検索_リクエストパラメータに応じたレシピ詳細情報が存在する場合にその一覧を取得できること(
       RecipeSearchCriteria inputCriteria, List<RecipeDetail> expectedRecipeDetails)
       throws Exception {
-    mockMvc.perform(get("/recipes")
+    mockMvc.perform(get("/api/recipes")
             .param("recipeNames", getParamStringListOrNull(inputCriteria.getRecipeNames()))
             .param("favoriteRecipe", getParamBooleanOrNull(inputCriteria.getFavoriteRecipe()))
             .param("createDateFrom", getParamLocalDateOrNull(inputCriteria.getCreateDateFrom()))
@@ -146,7 +146,7 @@ public class RecipeApiIntegrationTest {
   void レシピの一覧検索_リクエストパラメータに合致するデータがない場合に検索結果が0件であること(
       RecipeSearchCriteria inputCriteria)
       throws Exception {
-    mockMvc.perform(get("/recipes")
+    mockMvc.perform(get("/api/recipes")
             .param("recipeNames", getParamStringListOrNull(inputCriteria.getRecipeNames()))
             .param("favoriteRecipe", getParamBooleanOrNull(inputCriteria.getFavoriteRecipe()))
             .param("createDateFrom", getParamLocalDateOrNull(inputCriteria.getCreateDateFrom()))
@@ -190,7 +190,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの検索_正常系_存在するIDを指定した場合にレシピ詳細情報が返ってくること()
       throws Exception {
-    mockMvc.perform(get("/recipes/{id}", 1))
+    mockMvc.perform(get("/api/recipes/{id}", 1))
         .andExpect(status().isOk())
         .andExpect(
             jsonPath("$.recipe.id").value(createExpectedRecipeDetail1().getRecipe().getId()))
@@ -249,7 +249,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの検索_異常系_存在しないレシピIDを指定したときに例外がスローされること()
       throws Exception {
-    mockMvc.perform(get("/recipes/{id}", 999))
+    mockMvc.perform(get("/api/recipes/{id}", 999))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("レシピID「" + 999 + "」は存在しません"));
   }
@@ -257,7 +257,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの新規作成_JSON形式のリクエストボディを指定して新規作成できること()
       throws Exception {
-    mockMvc.perform(post("/recipes/new")
+    mockMvc.perform(post("/api/recipes/new")
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -315,7 +315,7 @@ public class RecipeApiIntegrationTest {
             .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isCreated())
         .andExpect(header().string("Location",
-            containsString("/recipes/" + createExpectedRecipeDetail3().getRecipe().getId())))
+            containsString("/api/recipes/" + createExpectedRecipeDetail3().getRecipe().getId())))
         .andExpect(
             jsonPath("$.recipe.id").value(createExpectedRecipeDetail3().getRecipe().getId()))
         .andExpect(
@@ -368,72 +368,73 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの更新_正常系_JSON形式のリクエストボディを指定して更新できること()
       throws Exception {
-    mockMvc.perform(put("/recipes/{id}/update", createExpectedRecipeDetail1().getRecipe().getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("""
-                {
-                    "recipe": {
-                        "id": 1,
-                        "name": "卵焼きrev",
-                        "imagePath": "test1/path/rev",
-                        "recipeSource": "https://------1/rev.com",
-                        "servings": "2人分rev",
-                        "remark": "備考欄1rev",
-                        "favorite": true
-                    },
-                    "ingredients": [
-                        {
+    mockMvc.perform(
+            put("/api/recipes/{id}/update", createExpectedRecipeDetail1().getRecipe().getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "recipe": {
                             "id": 1,
-                            "name": "卵rev",
-                            "quantity": "3個rev",
-                            "arrange": true
+                            "name": "卵焼きrev",
+                            "imagePath": "test1/path/rev",
+                            "recipeSource": "https://------1/rev.com",
+                            "servings": "2人分rev",
+                            "remark": "備考欄1rev",
+                            "favorite": true
                         },
-                        {
-                            "id": 2,
-                            "name": "サラダ油rev",
-                            "quantity": "適量rev",
-                            "arrange": true
-                        },
-                        {
-                            "id": 3,
-                            "name": "醤油rev",
-                            "quantity": "大さじ1/2rev",
-                            "arrange": true
-                        },
-                        {
-                            "name": "胡椒",
-                            "quantity": "適量",
-                            "arrange": true
-                        }
-                    ],
-                    "instructions": [
-                        {
-                            "id": 1,
-                            "stepNumber": 1,
-                            "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
-                            "arrange": true
-                        },
-                        {
-                            "id": 2,
-                            "stepNumber": 2,
-                            "content": "フライパンに油をたらし、火にかけるrev",
-                            "arrange": true
-                        },
-                        {
-                            "id": 3,
-                            "stepNumber": 3,
-                            "content": "卵液を1/3くらいフライパンに入れて焼き、巻くrev",
-                            "arrange": true
-                        },
-                        {
-                            "stepNumber": 4,
-                            "content": "胡椒をかけて完成",
-                            "arrange": true
-                        }
-                    ]
-                }
-                """)
-            .accept(MediaType.APPLICATION_JSON))
+                        "ingredients": [
+                            {
+                                "id": 1,
+                                "name": "卵rev",
+                                "quantity": "3個rev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 2,
+                                "name": "サラダ油rev",
+                                "quantity": "適量rev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 3,
+                                "name": "醤油rev",
+                                "quantity": "大さじ1/2rev",
+                                "arrange": true
+                            },
+                            {
+                                "name": "胡椒",
+                                "quantity": "適量",
+                                "arrange": true
+                            }
+                        ],
+                        "instructions": [
+                            {
+                                "id": 1,
+                                "stepNumber": 1,
+                                "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 2,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかけるrev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 3,
+                                "stepNumber": 3,
+                                "content": "卵液を1/3くらいフライパンに入れて焼き、巻くrev",
+                                "arrange": true
+                            },
+                            {
+                                "stepNumber": 4,
+                                "content": "胡椒をかけて完成",
+                                "arrange": true
+                            }
+                        ]
+                    }
+                    """)
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(
             jsonPath("$.recipe.id").value(createUpdatedRecipeDetail1().getRecipe().getId()))
@@ -495,7 +496,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの更新_異常系_パスのIDとリクエストボディのレシピIDが異なる場合に例外をスローすること()
       throws Exception {
-    mockMvc.perform(MockMvcRequestBuilders.put("/recipes/{id}/update", 999)
+    mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update", 999)
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -536,7 +537,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの更新_異常系_存在しないレシピIDを指定したときに例外をスローすること()
       throws Exception {
-    mockMvc.perform(MockMvcRequestBuilders.put("/recipes/{id}/update", 999)
+    mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update", 999)
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -576,7 +577,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの更新_異常系_存在しない材料IDを指定したときに例外をスローすること()
       throws Exception {
-    mockMvc.perform(MockMvcRequestBuilders.put("/recipes/{id}/update",
+    mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update",
                 createExpectedRecipeDetail1().getRecipe().getId())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
@@ -617,7 +618,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの更新_異常系_存在しない調理手順IDを指定したときに例外をスローすること()
       throws Exception {
-    mockMvc.perform(MockMvcRequestBuilders.put("/recipes/{id}/update",
+    mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update",
                 createExpectedRecipeDetail1().getRecipe().getId())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
@@ -662,7 +663,7 @@ public class RecipeApiIntegrationTest {
       throws Exception {
     int recipeId = createExpectedRecipeDetail1().getRecipe().getId();
 
-    mockMvc.perform(delete("/recipes/{id}/delete", recipeId))
+    mockMvc.perform(delete("/api/recipes/{id}/delete", recipeId))
         .andExpect(status().isOk())
         .andExpect(content().string("レシピを削除しました"));
 
@@ -674,7 +675,7 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの削除_異常系_存在しないレシピIDを指定したときに例外がスローされること()
       throws Exception {
-    mockMvc.perform(delete("/recipes/{id}/delete", 999))
+    mockMvc.perform(delete("/api/recipes/{id}/delete", 999))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("レシピID「" + 999 + "」は存在しません"));
   }

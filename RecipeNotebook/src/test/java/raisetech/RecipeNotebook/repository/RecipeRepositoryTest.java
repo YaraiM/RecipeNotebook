@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -276,7 +277,15 @@ class RecipeRepositoryTest {
 
   }
 
-  //  TODO：お気に入りフラグの更新機能をテスト
+  @Test
+  void 指定したIDのレシピのお気に入り状態が切り替わること() {
+    sut.updateFavoriteStatus(1, true);
+
+    Recipe actual = sut.getRecipe(1);
+
+    assertTrue(actual.isFavorite());
+    
+  }
 
   @Test
   void 指定したIDのレシピを削除できること() {

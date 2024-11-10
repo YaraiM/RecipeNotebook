@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -48,7 +49,7 @@ class RecipeApiControllerTest {
   MockMvc mockMvc;
 
   @MockBean
-  RecipeService service;
+  RecipeService recipeService;
 
   private Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -60,11 +61,11 @@ class RecipeApiControllerTest {
   @Test
   void レシピの一覧検索_サービスの処理が適切に呼び出されて処理成功のレスポンスが返ってくること()
       throws Exception {
-    mockMvc.perform(get("/recipes"))
+    mockMvc.perform(get("/api/recipes"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-    verify(service, times(1)).searchRecipeList(any(RecipeSearchCriteria.class));
+    verify(recipeService, times(1)).searchRecipeList(any(RecipeSearchCriteria.class));
   }
 
   @Test
@@ -72,13 +73,13 @@ class RecipeApiControllerTest {
       throws Exception {
     int recipeId = 1;
     RecipeDetail mockDetail = createTestRecipeDetail(recipeId);
-    when(service.searchRecipeDetail(recipeId)).thenReturn(mockDetail);
+    when(recipeService.searchRecipeDetail(recipeId)).thenReturn(mockDetail);
 
-    mockMvc.perform(get("/recipes/{id}", recipeId))
+    mockMvc.perform(get("/api/recipes/{id}", recipeId))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-    verify(service, times(1)).searchRecipeDetail(recipeId);
+    verify(recipeService, times(1)).searchRecipeDetail(recipeId);
   }
 
   @Test
@@ -86,57 +87,70 @@ class RecipeApiControllerTest {
       throws Exception {
     int newRecipeId = 2;
     RecipeDetail mockRecipeDetail = createTestRecipeDetail(newRecipeId);
-    when(service.createRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class))).thenReturn(
-        mockRecipeDetail);
 
-    mockMvc.perform(post("/recipes/new")
+    // JSONからサービスメソッドに渡される引数をキャプチャ
+    ArgumentCaptor<RecipeDetail> recipeDetailCaptor = ArgumentCaptor.forClass(RecipeDetail.class);
+    ArgumentCaptor<MultipartFile> fileCaptor = ArgumentCaptor.forClass(MultipartFile.class);
+
+    when(recipeService.createRecipeDetail(recipeDetailCaptor.capture(), fileCaptor.capture()))
+        .thenReturn(mockRecipeDetail);
+
+    mockMvc.perform(post("/api/recipes/new")
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                    {
-                         "recipe": {
-                             "name": "炒り卵",
-                             "imagePath": "test3/path",
-                             "recipeSource": "https://------3.com",
-                             "servings": "3人分",
-                             "remark": "備考欄3",
-                             "favorite": false
-                         },
-                         "ingredients": [
-                             {
-                                 "name": "卵",
-                                 "quantity": "3個",
-                                 "arrange": false
-                             },
-                             {
-                                 "name": "サラダ油",
-                                 "quantity": "適量",
-                                 "arrange": false
-                             },
-                             {
-                                 "name": "マヨネーズ",
-                                 "quantity": "大さじ2",
-                                 "arrange": true
-                             },
-                             {
-                                 "name": "砂糖",
-                                 "quantity": "大さじ1/2",
-                                 "arrange": false
-                             }
-                         ],
-                         "instructions": [
-                             {
-                                 "stepNumber": 1,
-                                 "content": "卵を溶いて調味料を混ぜ、卵液を作る",
-                                 "arrange": false
-                             },
-                             {
-                                 "stepNumber": 2,
-                                 "content": "フライパンに油をたらし、火にかける",
-                                 "arrange": false
-                             }
-                         ]
-                     }
+                        {
+                            "recipeDetail": {
+                                "recipe": {
+                                    "name": "炒り卵",
+                                    "imagePath": "test3/path",
+                                    "recipeSource": "https://------3.com",
+                                    "servings": "3人分",
+                                    "remark": "備考欄3",
+                                    "favorite": false
+                                },
+                                "ingredients": [
+                                    {
+                                        "name": "卵",
+                                        "quantity": "3個",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "name": "サラダ油",
+                                        "quantity": "適量",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "name": "マヨネーズ",
+                                        "quantity": "大さじ2",
+                                        "arrange": true
+                                    },
+                                    {
+                                        "name": "砂糖",
+                                        "quantity": "大さじ1/2",
+                                        "arrange": false
+                                    }
+                                ],
+                                "instructions": [
+                                    {
+                                        "stepNumber": 1,
+                                        "content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "stepNumber": 2,
+                                        "content": "フライパンに油をたらし、火にかける",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "stepNumber": 3,
+                                        "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
+                                        "arrange": false
+                                    }
+                                ]
+                            },
+                            "imageData": null
+                        }
                     """
             ))
         .andExpect(status().isCreated())
@@ -144,7 +158,8 @@ class RecipeApiControllerTest {
             "http://localhost/recipes/" + mockRecipeDetail.getRecipe().getId()))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-    verify(service, times(1)).createRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class));
+    verify(recipeService, times(1)).createRecipeDetail(recipeDetailCaptor.capture(),
+        fileCaptor.capture());
   }
 
   @Test
@@ -152,88 +167,91 @@ class RecipeApiControllerTest {
       throws Exception {
     int existingRecipeId = 3;
     RecipeDetail mockRecipeDetail = createTestRecipeDetail(existingRecipeId);
-    when(service.updateRecipeDetail(any(RecipeDetail.class))).thenReturn(mockRecipeDetail);
 
-    mockMvc.perform(put("/recipes/{id}/update", existingRecipeId)
+    // JSONからサービスメソッドに渡される引数をキャプチャ
+    ArgumentCaptor<RecipeDetail> recipeDetailCaptor = ArgumentCaptor.forClass(RecipeDetail.class);
+    ArgumentCaptor<MultipartFile> fileCaptor = ArgumentCaptor.forClass(MultipartFile.class);
+
+    when(recipeService.updateRecipeDetail(recipeDetailCaptor.capture(),
+        fileCaptor.capture())).thenReturn(
+        mockRecipeDetail);
+
+    mockMvc.perform(put("/api/recipes/{id}/update", existingRecipeId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                    {
-                        "recipe": {
-                            "id": 3,
-                            "name": "炒り卵",
-                            "imagePath": "test3/path",
-                            "recipeSource": "https://------3.com",
-                            "servings": "3人分",
-                            "remark": "備考欄3",
-                            "favorite": false
-                        },
-                        "ingredients": [
-                            {
-                                "id": 8,
-                                "recipeId": 3,
-                                "name": "卵",
-                                "quantity": "3個",
-                                "arrange": false
+                        {
+                            "recipeDetail": {
+                                "recipe": {
+                                    "id": 3,
+                                    "name": "炒り卵",
+                                    "imagePath": "test3/path",
+                                    "recipeSource": "https://------3.com",
+                                    "servings": "3人分",
+                                    "remark": "備考欄3",
+                                    "favorite": false
+                                },
+                                "ingredients": [
+                                    {
+                                        "id": 8,
+                                        "name": "卵",
+                                        "quantity": "3個",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "id": 9,
+                                        "name": "サラダ油",
+                                        "quantity": "適量",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "id": 10,
+                                        "name": "マヨネーズ",
+                                        "quantity": "大さじ2",
+                                        "arrange": true
+                                    },
+                                    {
+                                        "id": 11,
+                                        "name": "砂糖",
+                                        "quantity": "大さじ1/2",
+                                        "arrange": false
+                                    }
+                                ],
+                                "instructions": [
+                                    {
+                                        "id": 8,
+                                        "stepNumber": 1,
+                                        "content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "id": 9,
+                                        "stepNumber": 2,
+                                        "content": "フライパンに油をたらし、火にかける",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "id": 10,
+                                        "stepNumber": 3,
+                                        "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
+                                        "arrange": false
+                                    },
+                                    {
+                                        "stepNumber": 4,
+                                        "content": "黒コショウをかけて味変",
+                                        "arrange": true
+                                    }
+                                ]
                             },
-                            {
-                                "id": 9,
-                                "recipeId": 3,
-                                "name": "サラダ油",
-                                "quantity": "適量",
-                                "arrange": false
-                            },
-                            {
-                                "id": 10,
-                                "recipeId": 3,
-                                "name": "マヨネーズ",
-                                "quantity": "大さじ2",
-                                "arrange": true
-                            },
-                            {
-                                "id": 11,
-                                "recipeId": 3,
-                                "name": "砂糖",
-                                "quantity": "大さじ1/2",
-                                "arrange": false
-                            }
-                        ],
-                        "instructions": [
-                            {
-                                "id": 8,
-                                "recipeId": 3,
-                                "stepNumber": 1,
-                                "content": "卵を溶いて調味料を混ぜ、卵液を作る",
-                                "arrange": false
-                            },
-                            {
-                                "id": 9,
-                                "recipeId": 3,
-                                "stepNumber": 2,
-                                "content": "フライパンに油をたらし、火にかける",
-                                "arrange": false
-                            },
-                            {
-                                "id": 10,
-                                "recipeId": 3,
-                                "stepNumber": 3,
-                                "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
-                                "arrange": false
-                            },
-                            {
-                                "recipeId": 3,
-                                "stepNumber": 4,
-                                "content": "黒コショウをかけて味変",
-                                "arrange": true
-                            }
-                        ]
-                    }
+                            "imageData": null
+                        }
                     """
             ))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-    verify(service, times(1)).updateRecipeDetail(any(RecipeDetail.class));
+    verify(recipeService, times(1)).updateRecipeDetail(recipeDetailCaptor.capture(),
+        fileCaptor.capture());
   }
 
   @Test
@@ -247,82 +265,77 @@ class RecipeApiControllerTest {
             + "」は一致させてください";
 
     doThrow(new RecipeIdMismatchException(expectedErrorMessage))
-        .when(service).updateRecipeDetail(any(RecipeDetail.class));
+        .when(recipeService).updateRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class));
 
-    mockMvc.perform(put("/recipes/{id}/update", pathId)
+    mockMvc.perform(put("/api/recipes/{id}/update", pathId)
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                    {
-                        "recipe": {
-                            "id": 2,
-                            "name": "炒り卵",
-                            "imagePath": "test3/path",
-                            "recipeSource": "https://------3.com",
-                            "servings": "3人分",
-                            "remark": "備考欄3",
-                            "favorite": false
-                        },
-                        "ingredients": [
-                            {
-                                "id": 8,
-                                "recipeId": 2,
-                                "name": "卵",
-                                "quantity": "3個",
-                                "arrange": false
-                            },
-                            {
-                                "id": 9,
-                                "recipeId": 2,
-                                "name": "サラダ油",
-                                "quantity": "適量",
-                                "arrange": false
-                            },
-                            {
-                                "id": 10,
-                                "recipeId": 2,
-                                "name": "マヨネーズ",
-                                "quantity": "大さじ2",
-                                "arrange": true
-                            },
-                            {
-                                "id": 11,
-                                "recipeId": 2,
-                                "name": "砂糖",
-                                "quantity": "大さじ1/2",
-                                "arrange": false
-                            }
-                        ],
-                        "instructions": [
-                            {
-                                "id": 8,
-                                "recipeId": 2,
-                                "stepNumber": 1,
-                                "content": "卵を溶いて調味料を混ぜ、卵液を作る",
-                                "arrange": false
-                            },
-                            {
-                                "id": 9,
-                                "recipeId": 2,
-                                "stepNumber": 2,
-                                "content": "フライパンに油をたらし、火にかける",
-                                "arrange": false
-                            },
-                            {
-                                "id": 10,
-                                "recipeId": 2,
-                                "stepNumber": 3,
-                                "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
-                                "arrange": false
-                            },
-                            {
-                                "recipeId": 2,
-                                "stepNumber": 4,
-                                "content": "黒コショウをかけて味変",
-                                "arrange": true
-                            }
-                        ]
-                    }
+                       {
+                           "recipeDetail": {
+                               "recipe": {
+                                   "id": 2,
+                                   "name": "炒り卵",
+                                   "imagePath": "test3/path",
+                                   "recipeSource": "https://------3.com",
+                                   "servings": "3人分",
+                                   "remark": "備考欄3",
+                                   "favorite": false
+                               },
+                               "ingredients": [
+                                   {
+                                       "id": 8,
+                                       "name": "卵",
+                                       "quantity": "3個",
+                                       "arrange": false
+                                   },
+                                   {
+                                       "id": 9,
+                                       "name": "サラダ油",
+                                       "quantity": "適量",
+                                       "arrange": false
+                                   },
+                                   {
+                                       "id": 10,
+                                       "name": "マヨネーズ",
+                                       "quantity": "大さじ2",
+                                       "arrange": true
+                                   },
+                                   {
+                                       "id": 11,
+                                       "name": "砂糖",
+                                       "quantity": "大さじ1/2",
+                                       "arrange": false
+                                   }
+                               ],
+                               "instructions": [
+                                   {
+                                       "id": 8,
+                                       "stepNumber": 1,
+                                       "content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                                       "arrange": false
+                                   },
+                                   {
+                                       "id": 9,
+                                       "stepNumber": 2,
+                                       "content": "フライパンに油をたらし、火にかける",
+                                       "arrange": false
+                                   },
+                                   {
+                                       "id": 10,
+                                       "stepNumber": 3,
+                                       "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
+                                       "arrange": false
+                                   },
+                                   {
+                                       "stepNumber": 4,
+                                       "content": "黒コショウをかけて味変",
+                                       "arrange": true
+                                   }
+                               ]
+                           },
+                           "imageData": null
+                       }
                     """
             ))
         .andExpect(status().isBadRequest())
@@ -330,19 +343,34 @@ class RecipeApiControllerTest {
 
   }
 
-//  TODO：お気に入りフラグの切り替え機能をテスト
+  @Test
+  void お気に入りフラグの切替_エンドポイントでIDに紐づくレシピのお気に入り切替処理が呼び出され処理成功レスポンスとメッセージが返ること()
+      throws Exception {
+    int recipeId = 1;
+    boolean favorite = false;
+
+    mockMvc.perform(put("/api/recipes/{id}/favorite", recipeId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"favorite\": false}")
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("text/plain;charset=UTF-8"))
+        .andExpect(content().string("お気に入りを変更しました"));
+
+    verify(recipeService, times(1)).updateFavoriteStatus(recipeId, favorite);
+  }
 
   @Test
   void レシピの削除_エンドポイントでサービスの処理が適切に呼び出され処理成功のレスポンスとメッセージが返ってくること()
       throws Exception {
     int recipeId = 1;
 
-    mockMvc.perform(delete("/recipes/{id}/delete", recipeId))
+    mockMvc.perform(delete("/api/recipes/{id}/delete", recipeId))
         .andExpect(status().isOk())
         .andExpect(content().contentType("text/plain;charset=UTF-8"))
         .andExpect(content().string("レシピを削除しました"));
 
-    verify(service, times(1)).deleteRecipe(recipeId);
+    verify(recipeService, times(1)).deleteRecipe(recipeId);
   }
 
   @Test

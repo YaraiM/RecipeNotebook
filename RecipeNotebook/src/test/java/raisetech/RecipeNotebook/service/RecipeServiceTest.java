@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -24,6 +25,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -41,7 +43,7 @@ class RecipeServiceTest {
   @Mock
   private FileStorageService fileStorageService;
 
-  private RecipeService sut; // Mockitoを使用時は@Autowiredが適切に動作しない場合がある
+  private RecipeService sut;
 
   @BeforeEach
   void setUp() {
@@ -145,32 +147,41 @@ class RecipeServiceTest {
     List<Instruction> instructions = createMockInstructions(List.of(1));
     RecipeDetail recipeDetail = new RecipeDetail(recipe, ingredients, instructions);
 
+    when(fileStorageService.storeFile(any(MultipartFile.class))).thenReturn(
+        "testPath");
+
+    MultipartFile mockFile = mock(MultipartFile.class);
     LocalDateTime testStartedTime = LocalDateTime.now();
 
-    RecipeDetail actual = sut.createRecipeDetail(recipeDetail, null);
+    RecipeDetail actual = sut.createRecipeDetail(recipeDetail, mockFile);
+    String actualImagePath = actual.getRecipe().getImagePath();
     LocalDateTime actualCreatedAt = actual.getRecipe().getCreatedAt();
 
+    verify(fileStorageService, times(1)).storeFile(any(MultipartFile.class));
     verify(repository, times(1)).registerRecipe(recipe);
     verify(repository, times(2)).registerIngredient(any(Ingredient.class));
     verify(repository, times(2)).registerInstruction(any(Instruction.class));
 
-    assertAll("Multiple assertions", () -> assertThat(
-        actualCreatedAt.isAfter(testStartedTime) || actualCreatedAt.isEqual(testStartedTime),
-        is(true)), () -> {
-      for (Ingredient ingredient : actual.getIngredients()) {
-        assertThat(ingredient.getRecipeId(), is(actual.getRecipe().getId()));
-      }
-      for (int i = 0; i < actual.getInstructions().size(); i++) {
-        Instruction instruction = actual.getInstructions().get(i);
-        assertThat(instruction.getRecipeId(), is(actual.getRecipe().getId()));
-        assertThat(instruction.getStepNumber(), is(i + 1));
-      }
-    });
+    assertAll("Multiple assertions",
+        () -> assertThat(actualImagePath, is("testPath")),
+        () -> assertThat(
+            actualCreatedAt.isAfter(testStartedTime) || actualCreatedAt.isEqual(testStartedTime),
+            is(true)),
+        () -> {
+          for (Ingredient ingredient : actual.getIngredients()) {
+            assertThat(ingredient.getRecipeId(), is(actual.getRecipe().getId()));
+          }
+          for (int i = 0; i < actual.getInstructions().size(); i++) {
+            Instruction instruction = actual.getInstructions().get(i);
+            assertThat(instruction.getRecipeId(), is(actual.getRecipe().getId()));
+            assertThat(instruction.getStepNumber(), is(i + 1));
+          }
+        });
 
   }
 
   @Test
-  void レシピ詳細情報の更新_正常系_既存データの更新_リポジトリメソッドの呼び出しと更新日時の登録が適切に行われていること() {
+  void レシピ詳細情報の更新_正常系_既存データの更新_リポジトリメソッドの呼び出しとイメージファイルパスの更新と更新日時の登録が適切に行われていること() {
     Recipe recipe = createMockRecipes(List.of(1)).getFirst();
     List<Ingredient> ingredients = createMockIngredients(List.of(1));
     List<Instruction> instructions = createMockInstructions(List.of(1));
@@ -178,6 +189,7 @@ class RecipeServiceTest {
     RecipeDetail inputRecipeDetail = new RecipeDetail(recipe, ingredients, instructions);
 
     when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
+    when(fileStorageService.storeFile(any(MultipartFile.class))).thenReturn("testPath");
     when(repository.getIngredients(recipe.getId())).thenReturn(ingredients);
     when(repository.getInstructions(recipe.getId())).thenReturn(instructions);
     for (Ingredient ingredient : ingredients) {
@@ -187,12 +199,14 @@ class RecipeServiceTest {
       when(repository.getInstruction(instruction.getId())).thenReturn(instruction);
     }
 
+    MultipartFile mockFile = mock(MultipartFile.class);
     LocalDateTime testStartedTime = LocalDateTime.now();
 
-    RecipeDetail actual = sut.updateRecipeDetail(inputRecipeDetail);
+    RecipeDetail actual = sut.updateRecipeDetail(inputRecipeDetail, mockFile);
+    String actualImagePath = actual.getRecipe().getImagePath();
     LocalDateTime actualUpdatedAt = actual.getRecipe().getUpdatedAt();
 
-    verify(repository, times(1)).getRecipe(recipe.getId());
+    verify(repository, times(2)).getRecipe(recipe.getId());
     verify(repository, times(1)).getIngredients(recipe.getId());
     verify(repository, times(1)).getInstructions(recipe.getId());
     verify(repository, times(2)).getIngredient(anyInt());
@@ -200,7 +214,9 @@ class RecipeServiceTest {
     verify(repository, times(1)).updateRecipe(recipe);
     verify(repository, times(2)).updateIngredient(any(Ingredient.class));
     verify(repository, times(2)).updateInstruction(any(Instruction.class));
+    verify(fileStorageService, times(1)).storeFile(any(MultipartFile.class));
 
+    assertThat(actualImagePath, is("testPath"));
     assertThat(actualUpdatedAt.isAfter(testStartedTime) || actualUpdatedAt.isEqual(testStartedTime),
         is(true));
 
@@ -221,14 +237,16 @@ class RecipeServiceTest {
     List<Instruction> inputInstructions = List.of(existingInstructions.get(0));
 
     RecipeDetail inputRecipeDetail = new RecipeDetail(recipe, inputIngredients, inputInstructions);
+    MultipartFile mockFile = mock(MultipartFile.class);
 
     when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
+    when(fileStorageService.storeFile(any(MultipartFile.class))).thenReturn("testPath");
     when(repository.getIngredients(recipe.getId())).thenReturn(existingIngredients);
     when(repository.getInstructions(recipe.getId())).thenReturn(existingInstructions);
     when(repository.getIngredient(ingredient1.getId())).thenReturn(ingredient1);
     when(repository.getInstruction(instruction1.getId())).thenReturn(instruction1);
 
-    sut.updateRecipeDetail(inputRecipeDetail);
+    sut.updateRecipeDetail(inputRecipeDetail, mockFile);
 
     verify(repository, times(1)).deleteIngredient(ingredient2.getId());
     verify(repository, times(1)).deleteInstruction(instruction2.getId());
@@ -246,12 +264,14 @@ class RecipeServiceTest {
     List<Instruction> inputInstructions = List.of(newInstruction);
 
     RecipeDetail inputRecipeDetail = new RecipeDetail(recipe, inputIngredients, inputInstructions);
+    MultipartFile mockFile = mock(MultipartFile.class);
 
     when(repository.getRecipe(recipe.getId())).thenReturn(recipe);
+    when(fileStorageService.storeFile(any(MultipartFile.class))).thenReturn("testPath");
     when(repository.getIngredients(recipe.getId())).thenReturn(inputIngredients);
     when(repository.getInstructions(recipe.getId())).thenReturn(inputInstructions);
 
-    sut.updateRecipeDetail(inputRecipeDetail);
+    sut.updateRecipeDetail(inputRecipeDetail, mockFile);
 
     verify(repository, times(1)).registerIngredient(newIngredient);
     verify(repository, times(1)).registerInstruction(newInstruction);
@@ -268,7 +288,7 @@ class RecipeServiceTest {
     when(repository.getRecipe(recipe.getId())).thenReturn(null);
 
     ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
-        () -> sut.updateRecipeDetail(inputRecipeDetail));
+        () -> sut.updateRecipeDetail(inputRecipeDetail, any(MultipartFile.class)));
     assertThat(e.getMessage(), is("レシピID「" + recipe.getId() + "」は存在しません"));
 
     verify(repository, times(1)).getRecipe(recipe.getId());
@@ -289,7 +309,7 @@ class RecipeServiceTest {
     when(repository.getIngredient(anyInt())).thenReturn(null);
 
     ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
-        () -> sut.updateRecipeDetail(inputRecipeDetail));
+        () -> sut.updateRecipeDetail(inputRecipeDetail, any(MultipartFile.class)));
     assertThat(e.getMessage(), is("材料ID「" + recipe.getId() + "」は存在しません"));
 
     verify(repository, times(1)).getRecipe(recipe.getId());
@@ -316,7 +336,7 @@ class RecipeServiceTest {
     when(repository.getInstruction(anyInt())).thenReturn(null);
 
     ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
-        () -> sut.updateRecipeDetail(inputRecipeDetail));
+        () -> sut.updateRecipeDetail(inputRecipeDetail, any(MultipartFile.class)));
     assertThat(e.getMessage(), is("調理手順ID「" + recipe.getId() + "」は存在しません"));
 
     verify(repository, times(1)).getRecipe(recipe.getId());
@@ -327,11 +347,24 @@ class RecipeServiceTest {
 
   }
 
-  //  TODO：お気に入りフラグの切り替え機能をテスト
+  @Test
+  void お気に入りフラグの切替_正常系_IDに紐づくレシピのお気に入り切替メソッドが実行されること() {
+    Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    int id = recipe.getId();
+    boolean favorite = recipe.isFavorite();
+
+    when(repository.getRecipe(id)).thenReturn(recipe);
+
+    sut.updateFavoriteStatus(id, favorite);
+
+    verify(repository, times(1)).updateFavoriteStatus(id, favorite);
+
+  }
 
   @Test
-  void レシピの削除_正常系_IDに紐づくレシピ削除メソッドが実行されること() {
+  void レシピの削除_正常系_IDに紐づくレシピ削除メソッドと画像ファイル削除が実行されること() {
     Recipe recipe = createMockRecipes(List.of(1)).getFirst();
+    recipe.setImagePath("/uploads/test");
     int id = recipe.getId();
 
     when(repository.getRecipe(id)).thenReturn(recipe);
@@ -340,6 +373,7 @@ class RecipeServiceTest {
 
     verify(repository, times(1)).getRecipe(id);
     verify(repository, times(1)).deleteRecipe(id);
+    verify(fileStorageService, times(1)).deleteFile(recipe.getImagePath());
 
   }
 
