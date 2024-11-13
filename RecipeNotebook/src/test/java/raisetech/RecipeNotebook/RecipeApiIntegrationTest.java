@@ -1,6 +1,7 @@
 package raisetech.RecipeNotebook;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -17,17 +18,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
+import org.hamcrest.Matcher;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -50,10 +63,43 @@ public class RecipeApiIntegrationTest {
   MockMvc mockMvc;
 
   @Autowired
+  RecipeRepository recipeRepository;
+
+  @Autowired
   private ObjectMapper objectMapper;
 
   @Autowired
   private RecipeRepository repository;
+
+  @Value("${app.upload.dir}")
+  private String uploadDir;
+
+  private final String sampleImageName = "tamagoyaki_image.png";
+
+  @BeforeEach
+  public void setUp() throws Exception {
+    File uploadDirectory = new File(uploadDir);
+    if (!uploadDirectory.exists()) {
+      uploadDirectory.mkdirs();
+    }
+
+    BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+    File outputFile = new File(uploadDir, sampleImageName);
+    ImageIO.write(image, "png", outputFile);
+  }
+
+  @AfterEach
+  public void tearDown() throws IOException {
+    Path uploadPath = Paths.get(uploadDir);
+    if (Files.exists(uploadPath)) {
+      try (Stream<Path> paths = Files.walk(uploadPath)) {
+        paths
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)
+            .forEach(File::delete);
+      }
+    }
+  }
 
   @ParameterizedTest
   @MethodSource("provideSearchExistingRecipeTestCase")
@@ -254,125 +300,261 @@ public class RecipeApiIntegrationTest {
         .andExpect(jsonPath("$.message").value("レシピID「" + 999 + "」は存在しません"));
   }
 
-  @Test
-  void レシピの新規作成_JSON形式のリクエストボディを指定して新規作成できること()
-      throws Exception {
+  @ParameterizedTest
+  @MethodSource("recipeCreateTestCases")
+  void レシピの新規作成_JSON形式のリクエストボディを指定して新規作成できること(
+      String requestBody, RecipeDetail expectedRecipeDetail, Matcher<String> expectedImageData
+  ) throws Exception {
     mockMvc.perform(post("/api/recipes/new")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(
-                """
-                    {
-                         "recipe": {
-                             "name": "炒り卵",
-                             "imagePath": "test3/path",
-                             "recipeSource": "https://------3.com",
-                             "servings": "3人分",
-                             "remark": "備考欄3",
-                             "favorite": false
-                         },
-                         "ingredients": [
-                             {
-                                 "name": "卵",
-                                 "quantity": "3個",
-                                 "arrange": false
-                             },
-                             {
-                                 "name": "サラダ油",
-                                 "quantity": "適量",
-                                 "arrange": false
-                             },
-                             {
-                                 "name": "マヨネーズ",
-                                 "quantity": "大さじ2",
-                                 "arrange": true
-                             },
-                             {
-                                 "name": "砂糖",
-                                 "quantity": "大さじ1/2",
-                                 "arrange": false
-                             }
-                         ],
-                         "instructions": [
-                             {
-                                 "stepNumber": 1,
-                                 "content": "卵を溶いて調味料を混ぜ、卵液を作る",
-                                 "arrange": false
-                             },
-                             {
-                                 "stepNumber": 2,
-                                 "content": "フライパンに油をたらし、火にかける",
-                                 "arrange": false
-                             },
-                             {
-                                 "stepNumber": 3,
-                                 "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
-                                 "arrange": false
-                             }
-                         ]
-                    }
-                    """
-            )
+            .content(requestBody)
             .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isCreated())
         .andExpect(header().string("Location",
-            containsString("/api/recipes/" + createExpectedRecipeDetail3().getRecipe().getId())))
+            containsString(
+                "http://localhost/recipes/")))
         .andExpect(
-            jsonPath("$.recipe.id").value(createExpectedRecipeDetail3().getRecipe().getId()))
-        .andExpect(
-            jsonPath("$.recipe.name").value(createExpectedRecipeDetail3().getRecipe().getName()))
-        .andExpect(jsonPath("$.recipe.imagePath").value(
-            createExpectedRecipeDetail3().getRecipe().getImagePath()))
+            jsonPath("$.recipe.name").value(expectedRecipeDetail.getRecipe().getName()))
+        .andExpect(jsonPath("$.recipe.imagePath", expectedImageData))
         .andExpect(jsonPath("$.recipe.recipeSource").value(
-            createExpectedRecipeDetail3().getRecipe().getRecipeSource()))
+            expectedRecipeDetail.getRecipe().getRecipeSource()))
         .andExpect(jsonPath("$.recipe.servings").value(
-            createExpectedRecipeDetail3().getRecipe().getServings()))
+            expectedRecipeDetail.getRecipe().getServings()))
         .andExpect(jsonPath("$.recipe.remark").value(
-            createExpectedRecipeDetail3().getRecipe().getRemark()))
+            expectedRecipeDetail.getRecipe().getRemark()))
         .andExpect(jsonPath("$.recipe.favorite").value(
-            createExpectedRecipeDetail3().getRecipe().isFavorite()))
+            expectedRecipeDetail.getRecipe().isFavorite()))
         .andExpect(jsonPath("$.recipe.createdAt").exists())
         .andExpect(jsonPath("$.recipe.updatedAt").doesNotExist())
-        .andExpect(jsonPath("$.ingredients[*].id").exists()) // 更新メソッドで材料が一部削除された場合、IDがどうなるかわからないため
-        .andExpect(jsonPath("$.ingredients[*].recipeId",
-            contains(
-                createExpectedRecipeDetail3().getIngredients().stream().map(Ingredient::getRecipeId)
-                    .toArray())))
+        .andExpect(jsonPath("$.ingredients[*].id").exists())
         .andExpect(jsonPath("$.ingredients[*].name",
             contains(
-                createExpectedRecipeDetail3().getIngredients().stream().map(Ingredient::getName)
+                expectedRecipeDetail.getIngredients().stream().map(Ingredient::getName)
                     .toArray())))
         .andExpect(jsonPath("$.ingredients[*].quantity",
             contains(
-                createExpectedRecipeDetail3().getIngredients().stream().map(Ingredient::getQuantity)
+                expectedRecipeDetail.getIngredients().stream().map(Ingredient::getQuantity)
                     .toArray())))
         .andExpect(jsonPath("$.ingredients[*].arrange",
             contains(
-                createExpectedRecipeDetail3().getIngredients().stream().map(Ingredient::isArrange)
+                expectedRecipeDetail.getIngredients().stream().map(Ingredient::isArrange)
                     .toArray())))
         .andExpect(jsonPath("$.instructions[*].id").exists())
-        .andExpect(jsonPath("$.instructions[*].recipeId",
-            contains(createExpectedRecipeDetail3().getInstructions().stream()
-                .map(Instruction::getRecipeId).toArray())))
         .andExpect(jsonPath("$.instructions[*].stepNumber",
-            contains(createExpectedRecipeDetail3().getInstructions().stream()
+            contains(expectedRecipeDetail.getInstructions().stream()
                 .map(Instruction::getStepNumber).toArray())))
         .andExpect(jsonPath("$.instructions[*].content",
-            contains(createExpectedRecipeDetail3().getInstructions().stream()
+            contains(expectedRecipeDetail.getInstructions().stream()
                 .map(Instruction::getContent).toArray())))
         .andExpect(jsonPath("$.instructions[*].arrange",
             contains(
-                createExpectedRecipeDetail3().getInstructions().stream().map(Instruction::isArrange)
+                expectedRecipeDetail.getInstructions().stream().map(Instruction::isArrange)
                     .toArray())));
   }
 
-  @Test
-  void レシピの更新_正常系_JSON形式のリクエストボディを指定して更新できること()
-      throws Exception {
+  static Stream<Arguments> recipeCreateTestCases() {
+    return Stream.of(
+        // 画像ファイルあり
+        Arguments.of(
+            """
+                {
+                    "recipeDetail": {
+                        "recipe": {
+                            "name": "炒り卵",
+                            "imagePath": "test3/path",
+                            "recipeSource": "https://------3.com",
+                            "servings": "3人分",
+                            "remark": "備考欄3",
+                            "favorite": false
+                        },
+                        "ingredients": [
+                            {
+                                "name": "卵",
+                                "quantity": "3個",
+                                "arrange": false
+                            },
+                            {
+                                "name": "サラダ油",
+                                "quantity": "適量",
+                                "arrange": false
+                            },
+                            {
+                                "name": "マヨネーズ",
+                                "quantity": "大さじ2",
+                                "arrange": true
+                            },
+                            {
+                                "name": "砂糖",
+                                "quantity": "大さじ1/2",
+                                "arrange": false
+                            }
+                        ],
+                        "instructions": [
+                            {
+                                "stepNumber": 1,
+                                "content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                                "arrange": false
+                            },
+                            {
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかける",
+                                "arrange": false
+                            },
+                            {
+                                "stepNumber": 3,
+                                "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
+                                "arrange": false
+                            }
+                        ]
+                    },
+                    "imageData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/MDFYQAAAABJRU5ErkJggg=="
+                }
+                """,
+            createExpectedRecipeDetail3(),
+            allOf(
+                containsString("/uploads/"),
+                containsString("_image"))
+        ),
+        // 画像ファイルなし
+        Arguments.of(
+            """
+                {
+                    "recipeDetail": {
+                        "recipe": {
+                            "name": "炒り卵",
+                            "imagePath": "test3/path",
+                            "recipeSource": "https://------3.com",
+                            "servings": "3人分",
+                            "remark": "備考欄3",
+                            "favorite": false
+                        },
+                        "ingredients": [
+                            {
+                                "name": "卵",
+                                "quantity": "3個",
+                                "arrange": false
+                            },
+                            {
+                                "name": "サラダ油",
+                                "quantity": "適量",
+                                "arrange": false
+                            },
+                            {
+                                "name": "マヨネーズ",
+                                "quantity": "大さじ2",
+                                "arrange": true
+                            },
+                            {
+                                "name": "砂糖",
+                                "quantity": "大さじ1/2",
+                                "arrange": false
+                            }
+                        ],
+                        "instructions": [
+                            {
+                                "stepNumber": 1,
+                                "content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                                "arrange": false
+                            },
+                            {
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかける",
+                                "arrange": false
+                            },
+                            {
+                                "stepNumber": 3,
+                                "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
+                                "arrange": false
+                            }
+                        ]
+                    },
+                    "imageData": null
+                }
+                """,
+            createExpectedRecipeDetail3(),
+            allOf(
+                containsString("no_image.jpg"))
+        )
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideRecipeUpdateTestData")
+  void レシピの更新_正常系_JSON形式のリクエストボディを指定して更新できること(
+      RecipeDetail expectedRecipeDetail, int expectedIngredientsSize, int expectedInstructionsSize,
+      Matcher<String> expectedImageData, String requestJson
+  ) throws Exception {
     mockMvc.perform(
-            put("/api/recipes/{id}/update", createExpectedRecipeDetail1().getRecipe().getId())
+            put("/api/recipes/{id}/update", expectedRecipeDetail.getRecipe().getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {
+                .content(requestJson)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath("$.recipe.id").value(expectedRecipeDetail.getRecipe().getId()))
+        .andExpect(
+            jsonPath("$.recipe.name").value(expectedRecipeDetail.getRecipe().getName()))
+        .andExpect(jsonPath("$.recipe.imagePath", expectedImageData))
+        .andExpect(jsonPath("$.recipe.recipeSource").value(
+            expectedRecipeDetail.getRecipe().getRecipeSource()))
+        .andExpect(jsonPath("$.recipe.servings").value(
+            expectedRecipeDetail.getRecipe().getServings()))
+        .andExpect(jsonPath("$.recipe.remark").value(
+            expectedRecipeDetail.getRecipe().getRemark()))
+        .andExpect(jsonPath("$.recipe.favorite").value(
+            expectedRecipeDetail.getRecipe().isFavorite()))
+        .andExpect(result -> {
+              String responseContent = result.getResponse().getContentAsString();
+              JsonNode jsonNode = objectMapper.readTree(responseContent);
+              String actualUpdatedAtStr = jsonNode.path("recipe").path("updatedAt")
+                  .asText();
+              LocalDateTime actualUpdatedAt = LocalDateTime.parse(actualUpdatedAtStr);
+              assertTrue(actualUpdatedAt.isAfter(
+                  createExpectedRecipeDetail1().getRecipe().getUpdatedAt()));
+            }
+        )
+        .andExpect(jsonPath("$.ingredients.length()").value(expectedIngredientsSize))
+        .andExpect(jsonPath("$.ingredients[*].recipeId",
+            contains(
+                expectedRecipeDetail.getIngredients().stream().map(Ingredient::getRecipeId)
+                    .toArray())))
+        .andExpect(jsonPath("$.ingredients[*].name",
+            contains(
+                expectedRecipeDetail.getIngredients().stream().map(Ingredient::getName)
+                    .toArray())))
+        .andExpect(jsonPath("$.ingredients[*].quantity",
+            contains(
+                expectedRecipeDetail.getIngredients().stream().map(Ingredient::getQuantity)
+                    .toArray())))
+        .andExpect(jsonPath("$.ingredients[*].arrange",
+            contains(
+                expectedRecipeDetail.getIngredients().stream().map(Ingredient::isArrange)
+                    .toArray())))
+        .andExpect(jsonPath("$.ingredients.length()").value(expectedInstructionsSize))
+        .andExpect(jsonPath("$.instructions[*].recipeId",
+            contains(expectedRecipeDetail.getInstructions().stream()
+                .map(Instruction::getRecipeId).toArray())))
+        .andExpect(jsonPath("$.instructions[*].stepNumber",
+            contains(expectedRecipeDetail.getInstructions().stream()
+                .map(Instruction::getStepNumber).toArray())))
+        .andExpect(jsonPath("$.instructions[*].content",
+            contains(expectedRecipeDetail.getInstructions().stream()
+                .map(Instruction::getContent).toArray())))
+        .andExpect(jsonPath("$.instructions[*].arrange",
+            contains(
+                expectedRecipeDetail.getInstructions().stream().map(Instruction::isArrange)
+                    .toArray())));
+  }
+
+  static Stream<Arguments> provideRecipeUpdateTestData() {
+    return Stream.of(
+        // ▽既存の項目は更新、▽材料、調理手順は追加、▽画像は指定しない（更新無し）
+        Arguments.of(
+            createUpdatedRecipeDetail1(), 4, 4, allOf(
+                containsString("tamagoyaki_image.png")),
+            """
+                {
+                    "recipeDetail": {
                         "recipe": {
                             "id": 1,
                             "name": "卵焼きrev",
@@ -432,75 +614,18 @@ public class RecipeApiIntegrationTest {
                                 "arrange": true
                             }
                         ]
-                    }
-                    """)
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk())
-        .andExpect(
-            jsonPath("$.recipe.id").value(createUpdatedRecipeDetail1().getRecipe().getId()))
-        .andExpect(
-            jsonPath("$.recipe.name").value(createUpdatedRecipeDetail1().getRecipe().getName()))
-        .andExpect(jsonPath("$.recipe.imagePath").value(
-            createUpdatedRecipeDetail1().getRecipe().getImagePath()))
-        .andExpect(jsonPath("$.recipe.recipeSource").value(
-            createUpdatedRecipeDetail1().getRecipe().getRecipeSource()))
-        .andExpect(jsonPath("$.recipe.servings").value(
-            createUpdatedRecipeDetail1().getRecipe().getServings()))
-        .andExpect(jsonPath("$.recipe.remark").value(
-            createUpdatedRecipeDetail1().getRecipe().getRemark()))
-        .andExpect(jsonPath("$.recipe.favorite").value(
-            createUpdatedRecipeDetail1().getRecipe().isFavorite()))
-        .andExpect(result -> {
-              String responseContent = result.getResponse().getContentAsString();
-              JsonNode jsonNode = objectMapper.readTree(responseContent);
-              String actualUpdatedAtStr = jsonNode.path("recipe").path("updatedAt")
-                  .asText();
-              LocalDateTime actualUpdatedAt = LocalDateTime.parse(actualUpdatedAtStr);
-              assertTrue(actualUpdatedAt.isAfter(
-                  createExpectedRecipeDetail1().getRecipe().getUpdatedAt()));
-            }
-        )
-        .andExpect(jsonPath("$.ingredients[*].id").exists())
-        .andExpect(jsonPath("$.ingredients[*].recipeId",
-            contains(
-                createUpdatedRecipeDetail1().getIngredients().stream().map(Ingredient::getRecipeId)
-                    .toArray())))
-        .andExpect(jsonPath("$.ingredients[*].name",
-            contains(
-                createUpdatedRecipeDetail1().getIngredients().stream().map(Ingredient::getName)
-                    .toArray())))
-        .andExpect(jsonPath("$.ingredients[*].quantity",
-            contains(
-                createUpdatedRecipeDetail1().getIngredients().stream().map(Ingredient::getQuantity)
-                    .toArray())))
-        .andExpect(jsonPath("$.ingredients[*].arrange",
-            contains(
-                createUpdatedRecipeDetail1().getIngredients().stream().map(Ingredient::isArrange)
-                    .toArray())))
-        .andExpect(jsonPath("$.instructions[*].id").exists())
-        .andExpect(jsonPath("$.instructions[*].recipeId",
-            contains(createUpdatedRecipeDetail1().getInstructions().stream()
-                .map(Instruction::getRecipeId).toArray())))
-        .andExpect(jsonPath("$.instructions[*].stepNumber",
-            contains(createUpdatedRecipeDetail1().getInstructions().stream()
-                .map(Instruction::getStepNumber).toArray())))
-        .andExpect(jsonPath("$.instructions[*].content",
-            contains(createUpdatedRecipeDetail1().getInstructions().stream()
-                .map(Instruction::getContent).toArray())))
-        .andExpect(jsonPath("$.instructions[*].arrange",
-            contains(
-                createUpdatedRecipeDetail1().getInstructions().stream().map(Instruction::isArrange)
-                    .toArray())));
-  }
-
-  @Test
-  void レシピの更新_異常系_パスのIDとリクエストボディのレシピIDが異なる場合に例外をスローすること()
-      throws Exception {
-    mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update", 999)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(
+                    },
+                    "imageData": null
+                }
                 """
-                    {
+        ),
+        // ▽既存の項目は更新、▽材料、調理手順を削除、▽画像は指定しない（更新無し）
+        Arguments.of(
+            createUpdatedRecipeDetail2(), 2, 2, allOf(
+                containsString("tamagoyaki_image.png")),
+            """
+                {
+                    "recipeDetail": {
                         "recipe": {
                             "id": 1,
                             "name": "卵焼きrev",
@@ -516,6 +641,12 @@ public class RecipeApiIntegrationTest {
                                 "name": "卵rev",
                                 "quantity": "3個rev",
                                 "arrange": true
+                            },
+                            {
+                                "id": 2,
+                                "name": "サラダ油rev",
+                                "quantity": "適量rev",
+                                "arrange": true
                             }
                         ],
                         "instructions": [
@@ -524,9 +655,165 @@ public class RecipeApiIntegrationTest {
                                 "stepNumber": 1,
                                 "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
                                 "arrange": true
+                            },
+                            {
+                                "id": 2,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかけるrev",
+                                "arrange": true
                             }
                         ]
-                    }
+                    },
+                    "imageData": null
+                }
+                """
+        ),
+        // ▽既存の項目は更新、▽材料、調理手順の追加・削除なし、▽画像を新たに指定（更新あり）
+        Arguments.of(
+            createUpdatedRecipeDetail1(), 4, 4, allOf(
+                containsString("/uploads/"),
+                containsString("image.jpg")),
+            """
+                {
+                    "recipeDetail": {
+                        "recipe": {
+                            "id": 1,
+                            "name": "卵焼きrev",
+                            "imagePath": "test1/path/rev",
+                            "recipeSource": "https://------1/rev.com",
+                            "servings": "2人分rev",
+                            "remark": "備考欄1rev",
+                            "favorite": true
+                        },
+                        "ingredients": [
+                            {
+                                "id": 1,
+                                "name": "卵rev",
+                                "quantity": "3個rev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 2,
+                                "name": "サラダ油rev",
+                                "quantity": "適量rev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 3,
+                                "name": "醤油rev",
+                                "quantity": "大さじ1/2rev",
+                                "arrange": true
+                            },
+                            {
+                                "name": "胡椒",
+                                "quantity": "適量",
+                                "arrange": true
+                            }
+                        ],
+                        "instructions": [
+                            {
+                                "id": 1,
+                                "stepNumber": 1,
+                                "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 2,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかけるrev",
+                                "arrange": true
+                            },
+                            {
+                                "id": 3,
+                                "stepNumber": 3,
+                                "content": "卵液を1/3くらいフライパンに入れて焼き、巻くrev",
+                                "arrange": true
+                            },
+                            {
+                                "stepNumber": 4,
+                                "content": "胡椒をかけて完成",
+                                "arrange": true
+                            }
+                        ]
+                    },
+                    "imageData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/gnlX4YAAAAASUVORK5CYII="
+                }
+                """
+        )
+    );
+  }
+
+  @Test
+  void レシピの更新_異常系_パスのIDとリクエストボディのレシピIDが異なる場合に例外をスローすること()
+      throws Exception {
+    mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update", 999)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(
+                """
+                    {
+                        "recipeDetail": {
+                            "recipe": {
+                              "id": 1,
+                                  "name": "卵焼きrev",
+                                  "imagePath": "test1/path/rev",
+                                  "recipeSource": "https://------1/rev.com",
+                                  "servings": "2人分rev",
+                                  "remark": "備考欄1rev",
+                                  "favorite": true
+                            },
+                            "ingredients": [
+                            {
+                              "id": 1,
+                                "name": "卵rev",
+                                "quantity": "3個rev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 2,
+                                "name": "サラダ油rev",
+                                "quantity": "適量rev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "name": "醤油rev",
+                                "quantity": "大さじ1/2rev",
+                                "arrange": true
+                            },
+                            {
+                              "name": "胡椒",
+                                "quantity": "適量",
+                                "arrange": true
+                            }
+                            ],
+                            "instructions": [
+                            {
+                              "id": 1,
+                                "stepNumber": 1,
+                                "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 2,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかけるrev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "stepNumber": 3,
+                                "content": "卵液を1/3くらいフライパンに入れて焼き、巻くrev",
+                                "arrange": true
+                            },
+                            {
+                              "stepNumber": 4,
+                                "content": "胡椒をかけて完成",
+                                "arrange": true
+                            }
+                          ]
+                          },
+                          "imageData": null
+                      }
                     """
             ))
         .andExpect(status().isBadRequest())
@@ -542,32 +829,69 @@ public class RecipeApiIntegrationTest {
             .content(
                 """
                     {
-                        "recipe": {
-                            "id": 999,
-                            "name": "卵焼きrev",
-                            "imagePath": "test1/path/rev",
-                            "recipeSource": "https://------1/rev.com",
-                            "servings": "2人分rev",
-                            "remark": "備考欄1rev",
-                            "favorite": true
-                        },
-                        "ingredients": [
+                        "recipeDetail": {
+                            "recipe": {
+                              "id": 999,
+                                  "name": "卵焼きrev",
+                                  "imagePath": "test1/path/rev",
+                                  "recipeSource": "https://------1/rev.com",
+                                  "servings": "2人分rev",
+                                  "remark": "備考欄1rev",
+                                  "favorite": true
+                            },
+                            "ingredients": [
                             {
-                                "id": 1,
+                              "id": 1,
                                 "name": "卵rev",
                                 "quantity": "3個rev",
                                 "arrange": true
-                            }
-                        ],
-                        "instructions": [
+                            },
                             {
-                                "id": 1,
+                              "id": 2,
+                                "name": "サラダ油rev",
+                                "quantity": "適量rev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "name": "醤油rev",
+                                "quantity": "大さじ1/2rev",
+                                "arrange": true
+                            },
+                            {
+                              "name": "胡椒",
+                                "quantity": "適量",
+                                "arrange": true
+                            }
+                            ],
+                            "instructions": [
+                            {
+                              "id": 1,
                                 "stepNumber": 1,
                                 "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
                                 "arrange": true
+                            },
+                            {
+                              "id": 2,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかけるrev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "stepNumber": 3,
+                                "content": "卵液を1/3くらいフライパンに入れて焼き、巻くrev",
+                                "arrange": true
+                            },
+                            {
+                              "stepNumber": 4,
+                                "content": "胡椒をかけて完成",
+                                "arrange": true
                             }
-                        ]
-                    }
+                          ]
+                          },
+                          "imageData": null
+                      }
                     """
             ))
         .andExpect(status().isNotFound())
@@ -583,32 +907,69 @@ public class RecipeApiIntegrationTest {
             .content(
                 """
                     {
-                        "recipe": {
-                            "id": 1,
-                            "name": "卵焼きrev",
-                            "imagePath": "test1/path/rev",
-                            "recipeSource": "https://------1/rev.com",
-                            "servings": "2人分rev",
-                            "remark": "備考欄1rev",
-                            "favorite": true
-                        },
-                        "ingredients": [
+                        "recipeDetail": {
+                            "recipe": {
+                              "id": 1,
+                                  "name": "卵焼きrev",
+                                  "imagePath": "test1/path/rev",
+                                  "recipeSource": "https://------1/rev.com",
+                                  "servings": "2人分rev",
+                                  "remark": "備考欄1rev",
+                                  "favorite": true
+                            },
+                            "ingredients": [
                             {
-                                "id": 999,
+                              "id": 999,
                                 "name": "卵rev",
                                 "quantity": "3個rev",
                                 "arrange": true
-                            }
-                        ],
-                        "instructions": [
+                            },
                             {
-                                "id": 1,
+                              "id": 2,
+                                "name": "サラダ油rev",
+                                "quantity": "適量rev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "name": "醤油rev",
+                                "quantity": "大さじ1/2rev",
+                                "arrange": true
+                            },
+                            {
+                              "name": "胡椒",
+                                "quantity": "適量",
+                                "arrange": true
+                            }
+                            ],
+                            "instructions": [
+                            {
+                              "id": 1,
                                 "stepNumber": 1,
                                 "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
                                 "arrange": true
+                            },
+                            {
+                              "id": 2,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかけるrev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "stepNumber": 3,
+                                "content": "卵液を1/3くらいフライパンに入れて焼き、巻くrev",
+                                "arrange": true
+                            },
+                            {
+                              "stepNumber": 4,
+                                "content": "胡椒をかけて完成",
+                                "arrange": true
                             }
-                        ]
-                    }
+                          ]
+                          },
+                          "imageData": null
+                      }
                     """
             ))
         .andExpect(status().isNotFound())
@@ -624,39 +985,91 @@ public class RecipeApiIntegrationTest {
             .content(
                 """
                     {
-                        "recipe": {
-                            "id": 1,
-                            "name": "卵焼きrev",
-                            "imagePath": "test1/path/rev",
-                            "recipeSource": "https://------1/rev.com",
-                            "servings": "2人分rev",
-                            "remark": "備考欄1rev",
-                            "favorite": true
-                        },
-                        "ingredients": [
+                        "recipeDetail": {
+                            "recipe": {
+                              "id": 1,
+                                  "name": "卵焼きrev",
+                                  "imagePath": "test1/path/rev",
+                                  "recipeSource": "https://------1/rev.com",
+                                  "servings": "2人分rev",
+                                  "remark": "備考欄1rev",
+                                  "favorite": true
+                            },
+                            "ingredients": [
                             {
-                                "id": 1,
+                              "id": 1,
                                 "name": "卵rev",
                                 "quantity": "3個rev",
                                 "arrange": true
-                            }
-                        ],
-                        "instructions": [
+                            },
                             {
-                                "id": 999,
+                              "id": 2,
+                                "name": "サラダ油rev",
+                                "quantity": "適量rev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "name": "醤油rev",
+                                "quantity": "大さじ1/2rev",
+                                "arrange": true
+                            },
+                            {
+                              "name": "胡椒",
+                                "quantity": "適量",
+                                "arrange": true
+                            }
+                            ],
+                            "instructions": [
+                            {
+                              "id": 999,
                                 "stepNumber": 1,
                                 "content": "卵を溶いて調味料を混ぜ、卵液を作るrev",
                                 "arrange": true
+                            },
+                            {
+                              "id": 2,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかけるrev",
+                                "arrange": true
+                            },
+                            {
+                              "id": 3,
+                                "stepNumber": 3,
+                                "content": "卵液を1/3くらいフライパンに入れて焼き、巻くrev",
+                                "arrange": true
+                            },
+                            {
+                              "stepNumber": 4,
+                                "content": "胡椒をかけて完成",
+                                "arrange": true
                             }
-                        ]
-                    }
+                          ]
+                          },
+                          "imageData": null
+                      }
                     """
             ))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("調理手順ID「999」は存在しません"));
   }
 
-  //  TODO：お気に入りフラグの切り替え機能をテスト
+  @Test
+  void お気に入りフラグの切替_エンドポイントでIDに紐づくレシピのお気に入り切替処理が成功すること()
+      throws Exception {
+    int recipeId = 1;
+
+    mockMvc.perform(put("/api/recipes/{id}/favorite", recipeId)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"favorite\": true}")
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("text/plain;charset=UTF-8"))
+        .andExpect(content().string("お気に入りを変更しました"));
+
+    Recipe updatedRecipe = repository.getRecipe(recipeId);
+    assertTrue(updatedRecipe.isFavorite());
+  }
 
   @Test
   void レシピの削除_正常系_存在するIDを指定した場合にレシピおよび紐づく材料と調理手順が削除されメッセージが返ってくること()
@@ -716,7 +1129,8 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createExpectedRecipeDetail1() {
     return new RecipeDetail(
-        new Recipe(1, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
+        new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+            "2人分", "備考欄1",
             false, LocalDateTime.of(2024, 9, 22, 17, 0, 0),
             LocalDateTime.of(2024, 10, 22, 17, 0, 0)),
         List.of(
@@ -737,7 +1151,8 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createExpectedRecipeDetail2() {
     return new RecipeDetail(
-        new Recipe(2, "目玉焼き", "test2/path", "https://------2.com", "1人分",
+        new Recipe(2, "目玉焼き", "/test-uploads/medamayaki_image.png", "https://------2.com",
+            "1人分",
             "備考欄2", true, LocalDateTime.of(2024, 9, 23, 17, 0, 0),
             LocalDateTime.of(2024, 10, 23, 17, 0, 0)),
         List.of(
@@ -756,7 +1171,7 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createExpectedRecipeDetail3() {
     return new RecipeDetail(
-        new Recipe(3, "炒り卵", "test3/path", "https://------3.com", "3人分",
+        new Recipe(3, "炒り卵", "/uploads/random_image.jpg", "https://------3.com", "3人分",
             "備考欄3", false, null, null),
         List.of(
             new Ingredient(3, "卵", "3個", false),
@@ -775,7 +1190,8 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createUpdatedRecipeDetail1() {
     return new RecipeDetail(
-        new Recipe(1, "卵焼きrev", "test1/path/rev", "https://------1/rev.com", "2人分rev",
+        new Recipe(1, "卵焼きrev", "/test-uploads/tamagoyaki_image.png", "https://------1/rev.com",
+            "2人分rev",
             "備考欄1rev",
             true, LocalDateTime.of(2024, 9, 22, 17, 0, 0),
             LocalDateTime.of(2024, 11, 22, 17, 0, 0)),
@@ -793,6 +1209,24 @@ public class RecipeApiIntegrationTest {
                 true),
             // id=4の調理手順は削除されている
             new Instruction(1, 4, "胡椒をかけて完成", true) //新規追加の調理手順
+        )
+    );
+  }
+
+  private static RecipeDetail createUpdatedRecipeDetail2() {
+    return new RecipeDetail(
+        new Recipe(1, "卵焼きrev", "/test-uploads/tamagoyaki_image.png", "https://------1/rev.com",
+            "2人分rev",
+            "備考欄1rev",
+            true, LocalDateTime.of(2024, 9, 22, 17, 0, 0),
+            LocalDateTime.of(2024, 11, 22, 17, 0, 0)),
+        List.of(
+            new Ingredient(1, 1, "卵rev", "3個rev", true),
+            new Ingredient(2, 1, "サラダ油rev", "適量rev", true)
+        ),
+        List.of(
+            new Instruction(1, 1, 1, "卵を溶いて調味料を混ぜ、卵液を作るrev", true),
+            new Instruction(2, 1, 2, "フライパンに油をたらし、火にかけるrev", true)
         )
     );
   }

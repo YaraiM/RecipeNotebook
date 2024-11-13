@@ -111,10 +111,6 @@ public class RecipeApiController {
       @ApiResponse(responseCode = "400", description = "無効な入力形式の値をリクエストした場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
-      ),
-      @ApiResponse(responseCode = "500", description = "ファイルのアップロードに失敗した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = ErrorResponse.class))
       )
   })
   @PostMapping("/new")
