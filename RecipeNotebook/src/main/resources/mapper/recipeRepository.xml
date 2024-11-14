@@ -116,6 +116,10 @@
     WHERE id=#{id}
   </update>
 
+  <update id="updateFavoriteStatus">
+    UPDATE recipes SET favorite=#{favorite} WHERE id=#{id}
+  </update>
+
   <!--  レシピの材料の更新  -->
   <update id="updateIngredient">
     UPDATE ingredients SET name=#{name}, quantity=#{quantity}, arrange=#{arrange}

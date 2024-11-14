@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -23,10 +24,12 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 public class RecipeService {
 
   private final RecipeRepository repository;
+  private final FileStorageService fileStorageService;
 
   @Autowired
-  public RecipeService(RecipeRepository repository) {
+  public RecipeService(RecipeRepository repository, FileStorageService fileStorageService) {
     this.repository = repository;
+    this.fileStorageService = fileStorageService;
   }
 
   /**
@@ -89,8 +92,10 @@ public class RecipeService {
    * @return 新規作成されるレシピ詳細情報
    */
   @Transactional
-  public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail) {
+  public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
     Recipe recipe = recipeDetail.getRecipe();
+    String imagePath = fileStorageService.storeFile(file);
+    recipeDetail.getRecipe().setImagePath(imagePath);
     recipe.setCreatedAt(LocalDateTime.now());
     repository.registerRecipe(recipe);
 
@@ -118,13 +123,13 @@ public class RecipeService {
    * @return 更新されるレシピ詳細情報
    */
   @Transactional
-  public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail) {
+  public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
     int recipeId = recipeDetail.getRecipe().getId();
     if (repository.getRecipe(recipeId) == null) {
       throw new ResourceNotFoundException("レシピID「" + recipeId + "」は存在しません");
     }
 
-    //入力されたレシピ詳細情報の材料および調理手順のレシピIDにレシピIDをセット
+    // 入力されたレシピ詳細情報の材料および調理手順のレシピIDにレシピIDをセット
     for (Ingredient ingredient : recipeDetail.getIngredients()) {
       ingredient.setRecipeId(recipeId);
     }
@@ -183,10 +188,37 @@ public class RecipeService {
 
     // レシピ本体の更新
     Recipe inputRecipe = recipeDetail.getRecipe();
+
+    String existingImagePath = repository.getRecipe(recipeId).getImagePath();
+    if (file != null && !file.isEmpty()) {
+      fileStorageService.deleteFile(existingImagePath);
+      String updateImagePath = fileStorageService.storeFile(file);
+      inputRecipe.setImagePath(updateImagePath);
+    } else {
+      inputRecipe.setImagePath(existingImagePath);
+    }
+
     inputRecipe.setUpdatedAt(LocalDateTime.now());
     repository.updateRecipe(inputRecipe);
 
     return recipeDetail;
+  }
+
+  /**
+   * レシピのお気に入りフラグを更新するメソッドです。
+   *
+   * @param id レシピID
+   * @param favorite レシピのお気に入りフラグ
+   */
+  @Transactional
+  public void updateFavoriteStatus(int id, boolean favorite) {
+
+    if (repository.getRecipe(id) == null) {
+      throw new ResourceNotFoundException("レシピID「" + id + "」は存在しません");
+    }
+
+    repository.updateFavoriteStatus(id, favorite);
+
   }
 
   /**
@@ -197,10 +229,16 @@ public class RecipeService {
   @Transactional
   public void deleteRecipe(int id) {
 
-    if (repository.getRecipe(id) == null) {
+    Recipe deletedRecipe = repository.getRecipe(id);
+
+    if (deletedRecipe == null) {
       throw new ResourceNotFoundException("レシピID「" + id + "」は存在しません");
     }
 
+    String imagePathForDeletedRecipe = deletedRecipe.getImagePath();
+    if (imagePathForDeletedRecipe.contains("/uploads/")) {
+      fileStorageService.deleteFile(imagePathForDeletedRecipe);
+    }
     repository.deleteRecipe(id);
   }
 

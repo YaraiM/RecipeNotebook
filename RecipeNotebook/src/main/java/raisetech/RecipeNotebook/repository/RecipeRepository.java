@@ -112,6 +112,13 @@ public interface RecipeRepository {
   void updateRecipe(Recipe recipe);
 
   /**
+   * お気に入りレシピの更新です。IDを参照して、お気に入りボタンのオン/オフの切り替えに使用します。
+   *
+   * @param favorite レシピのお気に入りフラグ
+   */
+  void updateFavoriteStatus(int id, boolean favorite);
+
+  /**
    * レシピの材料の更新です。材料情報の中にあるIDを参照して、材料テーブルで該当するレコードを更新します。
    *
    * @param ingredient レシピの材料

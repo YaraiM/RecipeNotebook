@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -63,11 +64,15 @@ class RecipeRepositoryTest {
             new RecipeSearchCriteria(null, null, null,
                 null, null, null, null),
             List.of(
-                new Recipe(1, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
+                new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+                    "2人分",
+                    "備考欄1",
                     false,
                     LocalDateTime.parse("2024-09-22T17:00:00"),
                     LocalDateTime.parse("2024-09-22T17:00:00")),
-                new Recipe(2, "目玉焼き", "test2/path", "https://------2.com", "1人分", "備考欄2",
+                new Recipe(2, "目玉焼き", "/test-uploads/medamayaki_image.png",
+                    "https://------2.com", "1人分",
+                    "備考欄2",
                     true,
                     LocalDateTime.parse("2024-09-23T17:00:00"),
                     LocalDateTime.parse("2024-10-23T17:00:00")))),
@@ -75,7 +80,9 @@ class RecipeRepositoryTest {
                 LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
                 LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵")),
             List.of(
-                new Recipe(1, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
+                new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+                    "2人分",
+                    "備考欄1",
                     false,
                     LocalDateTime.parse("2024-09-22T17:00:00"),
                     LocalDateTime.parse("2024-09-22T17:00:00")))),
@@ -83,7 +90,9 @@ class RecipeRepositoryTest {
                 LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
                 LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵", "砂糖")),
             List.of(
-                new Recipe(1, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1",
+                new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+                    "2人分",
+                    "備考欄1",
                     false,
                     LocalDateTime.parse("2024-09-22T17:00:00"),
                     LocalDateTime.parse("2024-09-22T17:00:00")))),
@@ -98,7 +107,9 @@ class RecipeRepositoryTest {
   void IDに紐づくレシピを取得できること() {
     Recipe actual = sut.getRecipe(1);
 
-    assertRecipe(actual, "卵焼き", "test1/path", "https://------1.com", "2人分", "備考欄1", false,
+    assertRecipe(actual, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+        "2人分",
+        "備考欄1", false,
         LocalDateTime.parse("2024-09-22T17:00:00"), LocalDateTime.parse("2024-10-22T17:00:00"));
   }
 
@@ -273,6 +284,16 @@ class RecipeRepositoryTest {
 
     List<Instruction> actual = sut.getInstructions(1);
     assertInstructionDetail(actual.get(0), 1, 2, "卵を溶いて調味料を混ぜ、卵液を作るrev", true);
+
+  }
+
+  @Test
+  void 指定したIDのレシピのお気に入り状態が切り替わること() {
+    sut.updateFavoriteStatus(1, true);
+
+    Recipe actual = sut.getRecipe(1);
+
+    assertTrue(actual.isFavorite());
 
   }
 

@@ -32,8 +32,8 @@ public class DateRangeValidator implements
     if (criteria.getCreateDateFrom() != null && criteria.getCreateDateTo() != null) {
       if (criteria.getCreateDateFrom().isAfter(criteria.getCreateDateTo())) {
         context.buildConstraintViolationWithTemplate(
-            "開始日が終了日より後の日付になっています"
-        ).addPropertyNode("createDateFrom").addConstraintViolation();
+            "終了日が開始日より前の日付になっています"
+        ).addPropertyNode("createDateTo").addConstraintViolation();
         isValid = false;
       }
     }
@@ -42,8 +42,8 @@ public class DateRangeValidator implements
     if (criteria.getUpdateDateFrom() != null && criteria.getUpdateDateTo() != null) {
       if (criteria.getUpdateDateFrom().isAfter(criteria.getUpdateDateTo())) {
         context.buildConstraintViolationWithTemplate(
-            "開始日が終了日より後の日付になっています"
-        ).addPropertyNode("updateDateFrom").addConstraintViolation();
+            "終了日が開始日より前の日付になっています"
+        ).addPropertyNode("updateDateTo").addConstraintViolation();
         isValid = false;
       }
     }

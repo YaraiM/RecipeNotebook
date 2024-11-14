@@ -10,8 +10,9 @@ jobs:
   build-and-test:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -28,11 +29,11 @@ jobs:
         run: chmod +x RecipeNotebook/gradlew
 
       - name: Build with Gradle Wrapper
-        run: ./gradlew build
+        run: ./gradlew build -Dspring.profiles.active=ci
         working-directory: RecipeNotebook
 
       - name: Test with Gradle Wrapper
-        run: ./gradlew test --info
+        run: ./gradlew test --info -Dspring.profiles.active=ci
         working-directory: RecipeNotebook
 
       - name: Upload test results

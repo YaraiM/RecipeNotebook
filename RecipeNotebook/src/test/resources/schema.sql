@@ -1,7 +1,7 @@
 CREATE TABLE recipes (
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
-  image_path VARCHAR(255),
+  image_path VARCHAR(255) DEFAULT '/images/no_image.jpg',
   recipe_source VARCHAR(255),
   servings VARCHAR(255),
   remark VARCHAR(255),
