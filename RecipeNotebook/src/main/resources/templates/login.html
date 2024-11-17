@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,7 +17,10 @@
       <div class="card shadow border-0">
         <div class="card-body p-4">
           <h3 class="display-8 mb-4 text-center">レシピノートアプリ　ログイン画面</h3>
-          <form id="loginForm">
+          <div th:if="${param.error}" class="alert alert-danger">
+            ログインに失敗しました。IDまたはパスワードを確認してください。
+          </div>
+          <form id="loginForm" th:action="@{/login}" method="post">
             <div class="mb-3">
               <label for="username" class="form-label">ID</label>
               <input type="text" class="form-control" id="username" name="username"

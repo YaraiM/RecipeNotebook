@@ -108,7 +108,7 @@ public class RecipeApiController {
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = RecipeDetail.class))
       ),
-      @ApiResponse(responseCode = "400", description = "無効な入力形式の値をリクエストした場合のレスポンス",
+      @ApiResponse(responseCode = "400", description = "不正なな形式のデータをリクエストした場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
       )
@@ -142,7 +142,7 @@ public class RecipeApiController {
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = RecipeDetail.class))
       ),
-      @ApiResponse(responseCode = "400", description = "無効な入力形式の値をリクエストした場合のレスポンス",
+      @ApiResponse(responseCode = "400", description = "不正な形式のデータをリクエストした場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
       ),
@@ -213,6 +213,9 @@ public class RecipeApiController {
 
 }
 
-//TODO:④ログイン機能　⇒　ユーザーのデータベースが必要。ユーザーとレシピは１対多の関係とし、レシピにユーザーIDを追加する。
+//TODO:④ログイン機能
+//TODO:☆ログアウト機能の実装、☆テストで302エラーが発生する問題を解決したい
+//TODO:ユーザーのデータベースは後回し。ユーザーはメモリ内のみで機能させる。データベースを作る場合は、ユーザーとレシピは１対多の関係とし、レシピにユーザーIDを追加する。
+//TODO:ドキュメントの作成
 //TODO:⑤タグ付け・タグ検索機能
 //TODO:⑥栄養素の計算補助機能

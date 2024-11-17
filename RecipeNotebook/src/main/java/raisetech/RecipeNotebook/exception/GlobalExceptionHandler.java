@@ -67,6 +67,22 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * 不正な形式のデータを入力した場合などに発生する例外をハンドリングするメソッドです。
+   * 既存クラスのIllegalArgumentExceptionがスローされたとき、ステータス（BadRequest）および指定した例外メッセージを返します。
+   *
+   * @param e 例外クラス（不正なファイル形式を指定）
+   * @return エラーレスポンス（ステータスおよびメッセージ）
+   */
+  @ExceptionHandler
+  public ResponseEntity<ErrorResponse> handleIllegalArgumentCustomException(
+      IllegalArgumentCustomException e) {
+
+    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
+        e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
+  /**
    * 5MBを超える画像をアップロードしようとした場合の例外をハンドリングするメソッドです。
    * 既存クラスのFileSizeLimitExceededExceptionがスローされたとき、ステータス（BadRequest）および指定した例外メッセージを返します。
    *

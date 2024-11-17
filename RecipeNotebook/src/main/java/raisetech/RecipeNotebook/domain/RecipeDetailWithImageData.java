@@ -17,6 +17,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.exception.FileSizeLimitExceededCustomException;
+import raisetech.RecipeNotebook.exception.IllegalArgumentCustomException;
 import raisetech.RecipeNotebook.exception.InvalidFileTypeException;
 
 /**
@@ -40,7 +41,13 @@ public class RecipeDetailWithImageData {
     }
 
     try {
-      String base64Image = imageData.split(",")[1];
+      String[] base64Parts = imageData.split(",");
+      if (base64Parts.length < 2) {
+        throw new IllegalArgumentCustomException(
+            "不正なデータ形式です。画像データ以外はアップロードできません");
+      }
+
+      String base64Image = base64Parts[1];
       byte[] imageBytes = Base64.getDecoder().decode(base64Image);
 
       if (imageBytes.length > 5 * 1024 * 1024) {

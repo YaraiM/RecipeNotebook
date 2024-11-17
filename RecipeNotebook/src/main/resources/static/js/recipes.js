@@ -641,7 +641,8 @@ async function submitRecipeForm(event) {
                 handleValidationErrors(responseJson.errors);
                 throw new Error(responseJson.message);
             } else if (responseJson.message &&
-                      (responseJson.message.includes('ファイルのサイズ') ||
+                      (responseJson.message.includes('不正なデータ形式') ||
+                       responseJson.message.includes('ファイルのサイズ') ||
                        responseJson.message.includes('画像ファイルのみ'))) {
                 throw new Error(responseJson.message);
             } else {

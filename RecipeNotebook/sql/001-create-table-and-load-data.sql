@@ -14,9 +14,9 @@ CREATE TABLE recipes (
 );
 
 INSERT INTO recipes (name, image_path, recipe_source, servings, remark, created_at, updated_at)
-VALUES ('卵焼き', '/images/tamagoyaki.png', 'https://------1.com', '2人分', '備考欄1', '2024-09-22 17:00:00', '2024-10-22 17:00:00');
+VALUES ('卵焼き', '/images/tamagoyaki.jpg', 'https://------1.com', '2人分', '備考欄1', '2024-09-22 17:00:00', '2024-10-22 17:00:00');
 INSERT INTO recipes (name, image_path, recipe_source, servings, remark, favorite, created_at, updated_at)
-VALUES ('目玉焼き', '/images/medamayaki.png', 'https://------2.com', '1人分', '備考欄2', TRUE, '2024-09-23 17:00:00', '2024-10-23 17:00:00');
+VALUES ('目玉焼き', '/images/medamayaki.jpg', 'https://------2.com', '1人分', '備考欄2', TRUE, '2024-09-23 17:00:00', '2024-10-23 17:00:00');
 
 
 DROP TABLE IF EXISTS ingredients;

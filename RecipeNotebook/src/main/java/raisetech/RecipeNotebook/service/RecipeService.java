@@ -191,7 +191,9 @@ public class RecipeService {
 
     String existingImagePath = repository.getRecipe(recipeId).getImagePath();
     if (file != null && !file.isEmpty()) {
-      fileStorageService.deleteFile(existingImagePath);
+      if (!existingImagePath.contains("/images/") && existingImagePath.contains("/uploads/")) {
+        fileStorageService.deleteFile(existingImagePath);
+      }
       String updateImagePath = fileStorageService.storeFile(file);
       inputRecipe.setImagePath(updateImagePath);
     } else {
