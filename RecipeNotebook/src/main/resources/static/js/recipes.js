@@ -1,5 +1,6 @@
 // DOMContentLoaded時の初期化処理
 document.addEventListener('DOMContentLoaded', function() {
+    loadHeader();
     initializeModal();
     initializeAllViews();
 });
@@ -800,4 +801,19 @@ function navigateToEdit(recipeId) {
     document.getElementById('toEdit').addEventListener('click', () => {
         window.location.href = `/recipes/${recipeId}/update`;
     });
+}
+
+// ヘッダーのインクルード
+async function loadHeader() {
+    const headerElement = document.querySelector("#header");
+    const response = await fetch('/views/header.html');
+    const headerHTML = await response.text();
+    headerElement.innerHTML = headerHTML;
+
+    const navbarCollapse = document.querySelector('.navbar-collapse');
+    if (navbarCollapse) {
+        const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+            toggle: false
+        });
+    }
 }
