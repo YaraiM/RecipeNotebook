@@ -467,6 +467,7 @@ class RecipeServiceTest {
     for (Integer id : ids) {
       Recipe recipe = new Recipe();
       recipe.setId(id);
+      recipe.setImagePath("testPath" + id);
       recipes.add(recipe);
     }
     return recipes;

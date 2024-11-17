@@ -31,9 +31,11 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MultipartFile;
+import raisetech.RecipeNotebook.config.SecurityConfig;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -43,6 +45,7 @@ import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
 import raisetech.RecipeNotebook.service.RecipeService;
 
 @WebMvcTest(RecipeApiController.class)
+@Import(SecurityConfig.class)
 class RecipeApiControllerTest {
 
   @Autowired
