@@ -1,6 +1,5 @@
 // DOMContentLoaded時の初期化処理
 document.addEventListener('DOMContentLoaded', function() {
-    loadHeader();
     initializeModal();
     initializeAllViews();
 });
@@ -54,8 +53,14 @@ function confirmDelete(id) {
 
 // 画面の初期化
 function initializeAllViews() {
+    // ログイン画面
+    if (window.location.pathname === '/login') {
+        showLoginErrorMessage();
+    }
+
     // 検索・レシピ一覧画面
     if (document.getElementById('searchForm')) {
+        loadHeader();
         setupSearchForm();
         setupDatepickers();
         loadRecipes();
@@ -63,6 +68,7 @@ function initializeAllViews() {
 
     // レシピ詳細画面(recipeIdはdetail.html内で定義)
     if (document.getElementById('displayRecipeDetail')) {
+        loadHeader();
         const path = window.location.pathname;
         const recipeId = path.split("/")[2];
         loadRecipeDetail(recipeId);
@@ -71,6 +77,7 @@ function initializeAllViews() {
 
     // レシピ新規作成・編集画面
     if (document.getElementById('recipeForm')) {
+        loadHeader();
         initializeRecipeForm();
 
         const path = window.location.pathname;
@@ -79,6 +86,30 @@ function initializeAllViews() {
             loadRecipeDetail(recipeId);
             navigateToRecipeDetail(recipeId);
         }
+    }
+}
+
+// ログイン画面のエラーメッセージ
+function showLoginErrorMessage() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('error')) {
+    const errorMessage = document.getElementById('loginErrorMessage');
+    errorMessage.classList.remove('d-none')
+    }
+}
+
+// ヘッダーのインクルード
+async function loadHeader() {
+    const headerElement = document.querySelector("#header");
+    const response = await fetch('/views/header.html');
+    const headerHTML = await response.text();
+    headerElement.innerHTML = headerHTML;
+
+    const navbarCollapse = document.querySelector('.navbar-collapse');
+    if (navbarCollapse) {
+        const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+            toggle: false
+        });
     }
 }
 
@@ -801,19 +832,4 @@ function navigateToEdit(recipeId) {
     document.getElementById('toEdit').addEventListener('click', () => {
         window.location.href = `/recipes/${recipeId}/update`;
     });
-}
-
-// ヘッダーのインクルード
-async function loadHeader() {
-    const headerElement = document.querySelector("#header");
-    const response = await fetch('/views/header.html');
-    const headerHTML = await response.text();
-    headerElement.innerHTML = headerHTML;
-
-    const navbarCollapse = document.querySelector('.navbar-collapse');
-    if (navbarCollapse) {
-        const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
-            toggle: false
-        });
-    }
 }
