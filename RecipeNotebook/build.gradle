@@ -54,6 +54,8 @@ dependencies {
     // SpringBoot Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Spring Security Test
+    testImplementation 'org.springframework.security:spring-security-test'
     // MyBatis Test
     testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
     // H2(InMemoryDB)

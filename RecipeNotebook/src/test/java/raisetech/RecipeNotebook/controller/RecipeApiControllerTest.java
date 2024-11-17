@@ -33,6 +33,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.config.SecurityConfig;
@@ -46,6 +47,7 @@ import raisetech.RecipeNotebook.service.RecipeService;
 
 @WebMvcTest(RecipeApiController.class)
 @Import(SecurityConfig.class)
+@WithMockUser(username = "user", roles = "USER")
 class RecipeApiControllerTest {
 
   @Autowired

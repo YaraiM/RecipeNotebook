@@ -43,10 +43,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import raisetech.RecipeNotebook.config.SecurityConfig;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -56,6 +59,8 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(SecurityConfig.class)
+@WithMockUser(username = "user", roles = "USER")
 @Transactional
 public class RecipeApiIntegrationTest {
 
