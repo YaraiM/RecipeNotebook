@@ -71,5 +71,3 @@ public class FileStorageService {
     }
   }
 }
-
-//TODO:no_imageの状態で登録されたレシピ画像に新たな画像を登録しようとすると、500エラーが発生する
