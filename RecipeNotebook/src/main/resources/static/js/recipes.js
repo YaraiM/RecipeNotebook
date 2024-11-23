@@ -11,11 +11,17 @@ function initializeModal() {
         window.deleteModal = new bootstrap.Modal(modalElement);
 
         // 確認ボタンのイベントリスナーを設定
-        document.getElementById('confirmDelete')?.addEventListener('click', function() {
+        document.getElementById('confirmDelete')?.addEventListener('click', async function() {
             if (window.deleteTargetId === null) return;
 
-            fetch(`/api/recipes/${window.deleteTargetId}/delete`, {
-                method: 'DELETE'
+            const csrfToken = await fetchCSRFToken();
+
+            await fetch(`/api/recipes/${window.deleteTargetId}/delete`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json',
+                },
             })
             .then(response => {
                 if (!response.ok) throw new Error('削除に失敗しました');
@@ -55,6 +61,8 @@ function confirmDelete(id) {
 function initializeAllViews() {
     // ログイン画面
     if (window.location.pathname === '/login') {
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => insertCSRFToken(form));
         showLoginErrorMessage();
     }
 
@@ -89,6 +97,35 @@ function initializeAllViews() {
     }
 }
 
+// CSRFトークンの取得
+async function fetchCSRFToken() {
+    const response = await fetch('/csrf-token');
+    if (!response.ok) {
+        throw new Error('CSRFトークンの取得に失敗しました');
+    }
+    const data = await response.json();
+    return data.token;
+}
+
+// CSRFトークンの挿入
+async function insertCSRFToken(element) {
+    try {
+        const response = await fetch('/csrf-token', { method: 'GET', credentials: 'same-origin' });
+        if (!response.ok) throw new Error(response.json().message);
+        const { token, headerName } = await response.json();
+
+        if (!element.querySelector(`input[name="${headerName}"]`)) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = token;
+            element.appendChild(csrfInput);
+        }
+    } catch (error) {
+        console.error('CSRFトークンの初期化エラー：', error);
+    }
+}
+
 // ログイン画面のエラーメッセージ
 function showLoginErrorMessage() {
     const params = new URLSearchParams(window.location.search);
@@ -104,6 +141,9 @@ async function loadHeader() {
     const response = await fetch('/views/header.html');
     const headerHTML = await response.text();
     headerElement.innerHTML = headerHTML;
+
+    const form = document.querySelector('form');
+    insertCSRFToken(form);
 
     const navbarCollapse = document.querySelector('.navbar-collapse');
     if (navbarCollapse) {
@@ -238,7 +278,7 @@ function displayRecipes(recipeDetails) {
 }
 
 // レシピ一覧画面：各レシピのお気に入り状態の切り替え
-function toggleFavorite(recipeId) {
+async function toggleFavorite(recipeId) {
     const favoriteButton = document.querySelector(`.favorite-button[data-id='${recipeId}']`);
     const isCurrentlyFavorite = favoriteButton.classList.contains('favorite-active');
     const newFavorite = !isCurrentlyFavorite;
@@ -247,9 +287,12 @@ function toggleFavorite(recipeId) {
     favoriteButton.classList.toggle('favorite-active', newFavorite);
     favoriteButton.classList.toggle('favorite-inactive', !newFavorite);
 
-    fetch(`/api/recipes/${recipeId}/favorite`, {
+    const csrfToken = await fetchCSRFToken();
+
+    await fetch(`/api/recipes/${recipeId}/favorite`, {
         method: 'PUT',
         headers: {
+            'X-CSRF-TOKEN': csrfToken,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ favorite: newFavorite })
@@ -660,9 +703,12 @@ async function submitRecipeForm(event) {
 
     const method = isNewRecipe ? 'POST' : 'PUT';
 
-    fetch(endpoint, {
+    const csrfToken = await fetchCSRFToken();
+
+    await fetch(endpoint, {
         method: method,
         headers: {
+            'X-CSRF-TOKEN': csrfToken,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(recipeDetailWithImageData)

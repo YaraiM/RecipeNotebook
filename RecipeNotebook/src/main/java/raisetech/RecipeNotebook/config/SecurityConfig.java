@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,19 +17,22 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.csrf(AbstractHttpConfigurer::disable) //TODO:運用環境ではCSRFトークンを設定する必要あり
+    http
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/csrf-token"))
         .formLogin(login -> login
             .loginProcessingUrl("/login")
             .loginPage("/login")
-            .defaultSuccessUrl("/recipes")
+            .successHandler((request, response, authentication) -> {
+              response.sendRedirect("/recipes");
+            })
             .failureUrl("/login?error")
-            .permitAll()
-        ).logout(logout -> logout
-            .logoutSuccessUrl("/login")
-        ).authorizeHttpRequests(auth -> auth
+            .permitAll())
+        .logout(logout -> logout
+            .logoutSuccessUrl("/login"))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/csrf-token").permitAll()
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers("/").permitAll()
-            .requestMatchers("/").hasRole("USER")
+            .requestMatchers("/login").permitAll()
             .anyRequest().authenticated()
         );
     return http.build();
