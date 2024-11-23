@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -101,6 +102,7 @@ class RecipeApiControllerTest {
         .thenReturn(mockRecipeDetail);
 
     mockMvc.perform(post("/api/recipes/new")
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -182,6 +184,7 @@ class RecipeApiControllerTest {
         mockRecipeDetail);
 
     mockMvc.perform(put("/api/recipes/{id}/update", existingRecipeId)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -273,6 +276,7 @@ class RecipeApiControllerTest {
         .when(recipeService).updateRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class));
 
     mockMvc.perform(put("/api/recipes/{id}/update", pathId)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -355,6 +359,7 @@ class RecipeApiControllerTest {
     boolean favorite = false;
 
     mockMvc.perform(put("/api/recipes/{id}/favorite", recipeId)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"favorite\": false}")
         )
@@ -370,7 +375,7 @@ class RecipeApiControllerTest {
       throws Exception {
     int recipeId = 1;
 
-    mockMvc.perform(delete("/api/recipes/{id}/delete", recipeId))
+    mockMvc.perform(delete("/api/recipes/{id}/delete", recipeId).with(csrf()))
         .andExpect(status().isOk())
         .andExpect(content().contentType("text/plain;charset=UTF-8"))
         .andExpect(content().string("レシピを削除しました"));
