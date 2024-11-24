@@ -415,7 +415,7 @@ function displayRecipe(recipeDetail) {
         </div>
 
         <div class="recipe-info">
-            <h4 class="mb-3">材料</h4>
+            <h4 class="text-muted mb-3">材料</h4>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-light">
@@ -449,7 +449,7 @@ function displayRecipe(recipeDetail) {
         </div>
 
         <div class="recipe-info">
-            <h4 class="mb-3">調理手順</h4>
+            <h4 class="text-muted mb-3">調理手順</h4>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-light">
@@ -484,8 +484,8 @@ function displayRecipe(recipeDetail) {
 
         ${recipe.remark ? `
             <div class="recipe-info">
-                <h4 class="mb-3">備考</h4>
-                <p class="mb-0">${recipe.remark}</p>
+                <h4 class="text-muted mb-3">備考</h4>
+                <p class="mb-0">${recipe.remark.replace(/\n/g, '<br>')}</p>
             </div>
         ` : ''}
 
