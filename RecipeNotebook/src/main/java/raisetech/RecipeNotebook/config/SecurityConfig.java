@@ -1,5 +1,6 @@
 package raisetech.RecipeNotebook.config;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 @Configuration
 @EnableWebSecurity
@@ -23,7 +27,8 @@ public class SecurityConfig {
             .loginProcessingUrl("/login")
             .loginPage("/login")
             .successHandler((request, response, authentication) -> {
-              response.sendRedirect("/recipes");
+              String targetUrl = getRedirectUrlFromSavedRequest(request);
+              response.sendRedirect(targetUrl);
             })
             .failureUrl("/login?error")
             .permitAll())
@@ -47,6 +52,17 @@ public class SecurityConfig {
         .build();
 
     return new InMemoryUserDetailsManager(user);
+  }
+
+  private String getRedirectUrlFromSavedRequest(HttpServletRequest request) {
+    RequestCache requestCache = new HttpSessionRequestCache();
+    SavedRequest savedRequest = requestCache.getRequest(request, null);
+
+    if (savedRequest == null) {
+      return "/recipes";
+    }
+
+    return savedRequest.getRedirectUrl();
   }
 
 }
