@@ -46,13 +46,7 @@ public class RecipeApiController {
     this.recipeService = recipeService;
   }
 
-  /**
-   * レシピ詳細情報の一覧検索です。RecipeSearchCriteriaで定義するリクエストパラメータを指定することで条件検索を行えます。
-   *
-   * @param criteria レシピ詳細情報の検索条件
-   * @return レスポンス（ステータスコード200（OK）およびレシピ詳細情報一覧）
-   */
-  @Operation(summary = "レシピ詳細情報の一覧検索", description = "RecipeSearchCriteriaで定義するリクエストパラメータを指定することで条件検索を行えます。")
+  @Operation(summary = "レシピの一覧検索", description = "RecipeSearchCriteriaで定義するリクエストパラメータに応じたレシピ検索を行います。")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
           content = @Content(mediaType = "application/json",
@@ -72,19 +66,13 @@ public class RecipeApiController {
     return ResponseEntity.ok(recipeDetails);
   }
 
-  /**
-   * レシピ詳細情報の取得です。レシピIDに紐づくレシピ詳細情報を取得します。
-   *
-   * @param id　レシピID
-   * @return レスポンス（ステータスコード200（OK）およびレシピ詳細情報）
-   */
   @Operation(summary = "レシピ詳細情報の取得", description = "レシピIDに紐づくレシピ詳細情報を取得します。")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = RecipeDetail.class))
       ),
-      @ApiResponse(responseCode = "404", description = "存在しないIDを指定した場合のレスポンス",
+      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
       )
@@ -95,28 +83,21 @@ public class RecipeApiController {
     return ResponseEntity.ok(recipeDetail);
   }
 
-  /**
-   * レシピ詳細情報の新規作成です。レシピ詳細情報およびパスを新規作成します。
-   *
-   * @param inputRecipeDetailWithImageData 新規作成するレシピ詳細情報(JSON形式)
-   * @param uriBuilder 新規作成時に作成されるURIのビルダー
-   * @return レスポンス（ステータスコード201（CREATED）、新規作成されたURI、新規作成されたレシピ詳細情報）
-   */
-  @Operation(summary = "レシピ詳細情報の新規作成", description = "レシピ詳細情報およびパスを新規作成します。")
+  @Operation(summary = "レシピの新規作成", description = "入力した情報に基づきレシピを新規作成するとともに、そのレシピへのパスを作成します。")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "処理が成功した場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = RecipeDetail.class))
       ),
-      @ApiResponse(responseCode = "400", description = "不正なな形式のデータをリクエストした場合のレスポンス",
+      @ApiResponse(responseCode = "400", description = "許可されていないリクエスト（▽必須項目の未入力、▽画像以外のデータのアップロード、▽5MBを超える画像データのアップロード）をリクエストした場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
       )
   })
   @PostMapping("/new")
   public ResponseEntity<RecipeDetail> createRecipeDetail
-  (@Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData,
-      UriComponentsBuilder uriBuilder) {
+      (@Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData,
+          UriComponentsBuilder uriBuilder) {
 
     MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
     RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
@@ -129,32 +110,25 @@ public class RecipeApiController {
     return ResponseEntity.created(location).body(newRecipeDetail);
   }
 
-  /**
-   * レシピ詳細情報の更新です。既存情報の変更や材料・調理手順の追加や削除を行います。
-   *
-   * @param id 更新するレシピのID
-   * @param inputRecipeDetailWithImageData 更新するレシピ詳細情報
-   * @return レスポンス（ステータスコード200（OK）、更新されたレシピ詳細情報）
-   */
-  @Operation(summary = "レシピ詳細情報の更新", description = "既存情報の変更や材料・調理手順の追加や削除を行います。")
+  @Operation(summary = "レシピの更新", description = "既存情報の変更や材料・調理手順の追加・削除を行います。")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = RecipeDetail.class))
       ),
-      @ApiResponse(responseCode = "400", description = "不正な形式のデータをリクエストした場合のレスポンス",
+      @ApiResponse(responseCode = "400", description = "許可されていないリクエスト（▽必須項目の未入力、▽画像以外のデータのアップロード、▽5MBを超える画像データのアップロード、▽パスとリクエストパラメータにおけるレシピIDの不一致）をリクエストした場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
       ),
-      @ApiResponse(responseCode = "404", description = "存在しないIDを指定した場合のレスポンス",
+      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
       )
   })
   @PutMapping("/{id}/update")
   public ResponseEntity<RecipeDetail> updateRecipeDetail
-  (@PathVariable int id,
-      @Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData) {
+      (@PathVariable int id,
+          @Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData) {
 
     if (inputRecipeDetailWithImageData.getRecipeDetail().getRecipe().getId() != id) {
       throw new RecipeIdMismatchException(
@@ -171,15 +145,17 @@ public class RecipeApiController {
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 
-  //TODO:API仕様書の追加
-
-  /**
-   * レシピのお気に入りフラグの更新です。指定したレシピIDに紐づくお気に入りフラグを更新します。
-   *
-   * @param id レシピID
-   * @param request JSONをMapに変換したお気に入りフラグ（"favorite": true/false)
-   * @return レスポンス（ステータスコード200（OK）、更新成功のメッセージ）
-   */
+  @Operation(summary = "レシピのお気に入りフラグの更新", description = "指定したIDに紐づくレシピのお気に入りフラグ（favorite）の更新を行います。")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
+          content = @Content(mediaType = "application/json",
+              schema = @Schema(implementation = RecipeDetail.class))
+      ),
+      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
+          content = @Content(mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class))
+      )
+  })
   @PutMapping("/{id}/favorite")
   public ResponseEntity<String> updateFavoriteStatus(@PathVariable int id,
       @RequestBody Map<String, Boolean> request) {
@@ -188,19 +164,13 @@ public class RecipeApiController {
     return ResponseEntity.ok("お気に入りを変更しました");
   }
 
-  /**
-   * レシピ詳細情報の削除です。指定したレシピIDに紐づくレシピ詳細情報を削除します。
-   *
-   * @param id 削除するレシピのID
-   * @return レスポンス（ステータスコード200（OK）、削除成功のメッセージ）
-   */
-  @Operation(summary = "レシピ詳細情報の削除", description = "指定したレシピIDに紐づくレシピ詳細情報を削除します。")
+  @Operation(summary = "レシピの削除", description = "指定したIDに紐づくレシピをデータベースから削除します。レシピIDに紐づく材料および調理手順もデータベースから削除します。")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
           content = @Content(mediaType = "text/plain",
               schema = @Schema(type = "string", example = "レシピを削除しました"))
       ),
-      @ApiResponse(responseCode = "404", description = "存在しないIDを指定した場合のレスポンス",
+      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
           content = @Content(mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class))
       )
