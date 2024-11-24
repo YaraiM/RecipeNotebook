@@ -567,12 +567,13 @@ function addInstructionForm() {
 }
 
 // レシピ新規作成・編集画面：材料のHTML作成
-function createIngredientHtml() {
+function createIngredientHtml(id='') {
     const ingredients = document.querySelectorAll('.ingredient');
     const nextIndex = ingredients.length + 1;
 
     return `
         <div class="ingredient mb-3 row">
+        <input type="hidden" name="ingredient.id.${nextIndex}" value="${id}"/>
             <div class="col-md-5">
                 <input class="form-control" type="text" name="ingredient.name.${nextIndex}" placeholder="材料名（必須）"/>
             </div>
@@ -593,12 +594,13 @@ function createIngredientHtml() {
 }
 
 // レシピ新規作成・編集画面：手順のHTML作成
-function createInstructionHtml() {
+function createInstructionHtml(id = '') {
     const instructions = document.querySelectorAll('.instruction');
     const nextIndex = instructions.length + 1;
 
     return `
         <div class="instruction mb-3 row">
+        <input type="hidden" name="instruction.id.${nextIndex}" value="${id}"/>
             <div class="col-md-2">
                 <input class="form-control" type="number" name="instruction.stepNumber.${nextIndex}"
                        value="${nextIndex}" readonly/>
@@ -805,7 +807,9 @@ function getIngredients() {
     const ingredientContainers = document.querySelectorAll('.ingredient');
 
     ingredientContainers.forEach(container => {
+        const idInput = container.querySelector('input[name^="ingredient.id"]');
         ingredients.push({
+            id: idInput ? idInput.value : null,
             name: container.querySelector('input[name^="ingredient.name"]').value,
             quantity: container.querySelector('input[name^="ingredient.quantity"]').value,
             arrange: container.querySelector('input[name^="ingredient.arrange"]').checked,
@@ -821,7 +825,9 @@ function getInstructions() {
     const instructionContainers = document.querySelectorAll('.instruction');
 
     instructionContainers.forEach(container => {
+        const idInput = container.querySelector('input[name^="instruction.id"]');
         instructions.push({
+            id: idInput ? idInput.value : null,
             stepNumber: container.querySelector('input[name^="instruction.stepNumber"]').value || (index + 1).toString(),
             content: container.querySelector('textarea[name^="instruction.content"]').value,
             arrange: container.querySelector('input[name^="instruction.arrange"]').checked,
@@ -845,24 +851,32 @@ function displayPreFilledRecipe(recipeDetail) {
     document.getElementById('remark').value = recipeDetail.recipe.remark;
     document.getElementById('favorite').checked = recipeDetail.recipe.favorite;
 
+    const ingredientsContainer = document.getElementById('ingredientsContainer');
+    ingredientsContainer.innerHTML = '';
+
+    const instructionsContainer = document.getElementById('instructionsContainer');
+    instructionsContainer.innerHTML = '';
+
     recipeDetail.ingredients.forEach((ingredient, index) => {
-        if (index < recipeDetail.ingredients.length - 1) {
-            addIngredientForm();
-        }
-        const ingredientInputs = document.querySelectorAll(`.ingredient:nth-child(${index + 1}) input, .ingredient:nth-child(${index + 1}) textarea`);
-        ingredientInputs[0].value = ingredient.name;
-        ingredientInputs[1].value = ingredient.quantity;
-        ingredientInputs[2].checked = ingredient.arrange;
+        const ingredientHtml = createIngredientHtml(ingredient.id);
+        ingredientsContainer.insertAdjacentHTML('beforeend', ingredientHtml);
+
+        const currentIngredient = ingredientsContainer.children[index];
+        const inputs = currentIngredient.querySelectorAll('input[type="text"], input[type="checkbox"]');
+        inputs[0].value = ingredient.name;
+        inputs[1].value = ingredient.quantity;
+        inputs[2].checked = ingredient.arrange;
     });
 
     recipeDetail.instructions.forEach((instruction, index) => {
-        if (index < recipeDetail.instructions.length - 1) {
-            addInstructionForm();
-        }
-        const instructionInputs = document.querySelectorAll(`.instruction:nth-child(${index + 1}) input, .instruction:nth-child(${index + 1}) textarea`);
-        instructionInputs[0].value = instruction.stepNumber;
-        instructionInputs[1].value = instruction.content;
-        instructionInputs[2].checked = instruction.arrange;
+        const instructionHtml = createInstructionHtml(instruction.id);
+        instructionsContainer.insertAdjacentHTML('beforeend', instructionHtml);
+
+        const currentInstruction = instructionsContainer.children[index];
+        const inputs = currentInstruction.querySelectorAll('input[type="number"], textarea, input[type="checkbox"]');
+        inputs[0].value = instruction.stepNumber;
+        inputs[1].value = instruction.content;
+        inputs[2].checked = instruction.arrange;
     });
 }
 
