@@ -3,6 +3,7 @@ package raisetech.RecipeNotebook.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -46,35 +47,127 @@ public class RecipeApiController {
     this.recipeService = recipeService;
   }
 
-  @Operation(summary = "レシピの一覧検索", description = "RecipeSearchCriteriaで定義するリクエストパラメータに応じたレシピ検索を行います。")
+  @Operation(
+      summary = "レシピの一覧検索", description = "RecipeSearchCriteriaで定義するリクエストパラメータに応じたレシピ検索を行います。リクエストパラメータが全てnullの場合は全件検索を行います。")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
+      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンスです。",
           content = @Content(mediaType = "application/json",
-              array = @ArraySchema(schema = @Schema(implementation = RecipeDetail.class))
+              array = @ArraySchema(schema = @Schema(implementation = RecipeDetail.class)),
+              examples = {
+                  @ExampleObject(
+                      summary = "検索条件に合致するレシピが1件見つかった場合",
+                      value = """
+                              [
+                                {
+                                  "recipe": {
+                                    "id": 2,
+                                    "name": "目玉焼き",
+                                    "imagePath": "/images/medamayaki.jpg",
+                                    "recipeSource": "https://------2.com",
+                                    "servings": "1人前",
+                                    "remark": "基本の目玉焼きのレシピです。",
+                                    "favorite": true,
+                                    "createdAt": "2024-09-23T17:00:00",
+                                    "updatedAt": "2024-10-23T17:00:00"
+                                  },
+                                  "ingredients": [
+                                    {
+                                      "id": 5,
+                                      "recipeId": 2,
+                                      "name": "卵",
+                                      "quantity": "1個",
+                                      "arrange": false
+                                    },
+                                    {
+                                      "id": 6,
+                                      "recipeId": 2,
+                                      "name": "サラダ油",
+                                      "quantity": "適量",
+                                      "arrange": false
+                                    },
+                                    {
+                                      "id": 7,
+                                      "recipeId": 2,
+                                      "name": "水",
+                                      "quantity": null,
+                                      "arrange": false
+                                    }
+                                  ],
+                                  "instructions": [
+                                    {
+                                      "id": 5,
+                                      "recipeId": 2,
+                                      "stepNumber": 1,
+                                      "content": "フライパンに油をたらし、火にかける",
+                                      "arrange": false
+                                    },
+                                    {
+                                      "id": 6,
+                                      "recipeId": 2,
+                                      "stepNumber": 2,
+                                      "content": "フライパンに卵を割り入れる",
+                                      "arrange": false
+                                    },
+                                    {
+                                      "id": 7,
+                                      "recipeId": 2,
+                                      "stepNumber": 3,
+                                      "content": "少し焼けたら水を入れ、ふたをして5分、弱火にかけて完成",
+                                      "arrange": false
+                                    }
+                                  ]
+                                }
+                              ]
+                          """
+                  )
+              }
           )
       ),
-      @ApiResponse(responseCode = "400", description = "無効な検索条件を指定した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              array = @ArraySchema(schema = @Schema(implementation = ErrorResponse.class))
+      @ApiResponse(responseCode = "400", description = "不正な検索条件を指定した場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class),
+              examples = {
+                  @ExampleObject(
+                      summary = "終了日が開始日より前の日付を指定した場合",
+                      value = """
+                                {
+                                   "status": "BAD_REQUEST",
+                                   "message": "バリデーションエラーです。入力フォームを確認してください",
+                                   "errors": [
+                                     {
+                                       "field": "createDateTo",
+                                       "message": "終了日が開始日より前の日付になっています"
+                                     }
+                                   ]
+                                }
+                          """
+                  )
+              }
           )
       )
   })
   @GetMapping
   public ResponseEntity<List<RecipeDetail>> searchRecipeDetails(
-      @Valid @ModelAttribute RecipeSearchCriteria criteria) {
-    List<RecipeDetail> recipeDetails = recipeService.searchRecipeList(criteria);
+      @Valid @ModelAttribute RecipeSearchCriteria recipeSearchCriteria) {
+    List<RecipeDetail> recipeDetails = recipeService.searchRecipeList(recipeSearchCriteria);
     return ResponseEntity.ok(recipeDetails);
   }
 
   @Operation(summary = "レシピ詳細情報の取得", description = "レシピIDに紐づくレシピ詳細情報を取得します。")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
+      @ApiResponse(
+          responseCode = "200", description = "処理が成功した場合のレスポンス",
+          content = @Content(
+              mediaType = "application/json",
               schema = @Schema(implementation = RecipeDetail.class))
       ),
-      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = ErrorResponse.class))
+      @ApiResponse(
+          responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
+          content = @Content(
+              mediaType = "application/json",
+              array = @ArraySchema(schema = @Schema(implementation = RecipeDetail.class))
+          )
       )
   })
   @GetMapping("/{id}")

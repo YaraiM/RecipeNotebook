@@ -12,7 +12,7 @@ import raisetech.RecipeNotebook.exception.DateRangeValidation;
 /**
  * レシピ詳細情報の一覧検索時に指定可能なパラメータをまとめたオブジェクトです。
  */
-@Schema(description = "レシピ詳細情報の一覧検索時に指定可能なパラメータ")
+@Schema(description = "レシピ検索時に指定可能なパラメータです。")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,25 +20,25 @@ import raisetech.RecipeNotebook.exception.DateRangeValidation;
 @DateRangeValidation
 public class RecipeSearchCriteria {
 
-  @Schema(description = "レシピの名前によるキーワード検索（部分一致）")
+  @Schema(description = "レシピ名で検索します。複数のキーワードを指定可能です。", example = "[\"目玉\", \"焼\"]")
   private List<String> recipeNames;
 
-  @Schema(description = "レシピのお気に入りフラグ")
+  @Schema(description = "お気に入りのレシピで絞り込みます。", example = "true")
   private Boolean favoriteRecipe;
 
-  @Schema(description = "レシピの作成日の範囲検索（起点）")
+  @Schema(description = "作成日（指定日以降）で検索します", example = "2024-01-01")
   private LocalDate createDateFrom;
 
-  @Schema(description = "レシピの作成日の範囲検索（終点）")
+  @Schema(description = "作成日（指定日以前）で検索します", example = "2025-01-01")
   private LocalDate createDateTo;
 
-  @Schema(description = "レシピの更新日の範囲検索（起点）")
+  @Schema(description = "更新日（指定日以降）で検索します", example = "2024-07-01")
   private LocalDate updateDateFrom;
 
-  @Schema(description = "レシピの更新日の範囲検索（終点）")
+  @Schema(description = "作成日（指定日以前）で検索します", example = "2025-07-01")
   private LocalDate updateDateTo;
 
-  @Schema(description = "レシピに使用している材料名（部分一致）")
+  @Schema(description = "指定した材料が含まれるレシピを検索します。複数のキーワードを指定可能です。", example = "[\"卵\", \"水\"]")
   private List<String> ingredientNames;
 
 }
