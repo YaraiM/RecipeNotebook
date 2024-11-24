@@ -7,24 +7,28 @@ import org.springframework.web.bind.annotation.PathVariable;
 @Controller
 public class RecipeViewController {
 
+  @GetMapping("/login")
+  public String loginForm() {
+    return "login";
+  }
+
   @GetMapping("/recipes")
-  public String showRecipeList() {
+  public String recipeList() {
     return "recipes";
   }
 
   @GetMapping("/recipes/{id}/detail")
-  public String showRecipeDetail(@PathVariable int id) {
+  public String recipeDetail(@PathVariable int id) {
     return "detail";
   }
 
   @GetMapping("/recipes/new")
-  public String showNewRecipeForm() {
+  public String registerForm() {
     return "new";
   }
 
-  // レシピ更新画面
   @GetMapping("/recipes/{id}/update")
-  public String showUpdateForm(@PathVariable int id) {
+  public String updateForm(@PathVariable int id) {
     return "update";
   }
 

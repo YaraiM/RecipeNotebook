@@ -11,11 +11,17 @@ function initializeModal() {
         window.deleteModal = new bootstrap.Modal(modalElement);
 
         // 確認ボタンのイベントリスナーを設定
-        document.getElementById('confirmDelete')?.addEventListener('click', function() {
+        document.getElementById('confirmDelete')?.addEventListener('click', async function() {
             if (window.deleteTargetId === null) return;
 
-            fetch(`/api/recipes/${window.deleteTargetId}/delete`, {
-                method: 'DELETE'
+            const csrfToken = await fetchCSRFToken();
+
+            await fetch(`/api/recipes/${window.deleteTargetId}/delete`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json',
+                },
             })
             .then(response => {
                 if (!response.ok) throw new Error('削除に失敗しました');
@@ -53,8 +59,16 @@ function confirmDelete(id) {
 
 // 画面の初期化
 function initializeAllViews() {
+    // ログイン画面
+    if (window.location.pathname === '/login') {
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => insertCSRFToken(form));
+        showLoginErrorMessage();
+    }
+
     // 検索・レシピ一覧画面
     if (document.getElementById('searchForm')) {
+        loadHeader();
         setupSearchForm();
         setupDatepickers();
         loadRecipes();
@@ -62,6 +76,7 @@ function initializeAllViews() {
 
     // レシピ詳細画面(recipeIdはdetail.html内で定義)
     if (document.getElementById('displayRecipeDetail')) {
+        loadHeader();
         const path = window.location.pathname;
         const recipeId = path.split("/")[2];
         loadRecipeDetail(recipeId);
@@ -70,6 +85,7 @@ function initializeAllViews() {
 
     // レシピ新規作成・編集画面
     if (document.getElementById('recipeForm')) {
+        loadHeader();
         initializeRecipeForm();
 
         const path = window.location.pathname;
@@ -78,6 +94,62 @@ function initializeAllViews() {
             loadRecipeDetail(recipeId);
             navigateToRecipeDetail(recipeId);
         }
+    }
+}
+
+// CSRFトークンの取得
+async function fetchCSRFToken() {
+    const response = await fetch('/csrf-token');
+    if (!response.ok) {
+        throw new Error('CSRFトークンの取得に失敗しました');
+    }
+    const data = await response.json();
+    return data.token;
+}
+
+// CSRFトークンの挿入
+async function insertCSRFToken(element) {
+    try {
+        const response = await fetch('/csrf-token', { method: 'GET', credentials: 'same-origin' });
+        if (!response.ok) throw new Error(response.json().message);
+        const { token, headerName } = await response.json();
+
+        if (!element.querySelector(`input[name="${headerName}"]`)) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_csrf';
+            csrfInput.value = token;
+            element.appendChild(csrfInput);
+        }
+    } catch (error) {
+        console.error('CSRFトークンの初期化エラー：', error);
+    }
+}
+
+// ログイン画面のエラーメッセージ
+function showLoginErrorMessage() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('error')) {
+    const errorMessage = document.getElementById('loginErrorMessage');
+    errorMessage.classList.remove('d-none')
+    }
+}
+
+// ヘッダーのインクルード
+async function loadHeader() {
+    const headerElement = document.querySelector("#header");
+    const response = await fetch('/views/header.html');
+    const headerHTML = await response.text();
+    headerElement.innerHTML = headerHTML;
+
+    const form = document.querySelector('form');
+    insertCSRFToken(form);
+
+    const navbarCollapse = document.querySelector('.navbar-collapse');
+    if (navbarCollapse) {
+        const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
+            toggle: false
+        });
     }
 }
 
@@ -206,7 +278,7 @@ function displayRecipes(recipeDetails) {
 }
 
 // レシピ一覧画面：各レシピのお気に入り状態の切り替え
-function toggleFavorite(recipeId) {
+async function toggleFavorite(recipeId) {
     const favoriteButton = document.querySelector(`.favorite-button[data-id='${recipeId}']`);
     const isCurrentlyFavorite = favoriteButton.classList.contains('favorite-active');
     const newFavorite = !isCurrentlyFavorite;
@@ -215,9 +287,12 @@ function toggleFavorite(recipeId) {
     favoriteButton.classList.toggle('favorite-active', newFavorite);
     favoriteButton.classList.toggle('favorite-inactive', !newFavorite);
 
-    fetch(`/api/recipes/${recipeId}/favorite`, {
+    const csrfToken = await fetchCSRFToken();
+
+    await fetch(`/api/recipes/${recipeId}/favorite`, {
         method: 'PUT',
         headers: {
+            'X-CSRF-TOKEN': csrfToken,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ favorite: newFavorite })
@@ -340,7 +415,7 @@ function displayRecipe(recipeDetail) {
         </div>
 
         <div class="recipe-info">
-            <h4 class="mb-3">材料</h4>
+            <h4 class="text-muted mb-3">材料</h4>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-light">
@@ -374,7 +449,7 @@ function displayRecipe(recipeDetail) {
         </div>
 
         <div class="recipe-info">
-            <h4 class="mb-3">調理手順</h4>
+            <h4 class="text-muted mb-3">調理手順</h4>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-light">
@@ -409,8 +484,8 @@ function displayRecipe(recipeDetail) {
 
         ${recipe.remark ? `
             <div class="recipe-info">
-                <h4 class="mb-3">備考</h4>
-                <p class="mb-0">${recipe.remark}</p>
+                <h4 class="text-muted mb-3">備考</h4>
+                <p class="mb-0">${recipe.remark.replace(/\n/g, '<br>')}</p>
             </div>
         ` : ''}
 
@@ -628,9 +703,12 @@ async function submitRecipeForm(event) {
 
     const method = isNewRecipe ? 'POST' : 'PUT';
 
-    fetch(endpoint, {
+    const csrfToken = await fetchCSRFToken();
+
+    await fetch(endpoint, {
         method: method,
         headers: {
+            'X-CSRF-TOKEN': csrfToken,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(recipeDetailWithImageData)
@@ -641,7 +719,8 @@ async function submitRecipeForm(event) {
                 handleValidationErrors(responseJson.errors);
                 throw new Error(responseJson.message);
             } else if (responseJson.message &&
-                      (responseJson.message.includes('ファイルのサイズ') ||
+                      (responseJson.message.includes('不正なデータ形式') ||
+                       responseJson.message.includes('ファイルのサイズ') ||
                        responseJson.message.includes('画像ファイルのみ'))) {
                 throw new Error(responseJson.message);
             } else {

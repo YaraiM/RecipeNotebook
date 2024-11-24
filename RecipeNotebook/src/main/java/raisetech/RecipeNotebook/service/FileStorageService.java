@@ -58,10 +58,15 @@ public class FileStorageService {
         Path uploadPath = Paths.get(uploadDir);
         String fileName = imagePath.substring(imagePath.lastIndexOf("/") + 1);
         Path filePath = uploadPath.resolve(fileName);
-        Files.delete(filePath);
+
+        // ディレクトリにファイルが存在する場合に限り削除。存在しなければ何もしないことを許容する。
+        if (Files.exists(filePath)) {
+          Files.delete(filePath);
+        }
+
       } catch (IOException e) {
         throw new FileStorageException(
-            "ファイルの削除に失敗しました。画像ファイルが存在しない可能性があります");
+            "ファイルの削除に失敗しました");
       }
     }
   }

@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -43,10 +44,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import raisetech.RecipeNotebook.config.SecurityConfig;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
@@ -56,6 +60,8 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(SecurityConfig.class)
+@WithMockUser(username = "user", roles = "USER")
 @Transactional
 public class RecipeApiIntegrationTest {
 
@@ -306,6 +312,7 @@ public class RecipeApiIntegrationTest {
       String requestBody, RecipeDetail expectedRecipeDetail, Matcher<String> expectedImageData
   ) throws Exception {
     mockMvc.perform(post("/api/recipes/new")
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(requestBody)
             .accept(MediaType.APPLICATION_JSON))
@@ -486,6 +493,7 @@ public class RecipeApiIntegrationTest {
   ) throws Exception {
     mockMvc.perform(
             put("/api/recipes/{id}/update", expectedRecipeDetail.getRecipe().getId())
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson)
                 .accept(MediaType.APPLICATION_JSON))
@@ -747,6 +755,7 @@ public class RecipeApiIntegrationTest {
   void レシピの更新_異常系_パスのIDとリクエストボディのレシピIDが異なる場合に例外をスローすること()
       throws Exception {
     mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update", 999)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -825,6 +834,7 @@ public class RecipeApiIntegrationTest {
   void レシピの更新_異常系_存在しないレシピIDを指定したときに例外をスローすること()
       throws Exception {
     mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update", 999)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -903,6 +913,7 @@ public class RecipeApiIntegrationTest {
       throws Exception {
     mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update",
                 createExpectedRecipeDetail1().getRecipe().getId())
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -981,6 +992,7 @@ public class RecipeApiIntegrationTest {
       throws Exception {
     mockMvc.perform(MockMvcRequestBuilders.put("/api/recipes/{id}/update",
                 createExpectedRecipeDetail1().getRecipe().getId())
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
@@ -1060,6 +1072,7 @@ public class RecipeApiIntegrationTest {
     int recipeId = 1;
 
     mockMvc.perform(put("/api/recipes/{id}/favorite", recipeId)
+            .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"favorite\": true}")
         )
@@ -1076,7 +1089,8 @@ public class RecipeApiIntegrationTest {
       throws Exception {
     int recipeId = createExpectedRecipeDetail1().getRecipe().getId();
 
-    mockMvc.perform(delete("/api/recipes/{id}/delete", recipeId))
+    mockMvc.perform(delete("/api/recipes/{id}/delete", recipeId)
+            .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(content().string("レシピを削除しました"));
 
@@ -1088,7 +1102,8 @@ public class RecipeApiIntegrationTest {
   @Test
   void レシピの削除_異常系_存在しないレシピIDを指定したときに例外がスローされること()
       throws Exception {
-    mockMvc.perform(delete("/api/recipes/{id}/delete", 999))
+    mockMvc.perform(delete("/api/recipes/{id}/delete", 999)
+            .with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("レシピID「" + 999 + "」は存在しません"));
   }

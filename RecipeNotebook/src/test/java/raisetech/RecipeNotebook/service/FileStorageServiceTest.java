@@ -92,7 +92,7 @@ class FileStorageServiceTest {
   }
 
   @Test
-  void ファイルの削除_正常系_ファイルが正しく削除されること() throws IOException {
+  void ファイルの削除_ファイルが正しく削除されること() throws IOException {
     Path uploadPath = Paths.get("test-uploads");
     Files.createDirectories(uploadPath);
     Path testFile = uploadPath.resolve("test.jpg");
@@ -103,17 +103,6 @@ class FileStorageServiceTest {
     assertThat(Files.exists(testFile), is(false));
 
     Files.deleteIfExists(uploadPath);
-  }
-
-  @Test
-  void ファイルの削除_異常系_ファイルが存在しない場合にFileStorageExceptionがスローされること() {
-    String nonExistentFile = "/test-uploads/non_existent.jpg";
-
-    FileStorageException exception = assertThrows(FileStorageException.class,
-        () -> sut.deleteFile(nonExistentFile));
-
-    assertThat(exception.getMessage(),
-        is("ファイルの削除に失敗しました。画像ファイルが存在しない可能性があります"));
   }
 
 }
