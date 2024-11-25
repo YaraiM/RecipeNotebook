@@ -158,13 +158,14 @@ public class RecipeApiController {
 
   @Operation(
       summary = "レシピ詳細情報の取得",
-      description = "指定したIDのレシピの詳細情報を取得します。")
+      description = "指定したIDのレシピの詳細情報を取得します。"
+  )
   @ApiResponses(value = {
       @ApiResponse(
           responseCode = "200", description = "処理が成功した場合のレスポンスです。",
           content = @Content(
               mediaType = "application/json",
-              array = @ArraySchema(schema = @Schema(implementation = RecipeDetail.class)),
+              schema = @Schema(implementation = RecipeDetail.class),
               examples = {
                   @ExampleObject(
                       summary = "ID=2を指定した場合",
@@ -281,7 +282,7 @@ public class RecipeApiController {
                                 "imagePath": "test3/path",
                                 "recipeSource": "https://------3.com",
                                 "servings": "3人分",
-                                "remark": "備考欄3",
+                                "remark": "基本の炒り卵のレシピです。",
                                 "favorite": false
                             },
                             "ingredients": [
@@ -335,66 +336,83 @@ public class RecipeApiController {
       @ApiResponse(responseCode = "201", description = "処理が成功した場合のレスポンスです。",
           content = @Content(
               mediaType = "application/json",
-              array = @ArraySchema(schema = @Schema(implementation = RecipeDetail.class)),
+              schema = @Schema(implementation = RecipeDetail.class),
               examples = {
                   @ExampleObject(
                       summary = "新規作成が成功した場合",
                       value = """
                           {
-                          "recipe": {
-                              "name": "炒り卵",
-                              "imagePath": "test3/path",
-                              "recipeSource": "https://------3.com",
-                              "servings": "3人分",
-                              "remark": "備考欄3",
-                              "favorite": false
-                          },
-                          "ingredients": [
-                              {
-                                  "name": "卵",
-                                  "quantity": "3個",
-                                  "arrange": false
-                              },
-                              {
-                                  "name": "サラダ油",
-                                  "quantity": "適量",
-                                  "arrange": false
-                              },
-                              {
-                                  "name": "マヨネーズ",
-                                  "quantity": "大さじ2",
-                                  "arrange": true
-                              },
-                              {
-                                  "name": "砂糖",
-                                  "quantity": "大さじ1/2",
-                                  "arrange": false
-                              }
-                          ],
-                          "instructions": [
-                              {
-                                  "stepNumber": 1,
-                                  "content": "卵を溶いて調味料を混ぜ、卵液を作る",
-                                  "arrange": false
-                              },
-                              {
-                                  "stepNumber": 2,
-                                  "content": "フライパンに油をたらし、火にかける",
-                                  "arrange": false
-                              },
-                              {
-                                  "stepNumber": 3,
-                                  "content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
-                                  "arrange": false
-                              }
-                          ]
+                          	"recipe": {
+                          		"id": 3,
+                          		"name": "炒り卵",
+                          		"imagePath": "test3/path",
+                          		"recipeSource": "https://------3.com",
+                          		"servings": "3人分",
+                          		"remark": "基本の炒り卵のレシピです。",
+                          		"favorite": false
+                          	},
+                          	"ingredients": [
+                          		{
+                          			"id": 8,
+                          			"recipeId": 3,
+                          			"name": "卵",
+                          			"quantity": "3個",
+                          			"arrange": false
+                          		},
+                          		{
+                          			"id": 9,
+                          			"recipeId": 3,
+                          			"name": "サラダ油",
+                          			"quantity": "適量",
+                          			"arrange": false
+                          		},
+                          		{
+                          			"id": 10,
+                          			"recipeId": 3,
+                          			"name": "マヨネーズ",
+                          			"quantity": "大さじ2",
+                          			"arrange": true
+                          		},
+                          		{
+                          			"id": 11,
+                          			"recipeId": 3,
+                          			"name": "砂糖",
+                          			"quantity": "大さじ1/2",
+                          			"arrange": false
+                          		}
+                          	],
+                          	"instructions": [
+                          		{
+                          			"id": 8,
+                          			"recipeId": 3,
+                          			"stepNumber": 1,
+                          			"content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                          			"arrange": false
+                          		},
+                          		{
+                          			"id": 9,
+                          			"recipeId": 3,
+                          			"stepNumber": 2,
+                          			"content": "フライパンに油をたらし、火にかける",
+                          			"arrange": false
+                          		},
+                          		{
+                          			"id": 10,
+                          			"recipeId": 3,
+                          			"stepNumber": 3,
+                          			"content": "卵液をフライパンに入れて焼きながらかき混ぜて完成",
+                          			"arrange": false
+                          		}
+                          	]
                           }
                           """
                   )
               }
           )
       ),
-      @ApiResponse(responseCode = "400", description = "許可されていないリクエスト（▽必須項目の未入力、▽画像以外のデータのアップロード、▽5MBを超える画像データのアップロード）をリクエストした場合のレスポンス",
+      @ApiResponse(
+          responseCode = "400",
+          description = "許可されていないリクエスト（▽必須項目の未入力、▽画像以外のデータのアップロード、▽5MBを超える画像データのアップロード）をリクエストした場合のレスポンスです。",
           content = @Content(
               mediaType = "application/json",
               schema = @Schema(implementation = ErrorResponse.class),
@@ -402,38 +420,20 @@ public class RecipeApiController {
                   @ExampleObject(
                       summary = "必須項目が未入力の場合",
                       value = """
-                                {
-                                   "status": "BAD_REQUEST",
-                                   "message": "バリデーションエラーです。入力フォームを確認してください",
-                                   "errors": [
-                                     {
-                                       "field": "recipe.name",
-                                       "message": "空白は許可されていません"
-                                     },
-                                     {
-                                       "field": "ingredients[0].name",
-                                       "message": "空白は許可されていません"
-                                     },
-                                   ]
-                                }
-                          """
-                  ),
-                  @ExampleObject(
-                      summary = "画像以外のファイルをアップロードした場合",
-                      value = """
-                                {
-                                   "status": "BAD_REQUEST",
-                                   "message": "画像ファイルのみアップロード可能です",
-                                   "errors": null
-                          """
-                  ),
-                  @ExampleObject(
-                      summary = "5MBを超える画像データをアップロードした場合",
-                      value = """
-                                {
-                                   "status": "BAD_REQUEST",
-                                   "message": "画像ファイルのサイズが大きすぎます。5MB以下にしてください",
-                                   "errors": null
+                          {
+                              "status": "BAD_REQUEST",
+                              "message": "バリデーションエラーです。入力フォームを確認してください",
+                              "errors": [
+                                  {
+                                      "field": "recipeDetail.ingredients[0].name",
+                                      "message": "空白は許可されていません"
+                                  },
+                                  {
+                                      "field": "recipeDetail.recipe.name",
+                                      "message": "空白は許可されていません"
+                                  }
+                              ]
+                          }
                           """
                   )
               }
@@ -458,19 +458,220 @@ public class RecipeApiController {
         body(newRecipeDetail);
   }
 
-  @Operation(summary = "レシピの更新", description = "既存情報の変更や材料・調理手順の追加・削除を行います。")
+  @Operation(
+      summary = "レシピの更新",
+      description = "既存情報の変更や材料・調理手順の追加・削除を行います。"
+  )
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "レシピ詳細情報および画像データ（base64形式）です。",
+      content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = RecipeDetailWithImageData.class),
+          examples = {
+              @ExampleObject(
+                  summary = "レシピ名・備考欄の変更、砂糖の削除、白だしの追加をする場合",
+                  value = """
+                      {
+                        "recipeDetail": {
+                          "recipe": {
+                            "id": 1,
+                            "name": "卵焼き（アレンジver.）",
+                            "imagePath": "/images/tamagoyaki.jpg",
+                            "recipeSource": "https://------1.com",
+                            "servings": "2人分",
+                            "remark": "アレンジ版の卵焼きのレシピです。砂糖の代わりに白だしを加えます",
+                            "favorite": false
+                          },
+                          "ingredients": [
+                            {
+                              "id": 1,
+                              "name": "卵",
+                              "quantity": "3個",
+                              "arrange": false
+                            },
+                            {
+                              "id": 2,
+                              "name": "サラダ油",
+                              "quantity": "適量",
+                              "arrange": false
+                            },
+                            {
+                              "id": 3,
+                              "name": "醤油",
+                              "quantity": "大さじ1/2",
+                              "arrange": false
+                            },
+                            {
+                              "id": null,
+                              "name": "白だし",
+                              "quantity": "小さじ1/2",
+                              "arrange": true
+                            }
+                          ],
+                          "instructions": [
+                            {
+                              "id": 1,
+                              "stepNumber": 1,
+                              "content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                              "arrange": false
+                            },
+                            {
+                              "id": 2,
+                              "stepNumber": 2,
+                              "content": "フライパンに油をたらし、火にかける",
+                              "arrange": false
+                            },
+                            {
+                              "id": 3,
+                              "stepNumber": 3,
+                              "content": "卵液を1/3くらいフライパンに入れて焼き、巻く",
+                              "arrange": true
+                            },
+                            {
+                              "id": 4,
+                              "stepNumber": 4,
+                              "content": "3の手順を繰り返して完成",
+                              "arrange": false
+                            }
+                          ]
+                        },
+                        "imageData": null
+                      }
+                      """
+              )
+          }
+      )
+  )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = RecipeDetail.class))
+      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = RecipeDetail.class),
+              examples = {
+                  @ExampleObject(
+                      summary = "更新が成功した場合",
+                      value = """
+                          {
+                            "recipe": {
+                              "id": 1,
+                              "name": "卵焼き（アレンジver.）",
+                              "imagePath": "/images/tamagoyaki.jpg",
+                              "recipeSource": "https://------1.com",
+                              "servings": "2人分",
+                              "remark": "アレンジ版の卵焼きのレシピです。砂糖の代わりに白だしを加えます",
+                              "favorite": false
+                            },
+                            "ingredients": [
+                              {
+                                "id": 1,
+                                "recipeId": 1,
+                                "name": "卵",
+                                "quantity": "3個",
+                                "arrange": false
+                              },
+                              {
+                                "id": 2,
+                                "recipeId": 1,
+                                "name": "サラダ油",
+                                "quantity": "適量",
+                                "arrange": false
+                              },
+                              {
+                                "id": 3,
+                                "recipeId": 1,
+                                "name": "醤油",
+                                "quantity": "大さじ1/2",
+                                "arrange": false
+                              },
+                              {
+                                "id": 5,
+                                "recipeId": 1,
+                                "name": "白だし",
+                                "quantity": "小さじ1/2",
+                                "arrange": true
+                              }
+                            ],
+                            "instructions": [
+                              {
+                                "id": 1,
+                                "recipeId": 1,
+                                "stepNumber": 1,
+                                "content": "卵を溶いて調味料を混ぜ、卵液を作る",
+                                "arrange": false
+                              },
+                              {
+                                "id": 2,
+                                "recipeId": 1,
+                                "stepNumber": 2,
+                                "content": "フライパンに油をたらし、火にかける",
+                                "arrange": false
+                              },
+                              {
+                                "id": 3,
+                                "recipeId": 1,
+                                "stepNumber": 3,
+                                "content": "卵液を1/3くらいフライパンに入れて焼き、巻く",
+                                "arrange": true
+                              },
+                              {
+                                "id": 4,
+                                "recipeId": 1,
+                                "stepNumber": 4,
+                                "content": "3の手順を繰り返して完成",
+                                "arrange": false
+                              }
+                            ]
+                          }
+                          """
+                  )
+              }
+          )
       ),
-      @ApiResponse(responseCode = "400", description = "許可されていないリクエスト（▽必須項目の未入力、▽画像以外のデータのアップロード、▽5MBを超える画像データのアップロード、▽パスとリクエストパラメータにおけるレシピIDの不一致）をリクエストした場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = ErrorResponse.class))
+      @ApiResponse(responseCode = "400", description = "許可されていないリクエスト（▽必須項目の未入力、▽画像以外のデータのアップロード、▽5MBを超える画像データのアップロード、▽パスとリクエストパラメータにおけるレシピIDの不一致）をリクエストした場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class),
+              examples = {
+                  @ExampleObject(
+                      summary = "必須項目が未入力の場合",
+                      value = """
+                          {
+                              "status": "BAD_REQUEST",
+                              "message": "バリデーションエラーです。入力フォームを確認してください",
+                              "errors": [
+                                  {
+                                      "field": "recipeDetail.ingredients[0].name",
+                                      "message": "空白は許可されていません"
+                                  },
+                                  {
+                                      "field": "recipeDetail.recipe.name",
+                                      "message": "空白は許可されていません"
+                                  }
+                              ]
+                          }
+                          """
+                  )
+              }
+          )
       ),
-      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = ErrorResponse.class))
+      @ApiResponse(
+          responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class),
+              examples = {
+                  @ExampleObject(
+                      summary = "ID=999（データベースに存在しないID）を指定した場合",
+                      value = """
+                                {
+                                   "status": "NOT_FOUND",
+                                   "message": "レシピID「999」は存在しません",
+                                   "errors": null
+                                }
+                          """
+                  )
+              }
+          )
       )
   })
   @PutMapping("/{id}/update")
@@ -493,15 +694,52 @@ public class RecipeApiController {
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 
-  @Operation(summary = "レシピのお気に入りフラグの更新", description = "指定したIDに紐づくレシピのお気に入りフラグ（favorite）の更新を行います。")
+  @Operation(
+      summary = "レシピのお気に入りフラグの更新",
+      description = "指定したIDに紐づくレシピのお気に入りフラグ（favorite）の更新を行います。"
+  )
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "レシピIDとお気に入りフラグ（favorite）です。",
+      content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = RecipeDetailWithImageData.class),
+          examples = {
+              @ExampleObject(
+                  summary = "ID=1のレシピ（卵焼き）をお気に入りにする場合",
+                  value = """
+                          {
+                            "id": 1,
+                            "favorite": true
+                          }
+                      """
+              )
+          }
+      )
+  )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = RecipeDetail.class))
+      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンスです。",
+          content = @Content(
+              schema = @Schema(type = "string", example = "お気に入りを変更しました")
+          )
       ),
-      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = ErrorResponse.class))
+      @ApiResponse(
+          responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class),
+              examples = {
+                  @ExampleObject(
+                      summary = "ID=999（データベースに存在しないID）を指定した場合",
+                      value = """
+                                {
+                                   "status": "NOT_FOUND",
+                                   "message": "レシピID「999」は存在しません",
+                                   "errors": null
+                                }
+                          """
+                  )
+              }
+          )
       )
   })
   @PutMapping("/{id}/favorite")
@@ -512,15 +750,34 @@ public class RecipeApiController {
     return ResponseEntity.ok("お気に入りを変更しました");
   }
 
-  @Operation(summary = "レシピの削除", description = "指定したIDに紐づくレシピをデータベースから削除します。レシピIDに紐づく材料および調理手順もデータベースから削除します。")
+  @Operation(
+      summary = "レシピの削除",
+      description = "指定したIDに紐づくレシピをデータベースから削除します。レシピIDに紐づく材料および調理手順もデータベースから削除します。"
+  )
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンス",
-          content = @Content(mediaType = "text/plain",
-              schema = @Schema(type = "string", example = "レシピを削除しました"))
+      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンスです。",
+          content = @Content(
+              schema = @Schema(type = "string", example = "レシピを削除しました")
+          )
       ),
-      @ApiResponse(responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンス",
-          content = @Content(mediaType = "application/json",
-              schema = @Schema(implementation = ErrorResponse.class))
+      @ApiResponse(
+          responseCode = "404", description = "データベースに存在しないIDを指定した場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              schema = @Schema(implementation = ErrorResponse.class),
+              examples = {
+                  @ExampleObject(
+                      summary = "ID=999（データベースに存在しないID）を指定した場合",
+                      value = """
+                                {
+                                   "status": "NOT_FOUND",
+                                   "message": "レシピID「999」は存在しません",
+                                   "errors": null
+                                }
+                          """
+                  )
+              }
+          )
       )
   })
   @DeleteMapping("/{id}/delete")
