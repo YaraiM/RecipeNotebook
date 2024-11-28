@@ -30,7 +30,10 @@ public class SecurityConfig {
               String targetUrl = getRedirectUrlFromSavedRequest(request);
               response.sendRedirect(targetUrl);
             })
-            .failureUrl("/login?error")
+            .failureHandler((request, response, exception) -> {
+              new HttpSessionRequestCache().removeRequest(request, response);
+              response.sendRedirect("/login?error");
+            })
             .permitAll())
         .logout(logout -> logout
             .logoutSuccessUrl("/login"))
@@ -58,7 +61,7 @@ public class SecurityConfig {
     RequestCache requestCache = new HttpSessionRequestCache();
     SavedRequest savedRequest = requestCache.getRequest(request, null);
 
-    if (savedRequest == null) {
+    if (savedRequest == null || savedRequest.getRedirectUrl().contains("/error")) {
       return "/recipes";
     }
 
