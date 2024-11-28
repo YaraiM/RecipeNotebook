@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -22,7 +23,8 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.ignoringRequestMatchers("/csrf-token"))
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/csrf-token", "/swagger-ui/**",
+            "/v3/api-docs/**"))
         .formLogin(login -> login
             .loginProcessingUrl("/login")
             .loginPage("/login")
@@ -35,10 +37,11 @@ public class SecurityConfig {
               response.sendRedirect("/login?error");
             })
             .permitAll())
+        .httpBasic(Customizer.withDefaults()) // SwaggerUI用の認証
         .logout(logout -> logout
             .logoutSuccessUrl("/login"))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/csrf-token").permitAll()
+            .requestMatchers("/csrf-token", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
             .requestMatchers("/login").permitAll()
             .anyRequest().authenticated()
