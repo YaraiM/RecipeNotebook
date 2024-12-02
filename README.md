@@ -108,6 +108,10 @@ erDiagram
     }
 ```
 
+### API仕様書
+
+※準備中です。
+
 ### URL一覧
 
 <img src= "https://github.com/user-attachments/assets/a921b62b-5703-4438-9d31-51ab385a20fe" alt="URL一覧" width="70%">
