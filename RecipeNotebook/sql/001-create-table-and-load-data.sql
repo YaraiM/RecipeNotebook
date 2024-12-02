@@ -1,7 +1,30 @@
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+  id INT NOT NULL AUTO_INCREMENT,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  role VARCHAR(50) NOT NULL DEFAULT 'USER',
+  enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at DATETIME,
+  updated_at DATETIME,
+  PRIMARY KEY(id)
+);
+
+ALTER TABLE users ADD CONSTRAINT chk_role CHECK (role IN ('USER', 'ADMIN'));
+
+INSERT INTO users (username, password, email, role, enabled, created_at, updated_at)
+VALUES
+('user', 'user_password', 'user@example.com', 'USER', TRUE, '2024-10-23 17:00:00', '2024-11-23 17:00:00'),
+('admin', 'admin_password', 'admin@example.com', 'ADMIN', TRUE, '2024-08-23 17:00:00', '2024-09-23 17:00:00');
+
+
 DROP TABLE IF EXISTS recipes;
 
 CREATE TABLE recipes (
   id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
   image_path VARCHAR(255) DEFAULT '/images/no_image.jpg',
   recipe_source VARCHAR(255),
@@ -10,15 +33,16 @@ CREATE TABLE recipes (
   favorite BOOLEAN NOT NULL DEFAULT FALSE,
   created_at DATETIME,
   updated_at DATETIME,
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-INSERT INTO recipes (name, image_path, recipe_source, servings, remark, favorite, created_at, updated_at)
+INSERT INTO recipes (user_id, name, image_path, recipe_source, servings, remark, favorite, created_at, updated_at)
 VALUES
-('卵焼き', '/images/tamagoyaki.jpg', null, '2人前', '基本的な卵焼きのレシピ。', FALSE,'2024-09-22 17:00:00', '2024-10-22 17:00:00'),
-('目玉焼き', '/images/medamayaki.jpg', null, '1人前', '基本的な目玉焼きのレシピ。', FALSE, '2024-09-23 17:00:00', '2024-10-23 17:00:00'),
-('ナポリタン', '/images/neapolitan.jpg', 'https://www.youtube.com/watch?v=uCbg_uS9aEU&t=452s', '1人前', '料理研究家リュウジさんのレシピをベースに、アレンジを加えたナポリタンのレシピ。ケチャップ減らして醤油とウスターソースを追加して甘さ控えめ・キレのある味わい。', TRUE, '2024-12-01 11:00:00', null),
-('ジャージャー風・肉味噌', '/images/jaja_nikumiso.jpg', 'https://www.youtube.com/watch?v=FwoGQ6GlXQs', '7～8食分', '「くまの限界食堂」さんのレシピのうち、肉味噌部分を抜き出してアレンジを加えたレシピ。人参少し足して栄養と甘味追加。にんにくしょうがはみじん切りで炒める。作り置きに最適。', TRUE, '2024-12-01 11:00:00', null);
+(1, '卵焼き', '/images/tamagoyaki.jpg', null, '2人前', '基本的な卵焼きのレシピ。', FALSE,'2024-09-22 17:00:00', '2024-10-22 17:00:00'),
+(1, '目玉焼き', '/images/medamayaki.jpg', null, '1人前', '基本的な目玉焼きのレシピ。', FALSE, '2024-09-23 17:00:00', '2024-10-23 17:00:00'),
+(1, 'ナポリタン', '/images/neapolitan.jpg', 'https://www.youtube.com/watch?v=uCbg_uS9aEU&t=452s', '1人前', '料理研究家リュウジさんのレシピをベースに、アレンジを加えたナポリタンのレシピ。ケチャップ減らして醤油とウスターソースを追加して甘さ控えめ・キレのある味わい。', TRUE, '2024-12-01 11:00:00', null),
+(1, 'ジャージャー風・肉味噌', '/images/jaja_nikumiso.jpg', 'https://www.youtube.com/watch?v=FwoGQ6GlXQs', '7～8食分', '「くまの限界食堂」さんのレシピのうち、肉味噌部分を抜き出してアレンジを加えたレシピ。人参少し足して栄養と甘味追加。にんにくしょうがはみじん切りで炒める。作り置きに最適。', TRUE, '2024-12-01 11:00:00', null);
 
 DROP TABLE IF EXISTS ingredients;
 
