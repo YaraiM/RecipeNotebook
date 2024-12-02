@@ -48,23 +48,27 @@ https://github.com/user-attachments/assets/442a66ad-3658-4f75-b537-69c318ee8e12
 
 ## 主な使用技術
 
-- バックエンド
-    - Java Oracle OpenJDK 21.0.3
-    - SpringBoot 3.3.4
-    - JUnit 5.10.3
+#### バックエンド
 
-- フロントエンド
-    - HTML/CSS/JavaScript
-    - Bootstrap 5.1.3
+- Java Oracle OpenJDK 21.0.3
+- SpringBoot 3.3.4
+- JUnit 5.10.3
 
-- データベース・インフラ
-    - MySQL 8.0.39
-    - Docker
-    - Amazon Web Service
+#### フロントエンド
 
-- その他
-    - バージョン管理：Git, GitHub
-    - CI/CD：GitHub Actions
+- HTML/CSS/JavaScript
+- Bootstrap 5.1.3
+
+#### データベース・インフラ
+
+- MySQL 8.0.39
+- Docker
+- Amazon Web Service
+
+#### その他
+
+- バージョン管理：Git, GitHub
+- CI/CD：GitHub Actions
 
 ## 設計書
 
