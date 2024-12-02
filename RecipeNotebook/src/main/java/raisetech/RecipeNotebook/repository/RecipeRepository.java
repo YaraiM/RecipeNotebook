@@ -6,19 +6,10 @@ import org.apache.ibatis.annotations.Mapper;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
-import raisetech.RecipeNotebook.data.User;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 
 @Mapper
 public interface RecipeRepository {
-
-  /**
-   * ユーザーIDに紐づくユーザーを取得します。
-   *
-   * @param userId ユーザーID
-   * @return ユーザー
-   */
-  User getUser(int userId);
 
   /**
    * ユーザーIDと検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件取得になります。
