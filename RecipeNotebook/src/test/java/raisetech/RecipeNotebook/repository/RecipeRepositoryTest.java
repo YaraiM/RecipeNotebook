@@ -35,7 +35,9 @@ class RecipeRepositoryTest {
   @MethodSource("provideGetRecipeTestCase")
   void 検索条件に応じたレシピを検索できること(RecipeSearchCriteria criteria,
       List<Recipe> expectedRecipes) {
-    List<Recipe> actual = sut.getRecipes(criteria);
+
+    int userId = 1;
+    List<Recipe> actual = sut.getRecipes(userId, criteria);
 
     assertThat(actual, hasSize(expectedRecipes.size()));
 
@@ -44,6 +46,7 @@ class RecipeRepositoryTest {
       Recipe expectedRecipe = expectedRecipes.get(i);
 
       assertThat(actualRecipe.getId(), is(expectedRecipe.getId()));
+      assertThat(actualRecipe.getUserId(), is(expectedRecipe.getUserId()));
       assertThat(actualRecipe.getName(), is(expectedRecipe.getName()));
       assertThat(actualRecipe.getImagePath(), is(expectedRecipe.getImagePath()));
       assertThat(actualRecipe.getRecipeSource(), is(expectedRecipe.getRecipeSource()));
@@ -64,13 +67,14 @@ class RecipeRepositoryTest {
             new RecipeSearchCriteria(null, null, null,
                 null, null, null, null),
             List.of(
-                new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+                new Recipe(1, 1, "卵焼き", "/test-uploads/tamagoyaki_image.png",
+                    "https://------1.com",
                     "2人分",
                     "備考欄1",
                     false,
                     LocalDateTime.parse("2024-09-22T17:00:00"),
                     LocalDateTime.parse("2024-09-22T17:00:00")),
-                new Recipe(2, "目玉焼き", "/test-uploads/medamayaki_image.png",
+                new Recipe(2, 1, "目玉焼き", "/test-uploads/medamayaki_image.png",
                     "https://------2.com", "1人分",
                     "備考欄2",
                     true,
@@ -80,7 +84,8 @@ class RecipeRepositoryTest {
                 LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
                 LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵")),
             List.of(
-                new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+                new Recipe(1, 1, "卵焼き", "/test-uploads/tamagoyaki_image.png",
+                    "https://------1.com",
                     "2人分",
                     "備考欄1",
                     false,
@@ -90,7 +95,8 @@ class RecipeRepositoryTest {
                 LocalDate.parse("2024-09-21"), LocalDate.parse("2024-09-23"),
                 LocalDate.parse("2024-10-21"), LocalDate.parse("2024-10-23"), List.of("卵", "砂糖")),
             List.of(
-                new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+                new Recipe(1, 1, "卵焼き", "/test-uploads/tamagoyaki_image.png",
+                    "https://------1.com",
                     "2人分",
                     "備考欄1",
                     false,
@@ -107,7 +113,7 @@ class RecipeRepositoryTest {
   void IDに紐づくレシピを取得できること() {
     Recipe actual = sut.getRecipe(1);
 
-    assertRecipe(actual, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+    assertRecipe(actual, 1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
         "2人分",
         "備考欄1", false,
         LocalDateTime.parse("2024-09-22T17:00:00"), LocalDateTime.parse("2024-10-22T17:00:00"));
@@ -186,11 +192,13 @@ class RecipeRepositoryTest {
   @Test
   void レシピをデータベースに追加できること() {
     Recipe recipe = createSampleRecipe();
+    int userId = recipe.getUserId();
     RecipeSearchCriteria criteria = new RecipeSearchCriteria();
     sut.registerRecipe(recipe);
 
-    Recipe actual = sut.getRecipes(criteria).getLast(); // DB上のIDの値にかかわらず、最後に追加されたレコードを検証できるようにしている。
-    assertRecipe(actual, "ゆで卵", "test3/path", "https://------3.com", "1人分", "備考欄3", true,
+    Recipe actual = sut.getRecipes(userId, criteria)
+        .getLast(); // DB上のIDの値にかかわらず、最後に追加されたレコードを検証できるようにしている。
+    assertRecipe(actual, 1, "ゆで卵", "test3/path", "https://------3.com", "1人分", "備考欄3", true,
         LocalDateTime.parse("2024-09-24T17:00:00"), null);
 
   }
@@ -240,6 +248,7 @@ class RecipeRepositoryTest {
   void 指定したIDのレシピを更新できること() {
     Recipe recipe = new Recipe();
     recipe.setId(1);
+    recipe.setUserId(1);
     recipe.setName("卵焼きrev");
     recipe.setImagePath("test1/path/rev");
     recipe.setRecipeSource("https://------1/rev.com");
@@ -251,7 +260,7 @@ class RecipeRepositoryTest {
     sut.updateRecipe(recipe);
 
     Recipe actual = sut.getRecipe(1);
-    assertRecipe(actual, "卵焼きrev", "test1/path/rev", "https://------1/rev.com", "2人分rev",
+    assertRecipe(actual, 1, "卵焼きrev", "test1/path/rev", "https://------1/rev.com", "2人分rev",
         "備考欄1rev", true, LocalDateTime.parse("2024-09-22T17:00:00"),
         LocalDateTime.parse("2024-11-24T17:00:00"));
 
@@ -299,10 +308,12 @@ class RecipeRepositoryTest {
 
   @Test
   void 指定したIDのレシピを削除できること() {
+    int userId = 1;
+
     sut.deleteRecipe(1);
     RecipeSearchCriteria criteria = new RecipeSearchCriteria();
 
-    List<Recipe> actualAll = sut.getRecipes(criteria);
+    List<Recipe> actualAll = sut.getRecipes(1, criteria);
     Recipe actual = sut.getRecipe(1);
 
     assertAll("Multiple assertions", () -> assertThat(actualAll, hasSize(1)),
@@ -335,10 +346,13 @@ class RecipeRepositoryTest {
   /**
    * レシピのアサーションを行うヘルパーメソッドです。
    */
-  private void assertRecipe(Recipe recipe, String name, String imagePath, String recipeSource,
+  private void assertRecipe(Recipe recipe, int userId, String name, String imagePath,
+      String recipeSource,
       String servings, String remark, Boolean favorite, LocalDateTime createdAt,
       LocalDateTime updatedAt) {
-    assertAll("Multiple assertions", () -> assertThat(recipe.getName(), is(name)),
+    assertAll("Multiple assertions",
+        () -> assertThat(recipe.getUserId(), is(userId)),
+        () -> assertThat(recipe.getName(), is(name)),
         () -> assertThat(recipe.getImagePath(), is(imagePath)),
         () -> assertThat(recipe.getRecipeSource(), is(recipeSource)),
         () -> assertThat(recipe.getServings(), is(servings)),
@@ -375,6 +389,7 @@ class RecipeRepositoryTest {
    */
   private static Recipe createSampleRecipe() {
     Recipe recipe = new Recipe();
+    recipe.setUserId(1);
     recipe.setName("ゆで卵");
     recipe.setImagePath("test3/path");
     recipe.setRecipeSource("https://------3.com");
