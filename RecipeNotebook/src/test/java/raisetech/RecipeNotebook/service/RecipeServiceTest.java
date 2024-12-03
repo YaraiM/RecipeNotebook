@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
+import raisetech.RecipeNotebook.data.User;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.ResourceNotFoundException;
@@ -41,13 +42,16 @@ class RecipeServiceTest {
   private RecipeRepository repository;
 
   @Mock
+  private CustomUserDetailsService customUserDetailsService;
+
+  @Mock
   private FileStorageService fileStorageService;
 
   private RecipeService sut;
 
   @BeforeEach
   void setUp() {
-    sut = new RecipeService(repository, fileStorageService);
+    sut = new RecipeService(repository, customUserDetailsService, fileStorageService);
   }
 
   @ParameterizedTest
@@ -55,12 +59,16 @@ class RecipeServiceTest {
   void レシピ詳細情報の一覧検索_検索条件に応じたレシピIDが返されかつメソッドが適切に呼び出されること(
       List<Integer> recipeIds, List<Integer> recipeIdsWithMatchingIngredients,
       List<Integer> expectedResultIds) {
+
+    User user = createMockUser();
+
     RecipeSearchCriteria criteria = new RecipeSearchCriteria();
     List<Recipe> recipes = createMockRecipes(recipeIds);
     List<Ingredient> ingredients = createMockIngredients(recipeIds);
     List<Instruction> instructions = createMockInstructions(recipeIds);
 
-    when(repository.getRecipes(criteria)).thenReturn(recipes);
+    when(customUserDetailsService.getLoggedInUser()).thenReturn(user);
+    when(repository.getRecipes(user.getId(), criteria)).thenReturn(recipes);
 
     if (!recipeIds.isEmpty()) {
       when(repository.getRecipeIdsWithMatchingIngredients(recipeIds,
@@ -77,7 +85,7 @@ class RecipeServiceTest {
 
     assertThat(actual, hasSize(expectedResultIds.size()));
 
-    verify(repository, times(1)).getRecipes(criteria);
+    verify(repository, times(1)).getRecipes(user.getId(), criteria);
     if (!recipeIds.isEmpty()) {
       verify(repository, times(1)).getRecipeIdsWithMatchingIngredients(recipeIds,
           criteria.getIngredientNames());
@@ -455,6 +463,17 @@ class RecipeServiceTest {
     verify(repository, times(1)).getInstruction(id);
     verify(repository, never()).deleteInstruction(id);
 
+  }
+
+  /**
+   * テスト用のユーザーを作成するメソッドです。
+   *
+   */
+  private User createMockUser() {
+    User user = new User();
+    user.setId(1);
+
+    return user;
   }
 
   /**

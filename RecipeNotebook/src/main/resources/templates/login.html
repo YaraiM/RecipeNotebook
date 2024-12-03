@@ -20,13 +20,13 @@
         <div class="card-body p-4">
           <h3 class="display-6 mb-4 text-center">RecipeNotebook</h3>
           <div id="loginErrorMessage" class="alert alert-danger d-none">
-            ログインに失敗しました。IDまたはパスワードを確認してください。
+            ログインに失敗しました。ユーザー名またはパスワードを確認してください。
           </div>
           <form id="loginForm" action="/login" method="post">
             <div class="mb-3">
-              <label for="username" class="form-label">ID</label>
+              <label for="username" class="form-label">ユーザー名</label>
               <input type="text" class="form-control" id="username" name="username"
-                     placeholder="ユーザーIDを入力">
+                     placeholder="ユーザー名を入力">
             </div>
             <div class="mb-3">
               <label for="password" class="form-label">パスワード</label>
@@ -45,3 +45,5 @@
 <script src="/js/recipes.js"></script>
 </body>
 </html>
+
+<!--TODO:ゲストログインの追加　⇒　ひとまず、id1のuserと同じにする-->
