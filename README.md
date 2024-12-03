@@ -51,8 +51,8 @@ https://github.com/user-attachments/assets/442a66ad-3658-4f75-b537-69c318ee8e12
 #### バックエンド
 
 - Java Oracle OpenJDK 21.0.3
-- SpringBoot 3.3.4
-- JUnit 5.10.3
+- Spring Boot 3.3.4
+- Spring Security 6.3.3
 
 #### フロントエンド
 
@@ -69,6 +69,8 @@ https://github.com/user-attachments/assets/442a66ad-3658-4f75-b537-69c318ee8e12
 
 - バージョン管理：Git, GitHub
 - CI/CD：GitHub Actions
+- テスト：JUnit 5.10.3
+- O/Rマッパー：MyBatis 3.0.3
 
 ## 設計書
 
