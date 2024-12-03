@@ -91,7 +91,7 @@ public class RecipeService {
 
   }
 
-//  TODO:新規作成にユーザーIDを付与するよう修正
+//  TODO:新規作成にユーザーIDを付与するよう修正⇒単体テストの修正⇒動作確認
 
   /**
    * レシピの新規作成です。引数として渡されたレシピ詳細情報に基づいて新規登録を行います。
@@ -103,8 +103,10 @@ public class RecipeService {
   @Transactional
   public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
     Recipe recipe = recipeDetail.getRecipe();
+    User loggedInUser = customUserDetailsService.getLoggedInUser();
+    recipe.setUserId(loggedInUser.getId());
     String imagePath = fileStorageService.storeFile(file);
-    recipeDetail.getRecipe().setImagePath(imagePath);
+    recipe.setImagePath(imagePath);
     recipe.setCreatedAt(LocalDateTime.now());
     repository.registerRecipe(recipe);
 

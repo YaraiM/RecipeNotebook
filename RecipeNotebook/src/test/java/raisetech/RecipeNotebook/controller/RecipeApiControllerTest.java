@@ -44,6 +44,7 @@ import raisetech.RecipeNotebook.data.Recipe;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
+import raisetech.RecipeNotebook.service.CustomUserDetailsService;
 import raisetech.RecipeNotebook.service.RecipeService;
 
 @WebMvcTest(RecipeApiController.class)
@@ -56,6 +57,9 @@ class RecipeApiControllerTest {
 
   @MockBean
   RecipeService recipeService;
+
+  @MockBean
+  CustomUserDetailsService customUserDetailsService;
 
   private Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 

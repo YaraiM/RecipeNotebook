@@ -150,6 +150,7 @@ class RecipeServiceTest {
 
   @Test
   void レシピ詳細情報の新規登録_リポジトリメソッドの呼び出しと初期情報の登録が適切に行われていること() {
+    User user = createMockUser();
     Recipe recipe = createMockRecipes(List.of(1)).getFirst();
     List<Ingredient> ingredients = createMockIngredients(List.of(1));
     List<Instruction> instructions = createMockInstructions(List.of(1));
@@ -157,6 +158,7 @@ class RecipeServiceTest {
 
     when(fileStorageService.storeFile(any(MultipartFile.class))).thenReturn(
         "testPath");
+    when(customUserDetailsService.getLoggedInUser()).thenReturn(user);
 
     MultipartFile mockFile = mock(MultipartFile.class);
     LocalDateTime testStartedTime = LocalDateTime.now();
@@ -166,6 +168,7 @@ class RecipeServiceTest {
     LocalDateTime actualCreatedAt = actual.getRecipe().getCreatedAt();
 
     verify(fileStorageService, times(1)).storeFile(any(MultipartFile.class));
+    verify(customUserDetailsService, times(1)).getLoggedInUser();
     verify(repository, times(1)).registerRecipe(recipe);
     verify(repository, times(2)).registerIngredient(any(Ingredient.class));
     verify(repository, times(2)).registerInstruction(any(Instruction.class));
