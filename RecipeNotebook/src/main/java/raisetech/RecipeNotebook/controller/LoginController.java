@@ -1,5 +1,10 @@
 package raisetech.RecipeNotebook.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
@@ -33,6 +38,41 @@ public class LoginController {
     this.authenticationManager = authenticationManager;
   }
 
+  @Operation(
+      summary = "ゲストログインの実行",
+      description = "ゲストログインを行います。")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "処理が成功した場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              examples = {
+                  @ExampleObject(
+                      summary = "ゲストログインに成功した場合",
+                      value = """
+                          {
+                              "message": "ログイン成功"
+                          }
+                          """
+                  )
+              }
+          )
+      ),
+      @ApiResponse(responseCode = "401", description = "ゲストログインに認証に失敗した場合のレスポンスです。",
+          content = @Content(
+              mediaType = "application/json",
+              examples = {
+                  @ExampleObject(
+                      summary = "ゲストログイン認証に失敗した場合",
+                      value = """
+                          {
+                              "message": "ゲストログインに失敗しました。もう一度お試しください"
+                          }
+                          """
+                  )
+              }
+          )
+      )
+  })
   @PostMapping("/login/guest")
   public ResponseEntity<?> guestLogin(HttpServletRequest request) {
     try {
