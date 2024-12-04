@@ -36,7 +36,6 @@ class FileStorageServiceTest {
   @BeforeEach
   void setup() {
     ReflectionTestUtils.setField(sut, "uploadDir", "test-uploads");
-//    ReflectionTestUtils.setField(sut, "activeProfile", true);
   }
 
   @Test
@@ -69,15 +68,6 @@ class FileStorageServiceTest {
 
     assertThat(result, is("/images/no_image.jpg"));
   }
-
-//  @Test
-//  void ファイルの保存_CI環境_NoImage画像のパスが返されること() {
-//    ReflectionTestUtils.setField(sut, "activeProfile", false);
-//
-//    String result = sut.storeFile(mockFile);
-//
-//    assertThat(result, is("/images/no_image.jpg"));
-//  }
 
   @Test
   void ファイルの保存_異常系_FileStorageExceptionがスローされること()
