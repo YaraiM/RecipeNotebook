@@ -61,9 +61,15 @@ function confirmDelete(id) {
 function initializeAllViews() {
     // ログイン画面
     if (window.location.pathname === '/login') {
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => insertCSRFToken(form));
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            insertCSRFToken(loginForm);
+        }
         showLoginErrorMessage();
+        const guestLoginBtn = document.getElementById('guestLogin');
+        if (guestLoginBtn) {
+            loginByGuest(guestLoginBtn);
+        }
     }
 
     // 検索・レシピ一覧画面
@@ -110,11 +116,17 @@ async function fetchCSRFToken() {
 // CSRFトークンの挿入
 async function insertCSRFToken(element) {
     try {
-        const response = await fetch('/csrf-token', { method: 'GET', credentials: 'same-origin' });
+        const response = await fetch('/csrf-token', {
+            method: 'GET',
+            credentials: 'same-origin'
+        });
         if (!response.ok) throw new Error(response.json().message);
         const { token, headerName } = await response.json();
 
-        if (!element.querySelector(`input[name="${headerName}"]`)) {
+        const existingInput = element.querySelector('input[name="_csrf"]');
+        if (existingInput) {
+            existingInput.value = token;
+        } else {
             const csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
             csrfInput.name = '_csrf';
@@ -123,16 +135,47 @@ async function insertCSRFToken(element) {
         }
     } catch (error) {
         console.error('CSRFトークンの初期化エラー：', error);
+        alert('ページの初期化に失敗しました。ページを再読み込みしてください。');
     }
 }
 
 // ログイン画面のエラーメッセージ
 function showLoginErrorMessage() {
     const params = new URLSearchParams(window.location.search);
-    if (params.has('error')) {
     const errorMessage = document.getElementById('loginErrorMessage');
-    errorMessage.classList.remove('d-none')
+
+    if (params.has('error') && errorMessage) {
+        errorMessage.classList.remove('d-none')
     }
+}
+
+// ゲストログインの実行
+async function loginByGuest(btn) {
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        try {
+            const csrfToken = await fetchCSRFToken();
+            const response = await fetch('/api/login/guest', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
+
+            if(!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message);
+            }
+
+            window.location.href = '/recipes';
+        } catch(error) {
+            console.error('ゲストログインエラー：', error);
+            alert(error.message);
+        }
+    });
 }
 
 // ヘッダーのインクルード

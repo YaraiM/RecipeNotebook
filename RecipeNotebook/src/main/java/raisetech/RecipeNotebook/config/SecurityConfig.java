@@ -45,7 +45,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/csrf-token", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers("/login").permitAll()
+            .requestMatchers("/login", "/api/login/guest").permitAll()
             .anyRequest().authenticated()
         );
     return http.build();
