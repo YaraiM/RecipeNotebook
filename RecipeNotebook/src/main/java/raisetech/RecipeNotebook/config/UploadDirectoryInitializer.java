@@ -20,7 +20,7 @@ public class UploadDirectoryInitializer {
       Files.createDirectories(Paths.get(uploadDir));
       System.out.println("Upload directory: " + Paths.get(uploadDir).toAbsolutePath());
     } catch (IOException e) {
-      throw new RuntimeException("Could not create upload directory!", e);
+      throw new RuntimeException("アップロードディレクトリの作成に失敗しました", e);
     }
   }
 }
