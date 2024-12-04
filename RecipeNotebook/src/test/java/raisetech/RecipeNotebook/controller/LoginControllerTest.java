@@ -21,7 +21,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import raisetech.RecipeNotebook.config.SecurityConfig;
@@ -64,7 +63,6 @@ class LoginControllerTest {
   }
 
   @Test
-  @WithMockUser(username = "user", roles = "USER")
   void ゲストログインが失敗した場合は401とエラーメッセージを返すこと() throws Exception {
     when(authenticationManager.authenticate(any()))
         .thenThrow(new BadCredentialsException("認証失敗"));
