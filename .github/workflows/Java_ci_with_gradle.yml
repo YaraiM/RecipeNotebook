@@ -49,3 +49,24 @@ jobs:
         with:
           name: test-logs
           path: RecipeNotebook/build/test-results/test/
+
+      - name: Run Spring Boot to serve API docs
+        run: ./gradlew bootRun &
+        working-directory: RecipeNotebook
+
+      - name: Wait for the application to start
+        run: sleep 15
+
+      - name: Download OpenAPI spec
+        run: curl -o RecipeNotebook/openapi.json http://localhost:8080/v3/api-docs
+
+      - name: Generate OpenAPI HTML
+        run: |
+          wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.7.0/openapi-generator-cli-6.7.0.jar -O openapi-generator-cli.jar
+          java -jar openapi-generator-cli.jar generate -i RecipeNotebook/openapi.json -g html -o RecipeNotebook/openapi-html
+
+      - name: Upload OpenAPI HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-html
+          path: RecipeNotebook/openapi-html
