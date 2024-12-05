@@ -23,7 +23,7 @@ public class RecipeSearchCriteria {
   @Schema(description = "レシピ名で検索します。複数のキーワードを指定可能です。", example = "[\"目玉\", \"焼\"]")
   private List<String> recipeNames;
 
-  @Schema(description = "お気に入りのレシピで絞り込みます。", example = "true")
+  @Schema(description = "お気に入りのレシピで絞り込みます。", example = "false")
   private Boolean favoriteRecipe;
 
   @Schema(description = "作成日（指定日以降）で検索します", example = "2024-01-01")

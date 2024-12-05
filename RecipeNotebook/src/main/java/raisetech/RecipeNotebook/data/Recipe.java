@@ -18,10 +18,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Recipe {
 
-  private int id;
-
-  public Recipe(String name, String imagePath, String recipeSource, String servings, String remark,
-      boolean favorite, LocalDateTime createdAt, LocalDateTime updatedAt) {
+  public Recipe(int userId, String name, String imagePath, String recipeSource, String servings,
+      String remark, boolean favorite, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    this.userId = userId;
     this.name = name;
     this.imagePath = imagePath;
     this.recipeSource = recipeSource;
@@ -31,6 +30,10 @@ public class Recipe {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
+
+  private int id;
+
+  private int userId;
 
   @NotBlank
   private String name;

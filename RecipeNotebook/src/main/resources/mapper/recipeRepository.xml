@@ -8,25 +8,28 @@
   <select id="getRecipes" resultType="raisetech.RecipeNotebook.data.Recipe">
     SELECT * FROM recipes
     <where>
-      <if test="recipeNames != null and !recipeNames.isEmpty()">
-        <foreach item="recipeName" collection="recipeNames" open="(" separator=" AND " close=")">
+      user_id = #{userId}
+      <if test="criteria.recipeNames != null and !criteria.recipeNames.isEmpty()">
+        AND
+        <foreach item="recipeName" collection="criteria.recipeNames" open="(" separator=" AND "
+          close=")">
           name LIKE CONCAT('%', #{recipeName}, '%')
         </foreach>
       </if>
-      <if test="favoriteRecipe != null">
-        AND favorite = #{favoriteRecipe}
+      <if test="criteria.favoriteRecipe != null">
+        AND favorite = #{criteria.favoriteRecipe}
       </if>
-      <if test="createDateFrom != null">
-        AND CAST(created_at AS DATE) >= #{createDateFrom}
+      <if test="criteria.createDateFrom != null">
+        AND CAST(created_at AS DATE) >= #{criteria.createDateFrom}
       </if>
-      <if test="createDateTo != null">
-        AND CAST(created_at AS DATE) &lt;= #{createDateTo}
+      <if test="criteria.createDateTo != null">
+        AND CAST(created_at AS DATE) &lt;= #{criteria.createDateTo}
       </if>
-      <if test="updateDateFrom != null">
-        AND CAST(updated_at AS DATE) >= #{updateDateFrom}
+      <if test="criteria.updateDateFrom != null">
+        AND CAST(updated_at AS DATE) >= #{criteria.updateDateFrom}
       </if>
-      <if test="updateDateTo != null">
-        AND CAST(updated_at AS DATE) &lt;= #{updateDateTo}
+      <if test="criteria.updateDateTo != null">
+        AND CAST(updated_at AS DATE) &lt;= #{criteria.updateDateTo}
       </if>
     </where>
   </select>
@@ -92,8 +95,9 @@
 
   <!--  レシピの新規登録  -->
   <insert id="registerRecipe" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO recipes(name, image_path, recipe_source, servings, remark, favorite, created_at)
-    values(#{name}, #{imagePath}, #{recipeSource}, #{servings}, #{remark}, #{favorite},
+    INSERT INTO recipes(user_id, name, image_path, recipe_source, servings, remark, favorite,
+    created_at)
+    values(#{userId}, #{name}, #{imagePath}, #{recipeSource}, #{servings}, #{remark}, #{favorite},
     #{createdAt})
   </insert>
 

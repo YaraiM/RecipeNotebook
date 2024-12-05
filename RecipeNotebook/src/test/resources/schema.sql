@@ -1,5 +1,18 @@
+CREATE TABLE users (
+  id INT NOT NULL AUTO_INCREMENT,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  role VARCHAR(50) NOT NULL DEFAULT 'USER',
+  enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at DATETIME,
+  updated_at DATETIME,
+  PRIMARY KEY(id)
+);
+
 CREATE TABLE recipes (
   id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
   image_path VARCHAR(255) DEFAULT '/images/no_image.jpg',
   recipe_source VARCHAR(255),
@@ -8,7 +21,8 @@ CREATE TABLE recipes (
   favorite BOOLEAN NOT NULL DEFAULT FALSE,
   created_at DATETIME,
   updated_at DATETIME,
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE ingredients (

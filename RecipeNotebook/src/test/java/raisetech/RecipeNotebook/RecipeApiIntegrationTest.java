@@ -46,7 +46,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +61,7 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(SecurityConfig.class)
-@WithMockUser(username = "user", roles = "USER")
+@WithUserDetails(value = "user", userDetailsServiceBeanName = "customUserDetailsService")
 @Transactional
 public class RecipeApiIntegrationTest {
 
@@ -69,13 +69,10 @@ public class RecipeApiIntegrationTest {
   MockMvc mockMvc;
 
   @Autowired
-  RecipeRepository recipeRepository;
-
-  @Autowired
   private ObjectMapper objectMapper;
 
   @Autowired
-  private RecipeRepository repository;
+  private RecipeRepository recipeRepository;
 
   @Value("${app.upload.dir}")
   private String uploadDir;
@@ -1080,7 +1077,7 @@ public class RecipeApiIntegrationTest {
         .andExpect(content().contentType("text/plain;charset=UTF-8"))
         .andExpect(content().string("お気に入りを変更しました"));
 
-    Recipe updatedRecipe = repository.getRecipe(recipeId);
+    Recipe updatedRecipe = recipeRepository.getRecipe(recipeId);
     assertTrue(updatedRecipe.isFavorite());
   }
 
@@ -1094,9 +1091,9 @@ public class RecipeApiIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(content().string("レシピを削除しました"));
 
-    assertNull(repository.getRecipe(recipeId));
-    assertThat(repository.getIngredients(recipeId), hasSize(0));
-    assertThat(repository.getInstructions(recipeId), hasSize(0));
+    assertNull(recipeRepository.getRecipe(recipeId));
+    assertThat(recipeRepository.getIngredients(recipeId), hasSize(0));
+    assertThat(recipeRepository.getInstructions(recipeId), hasSize(0));
   }
 
   @Test
@@ -1144,7 +1141,7 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createExpectedRecipeDetail1() {
     return new RecipeDetail(
-        new Recipe(1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
+        new Recipe(1, 1, "卵焼き", "/test-uploads/tamagoyaki_image.png", "https://------1.com",
             "2人分", "備考欄1",
             false, LocalDateTime.of(2024, 9, 22, 17, 0, 0),
             LocalDateTime.of(2024, 10, 22, 17, 0, 0)),
@@ -1166,7 +1163,7 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createExpectedRecipeDetail2() {
     return new RecipeDetail(
-        new Recipe(2, "目玉焼き", "/test-uploads/medamayaki_image.png", "https://------2.com",
+        new Recipe(2, 1, "目玉焼き", "/test-uploads/medamayaki_image.png", "https://------2.com",
             "1人分",
             "備考欄2", true, LocalDateTime.of(2024, 9, 23, 17, 0, 0),
             LocalDateTime.of(2024, 10, 23, 17, 0, 0)),
@@ -1186,7 +1183,7 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createExpectedRecipeDetail3() {
     return new RecipeDetail(
-        new Recipe(3, "炒り卵", "/uploads/random_image.jpg", "https://------3.com", "3人分",
+        new Recipe(3, 1, "炒り卵", "/uploads/random_image.jpg", "https://------3.com", "3人分",
             "備考欄3", false, null, null),
         List.of(
             new Ingredient(3, "卵", "3個", false),
@@ -1205,7 +1202,8 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createUpdatedRecipeDetail1() {
     return new RecipeDetail(
-        new Recipe(1, "卵焼きrev", "/test-uploads/tamagoyaki_image.png", "https://------1/rev.com",
+        new Recipe(1, 1, "卵焼きrev", "/test-uploads/tamagoyaki_image.png",
+            "https://------1/rev.com",
             "2人分rev",
             "備考欄1rev",
             true, LocalDateTime.of(2024, 9, 22, 17, 0, 0),
@@ -1230,7 +1228,8 @@ public class RecipeApiIntegrationTest {
 
   private static RecipeDetail createUpdatedRecipeDetail2() {
     return new RecipeDetail(
-        new Recipe(1, "卵焼きrev", "/test-uploads/tamagoyaki_image.png", "https://------1/rev.com",
+        new Recipe(1, 1, "卵焼きrev", "/test-uploads/tamagoyaki_image.png",
+            "https://------1/rev.com",
             "2人分rev",
             "備考欄1rev",
             true, LocalDateTime.of(2024, 9, 22, 17, 0, 0),

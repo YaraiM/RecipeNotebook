@@ -12,12 +12,13 @@ import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 public interface RecipeRepository {
 
   /**
-   * 検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件取得になります。
+   * ユーザーIDと検索条件に応じてレシピ一覧を取得します。条件を指定しない場合は全件取得になります。
    *
+   * @param userId ユーザーID
    * @param criteria レシピ検索条件
    * @return レシピ一覧
    */
-  List<Recipe> getRecipes(RecipeSearchCriteria criteria);
+  List<Recipe> getRecipes(int userId, RecipeSearchCriteria criteria);
 
   /**
    * IDに紐づくレシピを取得します。

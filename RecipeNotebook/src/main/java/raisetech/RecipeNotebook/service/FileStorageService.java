@@ -21,12 +21,6 @@ public class FileStorageService {
   private boolean activeProfile;
 
   public String storeFile(MultipartFile file) {
-
-    // CI環境時はアップロード操作を行わず、imagesディレクトリのno_imageのパスを返すよう設定
-    if (!activeProfile) {
-      return "/images/no_image.jpg";
-    }
-
     try {
       if (file != null && !file.isEmpty()) {
         String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
@@ -51,23 +45,19 @@ public class FileStorageService {
   }
 
   public void deleteFile(String imagePath) {
-    // CI環境時は削除操作を行わないよう設定
-    if (activeProfile) {
+    try {
+      Path uploadPath = Paths.get(uploadDir);
+      String fileName = imagePath.substring(imagePath.lastIndexOf("/") + 1);
+      Path filePath = uploadPath.resolve(fileName);
 
-      try {
-        Path uploadPath = Paths.get(uploadDir);
-        String fileName = imagePath.substring(imagePath.lastIndexOf("/") + 1);
-        Path filePath = uploadPath.resolve(fileName);
-
-        // ディレクトリにファイルが存在する場合に限り削除。存在しなければ何もしないことを許容する。
-        if (Files.exists(filePath)) {
-          Files.delete(filePath);
-        }
-
-      } catch (IOException e) {
-        throw new FileStorageException(
-            "ファイルの削除に失敗しました");
+      // ディレクトリにファイルが存在する場合に限り削除。存在しなければ何もしないことを許容する。
+      if (Files.exists(filePath)) {
+        Files.delete(filePath);
       }
+
+    } catch (IOException e) {
+      throw new FileStorageException(
+          "ファイルの削除に失敗しました");
     }
   }
 }

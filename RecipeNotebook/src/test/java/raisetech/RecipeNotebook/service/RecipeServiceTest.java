@@ -17,18 +17,19 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
+import raisetech.RecipeNotebook.data.User;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.ResourceNotFoundException;
@@ -41,26 +42,29 @@ class RecipeServiceTest {
   private RecipeRepository repository;
 
   @Mock
+  private CustomUserDetailsService customUserDetailsService;
+
+  @Mock
   private FileStorageService fileStorageService;
 
+  @InjectMocks
   private RecipeService sut;
-
-  @BeforeEach
-  void setUp() {
-    sut = new RecipeService(repository, fileStorageService);
-  }
 
   @ParameterizedTest
   @MethodSource("provideSearchRecipeTestCase")
   void レシピ詳細情報の一覧検索_検索条件に応じたレシピIDが返されかつメソッドが適切に呼び出されること(
       List<Integer> recipeIds, List<Integer> recipeIdsWithMatchingIngredients,
       List<Integer> expectedResultIds) {
+
+    User user = createMockUser();
+
     RecipeSearchCriteria criteria = new RecipeSearchCriteria();
     List<Recipe> recipes = createMockRecipes(recipeIds);
     List<Ingredient> ingredients = createMockIngredients(recipeIds);
     List<Instruction> instructions = createMockInstructions(recipeIds);
 
-    when(repository.getRecipes(criteria)).thenReturn(recipes);
+    when(customUserDetailsService.getLoggedInUser()).thenReturn(user);
+    when(repository.getRecipes(user.getId(), criteria)).thenReturn(recipes);
 
     if (!recipeIds.isEmpty()) {
       when(repository.getRecipeIdsWithMatchingIngredients(recipeIds,
@@ -77,7 +81,7 @@ class RecipeServiceTest {
 
     assertThat(actual, hasSize(expectedResultIds.size()));
 
-    verify(repository, times(1)).getRecipes(criteria);
+    verify(repository, times(1)).getRecipes(user.getId(), criteria);
     if (!recipeIds.isEmpty()) {
       verify(repository, times(1)).getRecipeIdsWithMatchingIngredients(recipeIds,
           criteria.getIngredientNames());
@@ -142,6 +146,7 @@ class RecipeServiceTest {
 
   @Test
   void レシピ詳細情報の新規登録_リポジトリメソッドの呼び出しと初期情報の登録が適切に行われていること() {
+    User user = createMockUser();
     Recipe recipe = createMockRecipes(List.of(1)).getFirst();
     List<Ingredient> ingredients = createMockIngredients(List.of(1));
     List<Instruction> instructions = createMockInstructions(List.of(1));
@@ -149,6 +154,7 @@ class RecipeServiceTest {
 
     when(fileStorageService.storeFile(any(MultipartFile.class))).thenReturn(
         "testPath");
+    when(customUserDetailsService.getLoggedInUser()).thenReturn(user);
 
     MultipartFile mockFile = mock(MultipartFile.class);
     LocalDateTime testStartedTime = LocalDateTime.now();
@@ -158,6 +164,7 @@ class RecipeServiceTest {
     LocalDateTime actualCreatedAt = actual.getRecipe().getCreatedAt();
 
     verify(fileStorageService, times(1)).storeFile(any(MultipartFile.class));
+    verify(customUserDetailsService, times(1)).getLoggedInUser();
     verify(repository, times(1)).registerRecipe(recipe);
     verify(repository, times(2)).registerIngredient(any(Ingredient.class));
     verify(repository, times(2)).registerInstruction(any(Instruction.class));
@@ -455,6 +462,17 @@ class RecipeServiceTest {
     verify(repository, times(1)).getInstruction(id);
     verify(repository, never()).deleteInstruction(id);
 
+  }
+
+  /**
+   * テスト用のユーザーを作成するメソッドです。
+   *
+   */
+  private User createMockUser() {
+    User user = new User();
+    user.setId(1);
+
+    return user;
   }
 
   /**

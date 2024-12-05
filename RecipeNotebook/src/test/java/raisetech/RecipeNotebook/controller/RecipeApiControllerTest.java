@@ -44,6 +44,7 @@ import raisetech.RecipeNotebook.data.Recipe;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
+import raisetech.RecipeNotebook.service.CustomUserDetailsService;
 import raisetech.RecipeNotebook.service.RecipeService;
 
 @WebMvcTest(RecipeApiController.class)
@@ -56,6 +57,9 @@ class RecipeApiControllerTest {
 
   @MockBean
   RecipeService recipeService;
+
+  @MockBean
+  CustomUserDetailsService customUserDetailsService;
 
   private Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
@@ -270,7 +274,7 @@ class RecipeApiControllerTest {
 
     String expectedErrorMessage =
         "パスで指定したID「" + pathId + "」と更新対象のレシピのID「" + inputRecipeId
-            + "」は一致させてください";
+        + "」は一致させてください";
 
     doThrow(new RecipeIdMismatchException(expectedErrorMessage))
         .when(recipeService).updateRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class));
@@ -441,7 +445,7 @@ class RecipeApiControllerTest {
    * @return レシピ詳細情報
    */
   private static RecipeDetail createTestRecipeDetail(int recipeId) {
-    Recipe recipe = new Recipe(recipeId, "testName", "testImage", "testSource", "testServings",
+    Recipe recipe = new Recipe(recipeId, 1, "testName", "testImage", "testSource", "testServings",
         "testRemark", false,
         LocalDateTime.parse("2000-01-01T00:00:00"), LocalDateTime.parse("2001-01-01T00:00:00"));
 

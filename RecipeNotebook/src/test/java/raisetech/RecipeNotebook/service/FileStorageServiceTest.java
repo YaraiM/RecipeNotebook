@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -26,16 +27,15 @@ import raisetech.RecipeNotebook.exception.FileStorageException;
 @ExtendWith(MockitoExtension.class)
 class FileStorageServiceTest {
 
-  private FileStorageService sut;
-
   @Mock
   private MultipartFile mockFile;
 
+  @InjectMocks
+  private FileStorageService sut;
+
   @BeforeEach
   void setup() {
-    sut = new FileStorageService();
     ReflectionTestUtils.setField(sut, "uploadDir", "test-uploads");
-    ReflectionTestUtils.setField(sut, "activeProfile", true);
   }
 
   @Test
@@ -65,15 +65,6 @@ class FileStorageServiceTest {
   @Test
   void ファイルの保存_正常系_ファイルがnullの場合にNoImage画像のパスが返されること() {
     String result = sut.storeFile(null);
-
-    assertThat(result, is("/images/no_image.jpg"));
-  }
-
-  @Test
-  void ファイルの保存_CI環境_NoImage画像のパスが返されること() {
-    ReflectionTestUtils.setField(sut, "activeProfile", false);
-
-    String result = sut.storeFile(mockFile);
 
     assertThat(result, is("/images/no_image.jpg"));
   }

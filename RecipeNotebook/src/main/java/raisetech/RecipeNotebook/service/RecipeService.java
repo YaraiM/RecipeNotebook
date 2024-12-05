@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import raisetech.RecipeNotebook.data.Ingredient;
 import raisetech.RecipeNotebook.data.Instruction;
 import raisetech.RecipeNotebook.data.Recipe;
+import raisetech.RecipeNotebook.data.User;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
 import raisetech.RecipeNotebook.exception.ResourceNotFoundException;
@@ -24,11 +25,15 @@ import raisetech.RecipeNotebook.repository.RecipeRepository;
 public class RecipeService {
 
   private final RecipeRepository repository;
+  private final CustomUserDetailsService customUserDetailsService;
   private final FileStorageService fileStorageService;
 
   @Autowired
-  public RecipeService(RecipeRepository repository, FileStorageService fileStorageService) {
+  public RecipeService(RecipeRepository repository,
+      CustomUserDetailsService customUserDetailsService,
+      FileStorageService fileStorageService) {
     this.repository = repository;
+    this.customUserDetailsService = customUserDetailsService;
     this.fileStorageService = fileStorageService;
   }
 
@@ -37,8 +42,10 @@ public class RecipeService {
    * @return レシピ詳細情報の一覧
    */
   public List<RecipeDetail> searchRecipeList(RecipeSearchCriteria criteria) {
+    User loggedInUser = customUserDetailsService.getLoggedInUser();
+
     // レシピを検索
-    List<Recipe> recipes = repository.getRecipes(criteria);
+    List<Recipe> recipes = repository.getRecipes(loggedInUser.getId(), criteria);
     if (recipes.isEmpty()) {
       return Collections.emptyList();
     }
@@ -94,8 +101,10 @@ public class RecipeService {
   @Transactional
   public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
     Recipe recipe = recipeDetail.getRecipe();
+    User loggedInUser = customUserDetailsService.getLoggedInUser();
+    recipe.setUserId(loggedInUser.getId());
     String imagePath = fileStorageService.storeFile(file);
-    recipeDetail.getRecipe().setImagePath(imagePath);
+    recipe.setImagePath(imagePath);
     recipe.setCreatedAt(LocalDateTime.now());
     repository.registerRecipe(recipe);
 
