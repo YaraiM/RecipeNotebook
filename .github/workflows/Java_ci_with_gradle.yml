@@ -64,12 +64,12 @@ jobs:
       - name: Generate OpenAPI HTML
         run: |
           wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar -O openapi-generator-cli.jar
-          java -jar openapi-generator-cli.jar generate -i RecipeNotebook/openapi.json -g swagger-ui-single-page -o RecipeNotebook/openapi-docs
+          java -jar openapi-generator-cli.jar generate -i RecipeNotebook/openapi.json -g swagger -o RecipeNotebook/openapi-docs
 
-      - name: Upload OpenAPI HTML
+      - name: Upload OpenAPI DOCS
         uses: actions/upload-artifact@v4
         with:
-          name: openapi-html
+          name: openapi-docs
           path: RecipeNotebook/openapi-docs
 
       - name: Deploy to GitHub Pages
