@@ -78,7 +78,7 @@ https://github.com/user-attachments/assets/ec2c19dc-83a0-46f4-8b99-43bcc10d6b76
 
 #### API仕様書
 
-※準備中です。
+https://yaraim.github.io/RecipeNotebook/
 
 #### E-R図
 
