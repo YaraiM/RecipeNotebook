@@ -52,11 +52,16 @@ jobs:
           path: RecipeNotebook/build/test-results/test/
 
       - name: Run Spring Boot to serve API docs
-        run: ./gradlew bootRun &
+        run: java -jar build/libs/your-app.jar &
         working-directory: RecipeNotebook
 
       - name: Wait for the application to start
-        run: sleep 15
+        run: |
+          for i in {1..30}; do
+            curl --silent --fail http://localhost:8080/v3/api-docs.yaml && break
+            echo "Waiting for application to start..."
+            sleep 5
+          done
 
       - name: Download OpenAPI spec
         run: curl -o RecipeNotebook/openapi.yaml http://localhost:8080/v3/api-docs.yaml
@@ -66,13 +71,13 @@ jobs:
         with:
           output: swagger-ui
           spec-file: RecipeNotebook/openapi.yaml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload OpenAPI DOCS
         uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           name: openapi-docs
-          path: RecipeNotebook/openapi-docs
+          path: RecipeNotebook/openapi.yaml
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
