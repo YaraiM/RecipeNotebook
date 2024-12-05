@@ -67,8 +67,8 @@ jobs:
         with:
           output: RecipeNotebook/swagger-ui
           spec-file: RecipeNotebook/openapi.json
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           options: |
-            github_token: ${{ secrets.GITHUB_TOKEN }}
             configUrl: /swagger-ui-config.json
             url: /openapi.json
 
