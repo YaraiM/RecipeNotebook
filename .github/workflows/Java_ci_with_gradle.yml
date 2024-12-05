@@ -70,10 +70,12 @@ jobs:
       - name: Upload OpenAPI DOCS
         uses: actions/upload-artifact@v4
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           name: openapi-docs
           path: RecipeNotebook/openapi-docs
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: swagger-ui
