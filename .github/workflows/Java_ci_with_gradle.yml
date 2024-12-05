@@ -62,7 +62,7 @@ jobs:
 
       - name: Generate OpenAPI HTML
         run: |
-          wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.7.0/openapi-generator-cli-6.7.0.jar -O openapi-generator-cli.jar
+          wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar -O openapi-generator-cli.jar
           java -jar openapi-generator-cli.jar generate -i RecipeNotebook/openapi.json -g html -o RecipeNotebook/openapi-html
 
       - name: Upload OpenAPI HTML
