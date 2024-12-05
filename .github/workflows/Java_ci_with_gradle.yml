@@ -52,7 +52,7 @@ jobs:
           path: RecipeNotebook/build/test-results/test/
 
       - name: Run Spring Boot to serve API docs
-        run: java -jar build/libs/your-app.jar &
+        run: ./gradlew bootRun &
         working-directory: RecipeNotebook
 
       - name: Wait for the application to start
