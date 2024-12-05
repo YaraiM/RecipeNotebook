@@ -59,12 +59,13 @@ jobs:
         run: sleep 15
 
       - name: Download OpenAPI spec
-        run: curl -o RecipeNotebook/openapi.json http://localhost:8080/v3/api-docs
+        run: curl -o RecipeNotebook/openapi.yaml http://localhost:8080/v3/api-docs.yaml
 
-      - name: Generate OpenAPI HTML
-        run: |
-          wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.10.0/openapi-generator-cli-7.10.0.jar -O openapi-generator-cli.jar
-          java -jar openapi-generator-cli.jar generate -i RecipeNotebook/openapi.json -g swagger -o RecipeNotebook/openapi-docs
+      - name: Generate Swagger UI
+        uses: Legion2/swagger-ui-action@v1
+        with:
+          output: swagger-ui
+          spec-file: RecipeNotebook/openapi.yaml
 
       - name: Upload OpenAPI DOCS
         uses: actions/upload-artifact@v4
@@ -73,7 +74,6 @@ jobs:
           path: RecipeNotebook/openapi-docs
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4.5.0
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          folder: RecipeNotebook/openapi-docs
-          branch: gh-pages
+          publish_dir: swagger-ui
