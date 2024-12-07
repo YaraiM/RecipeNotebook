@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,22 +18,22 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import raisetech.RecipeNotebook.config.SecurityConfig;
+import raisetech.RecipeNotebook.exception.AuthenticationCustomException;
 import raisetech.RecipeNotebook.repository.UserRepository;
+import raisetech.RecipeNotebook.service.LoginService;
 
-@WebMvcTest(LoginController.class)
+@WebMvcTest(GuestLoginController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
     "guest.username=testGuest",
     "guest.password=testPass"
 })
-class LoginControllerTest {
+class GuestLoginControllerTest {
 
   @Autowired
   MockMvc mockMvc;
@@ -41,14 +42,14 @@ class LoginControllerTest {
   private UserRepository userRepository;
 
   @MockBean
-  AuthenticationManager authenticationManager;
+  LoginService loginService;
 
   @Test
   void 処理成功のレスポンスとログイン成功のメッセージが返ること() throws Exception {
     Authentication successAuth = new UsernamePasswordAuthenticationToken(
         "testGuest", "testPass", Collections.emptyList());
 
-    when(authenticationManager.authenticate(any())).thenReturn(successAuth);
+    when(loginService.authenticateGuest()).thenReturn(successAuth);
 
     mockMvc.perform(post("/api/login/guest")
             .with(csrf())
@@ -57,15 +58,17 @@ class LoginControllerTest {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.message").value("ログイン成功"));
 
-    verify(authenticationManager, times(1)).authenticate(
-        any(UsernamePasswordAuthenticationToken.class));
+    verify(loginService, times(1)).authenticateGuest();
+    verify(loginService, times(1)).setAuthenticationInContext(any(Authentication.class));
+    verify(loginService, times(1)).setAuthenticationInSession(any(HttpServletRequest.class));
 
   }
 
   @Test
-  void ゲストログインが失敗した場合は401とエラーメッセージを返すこと() throws Exception {
-    when(authenticationManager.authenticate(any()))
-        .thenThrow(new BadCredentialsException("認証失敗"));
+  void ゲストログインが失敗した場合に401とエラーメッセージを返すこと() throws Exception {
+    when(loginService.authenticateGuest())
+        .thenThrow(new AuthenticationCustomException(
+            "ゲストログインに失敗しました。もう一度お試しください"));
 
     mockMvc.perform(post("/api/login/guest")
             .with(csrf())
@@ -75,7 +78,6 @@ class LoginControllerTest {
         .andExpect(
             jsonPath("$.message").value("ゲストログインに失敗しました。もう一度お試しください"));
 
-    verify(authenticationManager, times(1))
-        .authenticate(any(UsernamePasswordAuthenticationToken.class));
+    verify(loginService, times(1)).authenticateGuest();
   }
 }
