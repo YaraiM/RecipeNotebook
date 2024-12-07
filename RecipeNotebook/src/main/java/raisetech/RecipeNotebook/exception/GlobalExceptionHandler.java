@@ -14,18 +14,32 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
   /**
-   * リクエストパラメータに有効ではない入力形式で入力した場合の例外をハンドリングするメソッドです。。（バリデーション）
+   * 認証処理が失敗した場合の例外をハンドリングするメソッドです。
    *
-   * @param ex 例外クラス（有効ではない入力形式）
+   * @param e 例外クラス（認証失敗）
+   * @return エラーレスポンス（ステータスおよびメッセージ）
+   */
+  @ExceptionHandler
+  public ResponseEntity<ErrorResponse> handleAuthenticationCustomException(
+      AuthenticationCustomException e) {
+
+    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+  }
+
+  /**
+   * リクエストパラメータに有効ではない入力形式で入力した場合の例外をハンドリングするメソッドです。（バリデーション）
+   *
+   * @param e 例外クラス（有効ではない入力形式）
    * @return 入力違反が発生したフィールドとエラーメッセージ
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-      MethodArgumentNotValidException ex) {
+      MethodArgumentNotValidException e) {
 
     List<Map<String, String>> errors = new ArrayList<>();
 
-    ex.getBindingResult().getFieldErrors().forEach(fieldError -> {
+    e.getBindingResult().getFieldErrors().forEach(fieldError -> {
       Map<String, String> error = new HashMap<>();
       error.put("field", fieldError.getField());
       error.put("message", fieldError.getDefaultMessage());
