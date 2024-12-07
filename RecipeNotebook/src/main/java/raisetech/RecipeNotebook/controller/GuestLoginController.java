@@ -56,7 +56,9 @@ public class GuestLoginController {
                       summary = "ゲストログイン認証に失敗した場合",
                       value = """
                           {
-                              "message": "ゲストログインに失敗しました。もう一度お試しください"
+                             "status": "UNAUTHORIZED",
+                             "message": "ゲストログインに失敗しました。もう一度お試しください",
+                             "errors": null
                           }
                           """
                   )
