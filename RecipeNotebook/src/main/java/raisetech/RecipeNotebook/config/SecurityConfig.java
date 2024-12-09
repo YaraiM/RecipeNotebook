@@ -25,7 +25,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.ignoringRequestMatchers("/csrf-token"))
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/csrf-token", "/v3/api-docs/**"))
         .formLogin(login -> login
             .loginProcessingUrl("/login")
             .loginPage("/login")
@@ -42,7 +42,7 @@ public class SecurityConfig {
         .logout(logout -> logout
             .logoutSuccessUrl("/login"))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/csrf-token").permitAll()
+            .requestMatchers("/csrf-token", "/v3/api-docs/**").permitAll()
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
             .requestMatchers("/login", "/api/login/guest").permitAll()
             .anyRequest().authenticated()
