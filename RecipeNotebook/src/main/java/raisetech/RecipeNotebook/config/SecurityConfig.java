@@ -25,8 +25,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.ignoringRequestMatchers("/csrf-token", "/swagger-ui/**",
-            "/v3/api-docs/**"))
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/csrf-token"))
         .formLogin(login -> login
             .loginProcessingUrl("/login")
             .loginPage("/login")
@@ -43,7 +42,7 @@ public class SecurityConfig {
         .logout(logout -> logout
             .logoutSuccessUrl("/login"))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/csrf-token", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .requestMatchers("/csrf-token").permitAll()
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
             .requestMatchers("/login", "/api/login/guest").permitAll()
             .anyRequest().authenticated()
