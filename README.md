@@ -64,7 +64,6 @@ https://github.com/user-attachments/assets/ec2c19dc-83a0-46f4-8b99-43bcc10d6b76
 #### データベース・インフラ
 
 - MySQL 8.0.39
-- Docker
 - Amazon Web Service
 
 #### その他
@@ -73,6 +72,7 @@ https://github.com/user-attachments/assets/ec2c19dc-83a0-46f4-8b99-43bcc10d6b76
 - CI/CD：GitHub Actions
 - テスト：JUnit 5.10.3
 - O/Rマッパー：MyBatis 3.0.3
+- DB環境構築（開発時）：Docker, Docker Compose
 
 ## 設計書
 
@@ -143,7 +143,7 @@ erDiagram
 
 #### インフラ構成図
 
-※準備中です。
+<img src="https://github.com/user-attachments/assets/54368dc6-c9c5-4d71-a712-1a6fc81d86e3" alt="インフラ構成図" width="70%">
 
 ## 工夫した点と課題
 
