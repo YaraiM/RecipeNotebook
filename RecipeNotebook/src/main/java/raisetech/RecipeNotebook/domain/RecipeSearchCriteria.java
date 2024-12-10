@@ -20,7 +20,7 @@ import raisetech.RecipeNotebook.exception.DateRangeValidation;
 @DateRangeValidation
 public class RecipeSearchCriteria {
 
-  @Schema(description = "レシピ名で検索します。複数のキーワードを指定可能です。", example = "[\"目玉\", \"焼\"]")
+  @Schema(description = "指定したキーワードに部分一致するレシピ名を検索します。複数のキーワードを指定した場合はAND検索になります。", example = "[\"目玉\", \"焼\"]")
   private List<String> recipeNames;
 
   @Schema(description = "お気に入りのレシピで絞り込みます。", example = "false")
@@ -38,7 +38,7 @@ public class RecipeSearchCriteria {
   @Schema(description = "作成日（指定日以前）で検索します", example = "2025-07-01")
   private LocalDate updateDateTo;
 
-  @Schema(description = "指定した材料が含まれるレシピを検索します。複数のキーワードを指定可能です。", example = "[\"卵\", \"水\"]")
+  @Schema(description = "指定したキーワードに部分一致する材料を含むレシピを検索します。複数のキーワードを指定した場合はAND検索になります。", example = "[\"卵\", \"水\"]")
   private List<String> ingredientNames;
 
 }
