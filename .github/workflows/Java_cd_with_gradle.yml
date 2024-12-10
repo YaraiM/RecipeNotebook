@@ -9,7 +9,7 @@ on:
 env:
   EC2_USER: 'ec2-user'
   EC2_HOST: '3.112.42.163'
-  SRC_PATH: 'build/libs/*.jar'
+  SRC_PATH: 'RecipeNotebook/build/libs/*.jar'
   DEST_PATH: '/home/ec2-user/RecipeManagement.jar'
 
 jobs:
@@ -62,7 +62,7 @@ jobs:
           path: RecipeNotebook/build/test-results/test/
 
       - name: Run Spring Boot to serve API docs
-        run: java -jar $SRC_PATH &
+        run: java -jar build/libs/*.jar &
         working-directory: RecipeNotebook
 
       - name: Wait for the application to start
