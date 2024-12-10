@@ -27,13 +27,13 @@ import raisetech.RecipeNotebook.exception.AuthenticationCustomException;
 import raisetech.RecipeNotebook.repository.UserRepository;
 import raisetech.RecipeNotebook.service.LoginService;
 
-@WebMvcTest(GuestLoginController.class)
+@WebMvcTest(LoginController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
     "guest.username=testGuest",
     "guest.password=testPass"
 })
-class GuestLoginControllerTest {
+class LoginControllerTest {
 
   @Autowired
   MockMvc mockMvc;
