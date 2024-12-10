@@ -10,7 +10,7 @@ env:
   EC2_USER: 'ec2-user'
   EC2_HOST: '3.112.42.163'
   SRC_PATH: 'RecipeNotebook/build/libs/*.jar'
-  DEST_PATH: '/home/ec2-user/RecipeManagement.jar'
+  DEST_PATH: '/home/ec2-user/RecipeNotebook.jar'
 
 jobs:
   build-and-test:
