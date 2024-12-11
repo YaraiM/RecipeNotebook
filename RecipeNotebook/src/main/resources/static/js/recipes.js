@@ -211,6 +211,12 @@ function setupDatepickers() {
 function setupSearchForm() {
     const form = document.getElementById('searchForm');
 
+    form.querySelector('button[type="reset"]').addEventListener('click', function() {
+        setTimeout(() => {
+            loadRecipes();
+        }, 0);
+    });
+
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -447,8 +453,12 @@ function displayRecipe(recipeDetail) {
         <div class="recipe-info">
             <div class="row align-items-center mb-4">
                 <div class="col-sm-6">
-                    <h5 class="text-muted mb-1">情報元</h5>
-                    <p class="mb-0">${recipe.recipeSource || '記載なし'}</p>
+                    <h5 class="text-muted mb-1">参考にしたレシピ</h5>
+                    <p class="mb-0">
+                        ${recipe.recipeSource ?
+                            `<a href="${recipe.recipeSource}" target="_blank" rel="noopener noreferrer">
+                                ${recipe.recipeSource}</a>`
+                                :'記載なし'}</p>
                 </div>
                 <div class="col-sm-6">
                     <h5 class="text-muted mb-1">分量</h5>
@@ -921,6 +931,8 @@ function displayPreFilledRecipe(recipeDetail) {
         inputs[1].value = instruction.content;
         inputs[2].checked = instruction.arrange;
     });
+
+    setupRemoveButtons();
 }
 
 // レシピ詳細情報へのリダイレクト
