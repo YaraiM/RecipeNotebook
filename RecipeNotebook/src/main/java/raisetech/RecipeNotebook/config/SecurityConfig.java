@@ -27,6 +27,7 @@ public class SecurityConfig {
             .loginProcessingUrl("/login")
             .loginPage("/login")
             .successHandler((request, response, authentication) -> {
+              new HttpSessionRequestCache().removeRequest(request, response);
               response.sendRedirect("/recipes");
             })
             .failureHandler((request, response, exception) -> {
