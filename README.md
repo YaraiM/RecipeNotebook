@@ -137,7 +137,7 @@ erDiagram
 
 #### URL一覧
 
-<img src= "https://github.com/user-attachments/assets/dcc6bfee-ce4d-4f46-8865-397f147b8b83" alt="URL一覧" width="70%">
+<img src= "https://github.com/user-attachments/assets/186aeae3-3fbf-41ac-b719-5120b63f6e1c" alt="URL一覧" width="70%">
 
 #### 画面遷移図
 
