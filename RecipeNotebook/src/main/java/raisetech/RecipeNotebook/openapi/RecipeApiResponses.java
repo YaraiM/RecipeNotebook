@@ -397,6 +397,18 @@ public class RecipeApiResponses {
                           "errors": null
                       }
                       """
+              ),
+              @ExampleObject(
+                  name = "nullOrEmptyObject",
+                  summary = "レシピ・材料・調理手順のオブジェクトがnullもしくは空白だった場合",
+                  description = "エラーステータスとメッセージを返します。",
+                  value = """
+                      {
+                          "status": "BAD_REQUEST",
+                          "message": "レシピ/材料/調理手順オブジェクトの入力は必須です。",
+                          "errors": null
+                      }
+                      """
               )
           }
       )

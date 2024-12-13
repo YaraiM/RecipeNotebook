@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
     info = @Info(
         title = "レシピノートAPI仕様",
         description = "レシピノートアプリのAPI仕様書です。",
-        version = "1.0.0",
+        version = "1.0.2",
         license = @License(name = "Apache License 2.0", url = "https://www.apache.org/licenses/LICENSE-2.0.txt")),
     servers = {
         @Server(description = "Development Server", url = "http://localhost:8080")
