@@ -213,6 +213,7 @@ function setupSearchForm() {
 
     form.querySelector('button[type="reset"]').addEventListener('click', function() {
         setTimeout(() => {
+            clearValidationErrors()
             loadRecipes();
         }, 0);
     });
