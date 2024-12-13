@@ -100,24 +100,25 @@ public class RecipeService {
    */
   @Transactional
   public RecipeDetail createRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
-    Recipe recipe = recipeDetail.getRecipe();
     User loggedInUser = customUserDetailsService.getLoggedInUser();
-    recipe.setUserId(loggedInUser.getId());
-    String imagePath = fileStorageService.storeFile(file);
-    recipe.setImagePath(imagePath);
-    recipe.setCreatedAt(LocalDateTime.now());
-    repository.registerRecipe(recipe);
 
-    List<Ingredient> ingredients = recipeDetail.getIngredients();
-    for (Ingredient ingredient : ingredients) {
-      ingredient.setRecipeId(recipe.getId());
+    Recipe inputRecipe = recipeDetail.getRecipe();
+    inputRecipe.setUserId(loggedInUser.getId());
+    String imagePath = fileStorageService.storeFile(file);
+    inputRecipe.setImagePath(imagePath);
+    inputRecipe.setCreatedAt(LocalDateTime.now());
+    repository.registerRecipe(inputRecipe);
+
+    List<Ingredient> inputIngredients = recipeDetail.getIngredients();
+    for (Ingredient ingredient : inputIngredients) {
+      ingredient.setRecipeId(inputRecipe.getId());
       repository.registerIngredient(ingredient);
     }
 
-    List<Instruction> instructions = recipeDetail.getInstructions();
-    for (int i = 0; i < instructions.size(); i++) {
-      Instruction instruction = instructions.get(i);
-      instruction.setRecipeId(recipe.getId());
+    List<Instruction> inputInstructions = recipeDetail.getInstructions();
+    for (int i = 0; i < inputInstructions.size(); i++) {
+      Instruction instruction = inputInstructions.get(i);
+      instruction.setRecipeId(inputRecipe.getId());
       instruction.setStepNumber(i + 1);
       repository.registerInstruction(instruction);
     }
@@ -133,16 +134,20 @@ public class RecipeService {
    */
   @Transactional
   public RecipeDetail updateRecipeDetail(RecipeDetail recipeDetail, MultipartFile file) {
-    int recipeId = recipeDetail.getRecipe().getId();
+    Recipe inputRecipe = recipeDetail.getRecipe();
+    List<Ingredient> inputIngredients = recipeDetail.getIngredients();
+    List<Instruction> inputInstructions = recipeDetail.getInstructions();
+
+    int recipeId = inputRecipe.getId();
     if (repository.getRecipe(recipeId) == null) {
       throw new ResourceNotFoundException("レシピID「" + recipeId + "」は存在しません");
     }
 
     // 入力されたレシピ詳細情報の材料および調理手順のレシピIDにレシピIDをセット
-    for (Ingredient ingredient : recipeDetail.getIngredients()) {
+    for (Ingredient ingredient : inputIngredients) {
       ingredient.setRecipeId(recipeId);
     }
-    for (Instruction instruction : recipeDetail.getInstructions()) {
+    for (Instruction instruction : inputInstructions) {
       instruction.setRecipeId(recipeId);
     }
 
@@ -151,7 +156,7 @@ public class RecipeService {
     List<Instruction> existingInstructions = repository.getInstructions(recipeId);
 
     // 材料の更新
-    Set<Integer> inputIngredientIds = recipeDetail.getIngredients().stream()
+    Set<Integer> inputIngredientIds = inputIngredients.stream()
         .map(Ingredient::getId)
         .collect(Collectors.toSet());
 
@@ -161,7 +166,7 @@ public class RecipeService {
         .forEach(ingredient -> repository.deleteIngredient(ingredient.getId()));
 
     // 材料の追加・更新処理
-    recipeDetail.getIngredients().forEach(ingredient -> {
+    inputIngredients.forEach(ingredient -> {
       if (ingredient.getId() == 0) {
         repository.registerIngredient(ingredient);
       } else {
@@ -173,7 +178,7 @@ public class RecipeService {
     });
 
     // 調理手順の更新
-    Set<Integer> inputInstructionIds = recipeDetail.getInstructions().stream()
+    Set<Integer> inputInstructionIds = inputInstructions.stream()
         .map(Instruction::getId)
         .collect(Collectors.toSet());
 
@@ -183,7 +188,7 @@ public class RecipeService {
         .forEach(instruction -> repository.deleteInstruction(instruction.getId()));
 
     // 調理手順の追加・更新処理
-    recipeDetail.getInstructions().forEach(instruction -> {
+    inputInstructions.forEach(instruction -> {
       if (instruction.getId() == 0) {
         repository.registerInstruction(instruction);
       } else {
@@ -196,8 +201,6 @@ public class RecipeService {
     });
 
     // レシピ本体の更新
-    Recipe inputRecipe = recipeDetail.getRecipe();
-
     String existingImagePath = repository.getRecipe(recipeId).getImagePath();
     if (file != null && !file.isEmpty()) {
       if (!existingImagePath.contains("/images/") && existingImagePath.contains("/uploads/")) {
