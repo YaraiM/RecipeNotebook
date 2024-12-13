@@ -19,9 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
+import raisetech.RecipeNotebook.data.Ingredient;
+import raisetech.RecipeNotebook.data.Instruction;
+import raisetech.RecipeNotebook.data.Recipe;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeDetailWithImageData;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
+import raisetech.RecipeNotebook.exception.NullOrEmptyObjectException;
 import raisetech.RecipeNotebook.exception.RecipeIdMismatchException;
 import raisetech.RecipeNotebook.openapi.RecipeApiRequests.CreateRecipeRequest;
 import raisetech.RecipeNotebook.openapi.RecipeApiRequests.UpdateFavoriteStatusRequest;
@@ -82,17 +86,31 @@ public class RecipeApiController {
       (@Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData,
           UriComponentsBuilder uriBuilder) {
 
-    MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
     RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
+
+    Recipe inputRecipe = inputRecipeDetail.getRecipe();
+    if (inputRecipe == null) {
+      throw new NullOrEmptyObjectException("レシピの入力は必須です");
+    }
+
+    List<Ingredient> inputIngredients = inputRecipeDetail.getIngredients();
+    if (inputIngredients == null || inputIngredients.isEmpty()) {
+      throw new NullOrEmptyObjectException("材料の入力は必須です");
+    }
+
+    List<Instruction> inputInstructions = inputRecipeDetail.getInstructions();
+    if (inputInstructions == null || inputInstructions.isEmpty()) {
+      throw new NullOrEmptyObjectException("調理手順の入力は必須です");
+    }
+
+    MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
 
     RecipeDetail newRecipeDetail = recipeService.createRecipeDetail(inputRecipeDetail, file);
 
     URI location = uriBuilder.path("/recipes/{newRecipeId}")
         .buildAndExpand(newRecipeDetail.getRecipe().getId()).toUri();
 
-    return ResponseEntity.created(location).
-
-        body(newRecipeDetail);
+    return ResponseEntity.created(location).body(newRecipeDetail);
   }
 
   @Operation(
@@ -106,7 +124,13 @@ public class RecipeApiController {
       (@PathVariable int id,
           @Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData) {
 
-    if (inputRecipeDetailWithImageData.getRecipeDetail().getRecipe().getId() != id) {
+    RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
+
+    Recipe inputRecipe = inputRecipeDetail.getRecipe();
+    if (inputRecipe == null) {
+      throw new NullOrEmptyObjectException("レシピの入力は必須です");
+    }
+    if (inputRecipe.getId() != id) {
       throw new RecipeIdMismatchException(
           "パスで指定したID「" + id + "」と更新対象のレシピのID「"
           + inputRecipeDetailWithImageData.getRecipeDetail().getRecipe()
@@ -114,8 +138,17 @@ public class RecipeApiController {
           + "」は一致させてください");
     }
 
+    List<Ingredient> inputIngredients = inputRecipeDetail.getIngredients();
+    if (inputIngredients == null || inputIngredients.isEmpty()) {
+      throw new NullOrEmptyObjectException("材料の入力は必須です");
+    }
+
+    List<Instruction> inputInstructions = inputRecipeDetail.getInstructions();
+    if (inputInstructions == null || inputInstructions.isEmpty()) {
+      throw new NullOrEmptyObjectException("調理手順の入力は必須です");
+    }
+
     MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
-    RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
 
     RecipeDetail updatedRecipeDetail = recipeService.updateRecipeDetail(inputRecipeDetail, file);
     return ResponseEntity.ok(updatedRecipeDetail);

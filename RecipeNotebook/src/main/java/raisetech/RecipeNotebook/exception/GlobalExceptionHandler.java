@@ -53,6 +53,20 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * リクエスト内のオブジェクトがNullもしくは空白だった場合の例外をハンドリングするメソッドです。
+   * NullOrEmptyExceptionがスローされたとき、ステータス（BadRequest）および指定した例外メッセージを返します。
+   * @param e 例外クラス（オブジェクトが入力されていない）
+   * @return エラーレスポンス（ステータスおよびメッセージ）
+   */
+  @ExceptionHandler
+  public ResponseEntity<ErrorResponse> handleNullOrEmptyObjectException(
+      NullOrEmptyObjectException e) {
+
+    ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+  }
+
+  /**
    * 存在しないIDなどを指定した場合に例外をハンドリングするメソッドです。
    * ResourceNotFoundExceptionがスローされたとき、ステータス（NotFound）および指定した例外メッセージを返します。
    * @param e 例外クラス（リソースが存在しない）
