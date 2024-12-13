@@ -1,6 +1,5 @@
 package raisetech.RecipeNotebook.config;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
-import org.springframework.security.web.savedrequest.RequestCache;
-import org.springframework.security.web.savedrequest.SavedRequest;
 import raisetech.RecipeNotebook.repository.UserRepository;
 import raisetech.RecipeNotebook.service.CustomUserDetailsService;
 
@@ -30,8 +27,7 @@ public class SecurityConfig {
             .loginProcessingUrl("/login")
             .loginPage("/login")
             .successHandler((request, response, authentication) -> {
-              String targetUrl = getRedirectUrlFromSavedRequest(request);
-              response.sendRedirect(targetUrl);
+              response.sendRedirect("/recipes");
             })
             .failureHandler((request, response, exception) -> {
               new HttpSessionRequestCache().removeRequest(request, response);
@@ -64,17 +60,6 @@ public class SecurityConfig {
   public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
       throws Exception {
     return configuration.getAuthenticationManager();
-  }
-
-  private String getRedirectUrlFromSavedRequest(HttpServletRequest request) {
-    RequestCache requestCache = new HttpSessionRequestCache();
-    SavedRequest savedRequest = requestCache.getRequest(request, null);
-
-    if (savedRequest == null || savedRequest.getRedirectUrl().contains("/error")) {
-      return "/recipes";
-    }
-
-    return savedRequest.getRedirectUrl();
   }
 
 }
