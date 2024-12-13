@@ -51,7 +51,7 @@ class LoginControllerTest {
 
     when(loginService.authenticateGuest()).thenReturn(successAuth);
 
-    mockMvc.perform(post("/api/login/guest")
+    mockMvc.perform(post("/login/guest")
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -70,7 +70,7 @@ class LoginControllerTest {
         .thenThrow(new AuthenticationCustomException(
             "ゲストログインに失敗しました。もう一度お試しください"));
 
-    mockMvc.perform(post("/api/login/guest")
+    mockMvc.perform(post("/login/guest")
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnauthorized())

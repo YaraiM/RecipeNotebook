@@ -44,7 +44,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/csrf-token", "/v3/api-docs/**").permitAll()
             .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers("/login", "/api/login/guest").permitAll()
+            .requestMatchers("/login", "/login/guest").permitAll()
             .anyRequest().authenticated()
         );
     return http.build();

@@ -27,7 +27,7 @@ public class LoginIntegrationTest {
 
   @Test
   void 処理成功のレスポンスとログイン成功のメッセージが返ること() throws Exception {
-    mockMvc.perform(post("/api/login/guest")
+    mockMvc.perform(post("/login/guest")
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())

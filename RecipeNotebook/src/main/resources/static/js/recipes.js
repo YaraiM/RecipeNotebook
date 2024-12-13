@@ -156,7 +156,7 @@ async function loginByGuest(btn) {
     btn.addEventListener('click', async () => {
         try {
             const csrfToken = await fetchCSRFToken();
-            const response = await fetch('/api/login/guest', {
+            const response = await fetch('/login/guest', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
