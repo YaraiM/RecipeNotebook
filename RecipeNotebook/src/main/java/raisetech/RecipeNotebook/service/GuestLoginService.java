@@ -11,8 +11,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
 
+/**
+ * ゲストログインを行うためのサービスです。
+ */
 @Service
-public class LoginService {
+public class GuestLoginService {
 
   private final AuthenticationManager authenticationManager;
 
@@ -23,7 +26,7 @@ public class LoginService {
   private String guestPassword;
 
   @Autowired
-  public LoginService(AuthenticationManager authenticationManager) {
+  public GuestLoginService(AuthenticationManager authenticationManager) {
     this.authenticationManager = authenticationManager;
   }
 

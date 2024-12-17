@@ -25,15 +25,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import raisetech.RecipeNotebook.config.SecurityConfig;
 import raisetech.RecipeNotebook.exception.AuthenticationCustomException;
 import raisetech.RecipeNotebook.repository.UserRepository;
-import raisetech.RecipeNotebook.service.LoginService;
+import raisetech.RecipeNotebook.service.GuestLoginService;
 
-@WebMvcTest(LoginController.class)
+@WebMvcTest(GuestLoginController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = {
     "guest.username=testGuest",
     "guest.password=testPass"
 })
-class LoginControllerTest {
+class GuestLoginControllerTest {
 
   @Autowired
   MockMvc mockMvc;
@@ -42,14 +42,14 @@ class LoginControllerTest {
   private UserRepository userRepository;
 
   @MockBean
-  LoginService loginService;
+  GuestLoginService guestLoginService;
 
   @Test
   void 処理成功のレスポンスとログイン成功のメッセージが返ること() throws Exception {
     Authentication successAuth = new UsernamePasswordAuthenticationToken(
         "testGuest", "testPass", Collections.emptyList());
 
-    when(loginService.authenticateGuest()).thenReturn(successAuth);
+    when(guestLoginService.authenticateGuest()).thenReturn(successAuth);
 
     mockMvc.perform(post("/login/guest")
             .with(csrf())
@@ -58,15 +58,15 @@ class LoginControllerTest {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.message").value("ログイン成功"));
 
-    verify(loginService, times(1)).authenticateGuest();
-    verify(loginService, times(1)).setAuthenticationInContext(any(Authentication.class));
-    verify(loginService, times(1)).setAuthenticationInSession(any(HttpServletRequest.class));
+    verify(guestLoginService, times(1)).authenticateGuest();
+    verify(guestLoginService, times(1)).setAuthenticationInContext(any(Authentication.class));
+    verify(guestLoginService, times(1)).setAuthenticationInSession(any(HttpServletRequest.class));
 
   }
 
   @Test
   void ゲストログインが失敗した場合に401とエラーメッセージを返すこと() throws Exception {
-    when(loginService.authenticateGuest())
+    when(guestLoginService.authenticateGuest())
         .thenThrow(new AuthenticationCustomException(
             "ゲストログインに失敗しました。もう一度お試しください"));
 
@@ -78,6 +78,6 @@ class LoginControllerTest {
         .andExpect(
             jsonPath("$.message").value("ゲストログインに失敗しました。もう一度お試しください"));
 
-    verify(loginService, times(1)).authenticateGuest();
+    verify(guestLoginService, times(1)).authenticateGuest();
   }
 }
