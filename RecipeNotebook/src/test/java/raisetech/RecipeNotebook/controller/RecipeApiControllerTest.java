@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -105,7 +105,7 @@ class RecipeApiControllerTest {
     when(recipeService.createRecipeDetail(recipeDetailCaptor.capture(), fileCaptor.capture()))
         .thenReturn(mockRecipeDetail);
 
-    mockMvc.perform(post("/api/recipes/new")
+    mockMvc.perform(post("/api/recipes")
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
@@ -187,7 +187,7 @@ class RecipeApiControllerTest {
         fileCaptor.capture())).thenReturn(
         mockRecipeDetail);
 
-    mockMvc.perform(put("/api/recipes/{id}/update", existingRecipeId)
+    mockMvc.perform(patch("/api/recipes/{id}", existingRecipeId)
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
@@ -279,7 +279,7 @@ class RecipeApiControllerTest {
     doThrow(new RecipeIdMismatchException(expectedErrorMessage))
         .when(recipeService).updateRecipeDetail(any(RecipeDetail.class), any(MultipartFile.class));
 
-    mockMvc.perform(put("/api/recipes/{id}/update", pathId)
+    mockMvc.perform(patch("/api/recipes/{id}", pathId)
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content(
@@ -362,7 +362,7 @@ class RecipeApiControllerTest {
     int recipeId = 1;
     boolean favorite = false;
 
-    mockMvc.perform(put("/api/recipes/{id}/favorite", recipeId)
+    mockMvc.perform(patch("/api/recipes/{id}/favorite", recipeId)
             .with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"favorite\": false}")
@@ -379,7 +379,7 @@ class RecipeApiControllerTest {
       throws Exception {
     int recipeId = 1;
 
-    mockMvc.perform(delete("/api/recipes/{id}/delete", recipeId).with(csrf()))
+    mockMvc.perform(delete("/api/recipes/{id}", recipeId).with(csrf()))
         .andExpect(status().isOk())
         .andExpect(content().contentType("text/plain;charset=UTF-8"))
         .andExpect(content().string("レシピを削除しました"));
