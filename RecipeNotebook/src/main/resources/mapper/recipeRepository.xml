@@ -86,6 +86,7 @@
   <!--  レシピIDに紐づく調理手順一覧の取得  -->
   <select id="getInstructions" resultType="raisetech.RecipeNotebook.data.Instruction">
     SELECT * FROM instructions WHERE recipe_id = #{recipeId}
+    ORDER BY step_number ASC
   </select>
 
   <!--  IDに紐づく調理手順の取得  -->
