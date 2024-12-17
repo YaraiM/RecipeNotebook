@@ -11,9 +11,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -81,7 +81,7 @@ public class RecipeApiController {
   )
   @CreateRecipeRequest
   @CreateRecipeResponses
-  @PostMapping("/new")
+  @PostMapping
   public ResponseEntity<RecipeDetail> createRecipe
       (@Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData,
           UriComponentsBuilder uriBuilder) {
@@ -119,7 +119,7 @@ public class RecipeApiController {
   )
   @UpdateRecipeRequest
   @UpdateRecipeResponses
-  @PutMapping("/{id}/update")
+  @PatchMapping("/{id}")
   public ResponseEntity<RecipeDetail> updateRecipeDetail
       (@PathVariable int id,
           @Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData) {
@@ -160,7 +160,7 @@ public class RecipeApiController {
   )
   @UpdateFavoriteStatusRequest
   @UpdateFavoriteStatusResponses
-  @PutMapping("/{id}/favorite")
+  @PatchMapping("/{id}/favorite")
   public ResponseEntity<String> updateFavoriteStatus(@PathVariable int id,
       @RequestBody Map<String, Boolean> request) {
     Boolean favorite = request.get("favorite");
@@ -173,7 +173,7 @@ public class RecipeApiController {
       description = "指定したIDに紐づくレシピをデータベースから削除します。レシピIDに紐づく材料および調理手順もデータベースから削除します。"
   )
   @DeleteRecipeResponses
-  @DeleteMapping("/{id}/delete")
+  @DeleteMapping("/{id}")
   public ResponseEntity<String> deleteRecipeDetail(@PathVariable int id) {
     recipeService.deleteRecipe(id);
     return ResponseEntity.ok("レシピを削除しました");
