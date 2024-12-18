@@ -62,10 +62,12 @@ jobs:
           path: RecipeNotebook/build/test-results/test/
 
       - name: Run Spring Boot to serve API docs
+        if: github.ref == 'refs/heads/main'
         run: java -jar build/libs/*.jar &
         working-directory: RecipeNotebook
 
       - name: Wait for the application to start
+        if: github.ref == 'refs/heads/main'
         run: |
           for i in {1..15}; do
             nc -z localhost 8080 && break
@@ -74,9 +76,11 @@ jobs:
           done
 
       - name: Download OpenAPI spec
+        if: github.ref == 'refs/heads/main'
         run: curl -o RecipeNotebook/openapi.json http://localhost:8080/v3/api-docs
 
       - name: Generate Swagger UI
+        if: github.ref == 'refs/heads/main'
         uses: Legion2/swagger-ui-action@v1
         with:
           output: RecipeNotebook/swagger-ui
@@ -84,6 +88,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload OpenAPI DOCS
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: openapi-docs
@@ -98,6 +103,7 @@ jobs:
           force_orphan: true
 
       - name: SCP Copy Application to EC2
+        if: github.ref == 'refs/heads/main'
         env:
           PRIVATE_KEY: ${{ secrets.AWS_EC2_PRIVATE_KEY }}
         run: |
@@ -105,6 +111,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i private_key $SRC_PATH $EC2_USER@$EC2_HOST:$DEST_PATH
 
       - name: SSH Application Deploy
+        if: github.ref == 'refs/heads/main'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_HOST }}
