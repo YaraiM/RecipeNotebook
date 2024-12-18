@@ -113,7 +113,7 @@ class RecipeServiceTest {
 
     RecipeDetail actual = sut.searchRecipeDetail(recipe.getId());
 
-    verify(repository, times(1)).getRecipe(recipe.getId());
+    verify(repository, times(2)).getRecipe(recipe.getId());
     verify(repository, times(1)).getIngredients(recipe.getId());
     verify(repository, times(1)).getInstructions(recipe.getId());
 
@@ -378,7 +378,7 @@ class RecipeServiceTest {
 
     sut.deleteRecipe(id);
 
-    verify(repository, times(1)).getRecipe(id);
+    verify(repository, times(2)).getRecipe(id);
     verify(repository, times(1)).deleteRecipe(id);
     verify(fileStorageService, times(1)).deleteFile(recipe.getImagePath());
 
