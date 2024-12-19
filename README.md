@@ -38,10 +38,11 @@
 
 https://github.com/user-attachments/assets/ec2c19dc-83a0-46f4-8b99-43bcc10d6b76
 
-#### 詳細
+#### 詳細な使い方
+
+↓ GitHub Wikiにまとめておりますので、ご覧ください。
 
 https://github.com/YaraiM/RecipeNotebook/wiki/How-to-Use-RecipeNotebook
-GitHub Wikiにまとめておりますので、ご覧ください。
 
 ## 主な使用技術
 
