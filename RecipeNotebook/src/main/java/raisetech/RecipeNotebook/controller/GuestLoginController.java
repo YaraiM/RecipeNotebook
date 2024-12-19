@@ -12,16 +12,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import raisetech.RecipeNotebook.exception.AuthenticationCustomException;
 import raisetech.RecipeNotebook.openapi.LoginResponses.GuestLoginResponses;
-import raisetech.RecipeNotebook.service.LoginService;
+import raisetech.RecipeNotebook.service.GuestLoginService;
 
+/**
+ * ゲストログインを行うためのコントローラーです。
+ */
 @RestController
-public class LoginController {
+public class GuestLoginController {
 
-  private final LoginService loginService;
+  private final GuestLoginService guestLoginService;
 
   @Autowired
-  public LoginController(LoginService loginService) {
-    this.loginService = loginService;
+  public GuestLoginController(GuestLoginService guestLoginService) {
+    this.guestLoginService = guestLoginService;
   }
 
   @Operation(
@@ -32,9 +35,9 @@ public class LoginController {
   @PostMapping("/login/guest")
   public ResponseEntity<?> guestLogin(HttpServletRequest request) {
     try {
-      Authentication authentication = loginService.authenticateGuest();
-      loginService.setAuthenticationInContext(authentication);
-      loginService.setAuthenticationInSession(request);
+      Authentication authentication = guestLoginService.authenticateGuest();
+      guestLoginService.setAuthenticationInContext(authentication);
+      guestLoginService.setAuthenticationInSession(request);
 
       Map<String, String> response = new HashMap<>();
       response.put("message", "ログイン成功");

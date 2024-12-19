@@ -24,13 +24,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 @ExtendWith(MockitoExtension.class)
-class LoginServiceTest {
+class GuestLoginServiceTest {
 
   @Mock
   private AuthenticationManager authenticationManager;
 
   @InjectMocks
-  private LoginService sut;
+  private GuestLoginService sut;
 
   @AfterEach
   void cleanup() {

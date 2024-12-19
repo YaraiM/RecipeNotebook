@@ -11,17 +11,14 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
-import raisetech.RecipeNotebook.data.Ingredient;
-import raisetech.RecipeNotebook.data.Instruction;
-import raisetech.RecipeNotebook.data.Recipe;
 import raisetech.RecipeNotebook.domain.RecipeDetail;
 import raisetech.RecipeNotebook.domain.RecipeDetailWithImageData;
 import raisetech.RecipeNotebook.domain.RecipeSearchCriteria;
@@ -60,8 +57,7 @@ public class RecipeApiController {
   @GetMapping
   public ResponseEntity<List<RecipeDetail>> searchRecipes(
       @Valid @ModelAttribute RecipeSearchCriteria recipeSearchCriteria) {
-    List<RecipeDetail> recipeDetails = recipeService.searchRecipeList(recipeSearchCriteria);
-    return ResponseEntity.ok(recipeDetails);
+    return ResponseEntity.ok(recipeService.searchRecipeList(recipeSearchCriteria));
   }
 
   @Operation(
@@ -71,8 +67,7 @@ public class RecipeApiController {
   @GetRecipeDetailResponses
   @GetMapping("/{id}")
   public ResponseEntity<RecipeDetail> getRecipeDetail(@PathVariable int id) {
-    RecipeDetail recipeDetail = recipeService.searchRecipeDetail(id);
-    return ResponseEntity.ok(recipeDetail);
+    return ResponseEntity.ok(recipeService.searchRecipeDetail(id));
   }
 
   @Operation(
@@ -81,30 +76,15 @@ public class RecipeApiController {
   )
   @CreateRecipeRequest
   @CreateRecipeResponses
-  @PostMapping("/new")
+  @PostMapping
   public ResponseEntity<RecipeDetail> createRecipe
       (@Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData,
           UriComponentsBuilder uriBuilder) {
 
     RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
-
-    Recipe inputRecipe = inputRecipeDetail.getRecipe();
-    if (inputRecipe == null) {
-      throw new NullOrEmptyObjectException("レシピの入力は必須です");
-    }
-
-    List<Ingredient> inputIngredients = inputRecipeDetail.getIngredients();
-    if (inputIngredients == null || inputIngredients.isEmpty()) {
-      throw new NullOrEmptyObjectException("材料の入力は必須です");
-    }
-
-    List<Instruction> inputInstructions = inputRecipeDetail.getInstructions();
-    if (inputInstructions == null || inputInstructions.isEmpty()) {
-      throw new NullOrEmptyObjectException("調理手順の入力は必須です");
-    }
+    validateRecipeDetail(inputRecipeDetail);
 
     MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
-
     RecipeDetail newRecipeDetail = recipeService.createRecipeDetail(inputRecipeDetail, file);
 
     URI location = uriBuilder.path("/recipes/{newRecipeId}")
@@ -119,38 +99,18 @@ public class RecipeApiController {
   )
   @UpdateRecipeRequest
   @UpdateRecipeResponses
-  @PutMapping("/{id}/update")
+  @PatchMapping("/{id}")
   public ResponseEntity<RecipeDetail> updateRecipeDetail
       (@PathVariable int id,
           @Valid @RequestBody RecipeDetailWithImageData inputRecipeDetailWithImageData) {
 
     RecipeDetail inputRecipeDetail = inputRecipeDetailWithImageData.getRecipeDetail();
-
-    Recipe inputRecipe = inputRecipeDetail.getRecipe();
-    if (inputRecipe == null) {
-      throw new NullOrEmptyObjectException("レシピの入力は必須です");
-    }
-    if (inputRecipe.getId() != id) {
-      throw new RecipeIdMismatchException(
-          "パスで指定したID「" + id + "」と更新対象のレシピのID「"
-          + inputRecipeDetailWithImageData.getRecipeDetail().getRecipe()
-              .getId()
-          + "」は一致させてください");
-    }
-
-    List<Ingredient> inputIngredients = inputRecipeDetail.getIngredients();
-    if (inputIngredients == null || inputIngredients.isEmpty()) {
-      throw new NullOrEmptyObjectException("材料の入力は必須です");
-    }
-
-    List<Instruction> inputInstructions = inputRecipeDetail.getInstructions();
-    if (inputInstructions == null || inputInstructions.isEmpty()) {
-      throw new NullOrEmptyObjectException("調理手順の入力は必須です");
-    }
+    validateRecipeDetail(inputRecipeDetail);
+    validateRecipeId(id, inputRecipeDetail.getRecipe().getId());
 
     MultipartFile file = inputRecipeDetailWithImageData.convertBase64ToMultipartFile();
-
     RecipeDetail updatedRecipeDetail = recipeService.updateRecipeDetail(inputRecipeDetail, file);
+
     return ResponseEntity.ok(updatedRecipeDetail);
   }
 
@@ -160,11 +120,10 @@ public class RecipeApiController {
   )
   @UpdateFavoriteStatusRequest
   @UpdateFavoriteStatusResponses
-  @PutMapping("/{id}/favorite")
+  @PatchMapping("/{id}/favorite")
   public ResponseEntity<String> updateFavoriteStatus(@PathVariable int id,
       @RequestBody Map<String, Boolean> request) {
-    Boolean favorite = request.get("favorite");
-    recipeService.updateFavoriteStatus(id, favorite);
+    recipeService.updateFavoriteStatus(id, request.get("favorite"));
     return ResponseEntity.ok("お気に入りを変更しました");
   }
 
@@ -173,10 +132,44 @@ public class RecipeApiController {
       description = "指定したIDに紐づくレシピをデータベースから削除します。レシピIDに紐づく材料および調理手順もデータベースから削除します。"
   )
   @DeleteRecipeResponses
-  @DeleteMapping("/{id}/delete")
+  @DeleteMapping("/{id}")
   public ResponseEntity<String> deleteRecipeDetail(@PathVariable int id) {
     recipeService.deleteRecipe(id);
     return ResponseEntity.ok("レシピを削除しました");
+  }
+
+  /**
+   * 入力されたレシピ詳細情報の検証を行うメソッドです。
+   *
+   * @param inputRecipeDetail 入力されたレシピ詳細情報
+   */
+  private void validateRecipeDetail(RecipeDetail inputRecipeDetail) {
+    if (inputRecipeDetail.getRecipe() == null) {
+      throw new NullOrEmptyObjectException("レシピの入力は必須です");
+    }
+    if (inputRecipeDetail.getIngredients() == null || inputRecipeDetail.getIngredients()
+        .isEmpty()) {
+      throw new NullOrEmptyObjectException("材料の入力は必須です");
+    }
+    if (inputRecipeDetail.getInstructions() == null || inputRecipeDetail.getInstructions()
+        .isEmpty()) {
+      throw new NullOrEmptyObjectException("調理手順の入力は必須です");
+    }
+  }
+
+  /**
+   * IDの一致をチェックするメソッドです。
+   *
+   * @param pathId パスのID
+   * @param recipeId レシピID
+   */
+  private void validateRecipeId(int pathId, int recipeId) {
+    if (pathId != recipeId) {
+      throw new RecipeIdMismatchException(
+          String.format(
+              "パスで指定したID「%d」と更新対象のレシピのID「%d」は一致させてください", pathId,
+              recipeId));
+    }
   }
 
 }

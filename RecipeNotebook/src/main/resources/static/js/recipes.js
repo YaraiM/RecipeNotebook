@@ -16,7 +16,7 @@ function initializeModal() {
 
             const csrfToken = await fetchCSRFToken();
 
-            await fetch(`/api/recipes/${window.deleteTargetId}/delete`, {
+            await fetch(`/api/recipes/${window.deleteTargetId}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
@@ -340,7 +340,7 @@ async function toggleFavorite(recipeId) {
     const csrfToken = await fetchCSRFToken();
 
     await fetch(`/api/recipes/${recipeId}/favorite`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
             'Content-Type': 'application/json'
@@ -754,10 +754,10 @@ async function submitRecipeForm(event) {
 
     const isNewRecipe = !recipeDetail.recipe.id;
     const endpoint = isNewRecipe
-        ? '/api/recipes/new'
-        : `/api/recipes/${recipeDetail.recipe.id}/update`;
+        ? '/api/recipes'
+        : `/api/recipes/${recipeDetail.recipe.id}`;
 
-    const method = isNewRecipe ? 'POST' : 'PUT';
+    const method = isNewRecipe ? 'POST' : 'PATCH';
 
     const csrfToken = await fetchCSRFToken();
 
