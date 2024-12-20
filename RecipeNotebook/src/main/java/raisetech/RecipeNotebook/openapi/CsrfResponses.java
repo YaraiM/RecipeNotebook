@@ -21,9 +21,10 @@ public class CsrfResponses {
               @ExampleObject(
                   name = "success(get a csrf token)",
                   summary = "CSRFトークンの取得に成功した場合",
-                  description = "headerNameとtokenの値を返します。",
+                  description = "parameterName、headerName、tokenの値を返します。",
                   value = """
                       {
+                          "parameterName": "_csrf",
                           "token": "token1234",
                           "headerName": "X-CSRF-TOKEN"
                       }
