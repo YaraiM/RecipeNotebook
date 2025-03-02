@@ -4,7 +4,6 @@ import {
   Input,
   Checkbox,
   VStack,
-  Heading,
   Textarea,
 } from "@chakra-ui/react";
 import { RecipeState } from "../types/RecipeState";
@@ -28,10 +27,6 @@ export const RecipeInfo = ({ recipe, onChange }: Props) => {
 
   return (
     <VStack spacing={4} align="stretch">
-      <Heading as="h1" size="xl" textAlign="center" mb={4}>
-        レシピ新規作成フォーム
-      </Heading>
-
       <FormControl>
         <FormLabel>レシピ名（必須）</FormLabel>
         <Input

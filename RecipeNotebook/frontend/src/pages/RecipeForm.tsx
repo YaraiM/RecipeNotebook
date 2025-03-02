@@ -1,9 +1,9 @@
 import { Ingredient } from "../types/Ingredient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Instruction } from "../types/Instruction";
 import { Recipe } from "../types/Recipe";
 import { RecipeDetailWithImageData } from "../types/RecipeDetailWithImageData";
-import { Box, Divider, VStack } from "@chakra-ui/react";
+import { Box, Divider, Heading, VStack } from "@chakra-ui/react";
 import { RecipeState } from "../types/RecipeState";
 import { RecipeInfo } from "../recipe/RecipeInfo";
 import { IngredientList } from "../recipe/IngredientList";
@@ -17,6 +17,8 @@ export const RecipeForm = () => {
 
   // レシピの状態管理（フォームに基づく項目）
   const [recipe, setRecipe] = useState<RecipeState>({
+    id: 0,
+    userId: 0,
     name: "",
     recipeSource: "",
     servings: "",
@@ -35,6 +37,56 @@ export const RecipeForm = () => {
   const [instructions, setInstructions] = useState<Instruction[]>([
     { stepNumber: 1, content: "", arrange: false },
   ]);
+
+  // 新規作成、更新に応じてフォームタイトルを変更
+  const formTitle = window.location.pathname.includes("new")
+    ? "レシピ新規作成フォーム"
+    : "レシピ更新フォーム";
+
+  // 更新ページの場合は初回マウント時にレシピデータを入力
+  useEffect(() => {
+    (async () => {
+      const url = window.location.pathname;
+      if (url.includes("update")) {
+        const recipeId = url.split("/")[2];
+
+        const response = await fetch(
+          `http://localhost:8080/api/recipes/${recipeId}`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        const responseJson = await response.json();
+        if (!response.ok) {
+          throw new Error(responseJson.message);
+        }
+
+        const updateRecipeState: RecipeState = {
+          id: responseJson.recipe.id,
+          userId: responseJson.recipe.userId,
+          name: responseJson.recipe.name,
+          recipeSource: responseJson.recipe.recipeSource,
+          servings: responseJson.recipe.servings,
+          remark: responseJson.recipe.remark,
+          favorite: responseJson.recipe.favorite,
+          image: null,
+          imageSelected: false,
+        };
+        setRecipe(updateRecipeState);
+
+        const updateIngredients = responseJson.ingredients;
+        setIngredients(updateIngredients);
+
+        const updateInstructions = responseJson.instructions;
+        setInstructions(updateInstructions);
+      }
+    })();
+  }, []);
 
   // 画像データをBase64に変換
   const convertToBase64 = (file: File) => {
@@ -62,6 +114,8 @@ export const RecipeForm = () => {
     e.preventDefault();
 
     const newRecipe: Recipe = {
+      id: recipe.id,
+      userId: recipe.userId,
       name: recipe.name,
       recipeSource: recipe.recipeSource,
       servings: recipe.servings,
@@ -87,8 +141,16 @@ export const RecipeForm = () => {
       imageData: base64ImageData,
     };
 
-    fetch("http://localhost:8080/api/recipes", {
-      method: "POST",
+    // 新規作成画面、更新画面に応じて処理を変更
+    const recipeId = window.location.pathname.split("/")[2];
+    const uri = window.location.pathname.includes("new")
+      ? "http://localhost:8080/api/recipes"
+      : `http://localhost:8080/api/recipes/${recipeId}`;
+
+    const method = window.location.pathname.includes("new") ? "POST" : "PATCH";
+
+    fetch(uri, {
+      method: method,
       credentials: "include",
       headers: {
         [csrfHeaderName]: csrfToken,
@@ -130,6 +192,10 @@ export const RecipeForm = () => {
   return (
     <Box as="form" onSubmit={handleSubmit}>
       <VStack spacing={6} align="stretch">
+        <Heading as="h1" size="xl" textAlign="center" mb={4}>
+          {formTitle}
+        </Heading>
+
         <RecipeInfo recipe={recipe} onChange={handleRecipeChange} />
 
         <Divider />

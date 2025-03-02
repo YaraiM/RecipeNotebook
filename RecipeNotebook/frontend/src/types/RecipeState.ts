@@ -1,4 +1,6 @@
 export type RecipeState = {
+  id?: number;
+  userId?: number;
   name: string;
   recipeSource: string;
   servings: string;
