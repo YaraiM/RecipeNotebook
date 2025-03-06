@@ -24,7 +24,6 @@ export const RecipeForm = () => {
     servings: "",
     remark: "",
     favorite: false,
-    image: null,
     imageSelected: false,
   });
 
@@ -74,7 +73,6 @@ export const RecipeForm = () => {
           servings: responseJson.recipe.servings,
           remark: responseJson.recipe.remark,
           favorite: responseJson.recipe.favorite,
-          image: null,
           imageSelected: false,
         };
         setRecipe(updateRecipeState);
@@ -128,7 +126,7 @@ export const RecipeForm = () => {
     const newInstructions: Instruction[] = instructions;
 
     let base64ImageData = null;
-    if (recipe.image !== null) {
+    if (recipe.image) {
       base64ImageData = await convertToBase64(recipe.image);
     }
 

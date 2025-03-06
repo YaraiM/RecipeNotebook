@@ -6,6 +6,6 @@ export type RecipeState = {
   servings: string;
   remark: string;
   favorite: boolean;
-  image: File | null;
-  imageSelected: boolean;
+  image?: File;
+  imageSelected?: boolean;
 };
