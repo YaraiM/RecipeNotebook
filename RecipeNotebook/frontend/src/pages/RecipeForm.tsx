@@ -68,11 +68,11 @@ export const RecipeForm = () => {
         const updateRecipeState: RecipeState = {
           id: responseJson.recipe.id,
           userId: responseJson.recipe.userId,
-          name: responseJson.recipe.name,
-          recipeSource: responseJson.recipe.recipeSource,
-          servings: responseJson.recipe.servings,
-          remark: responseJson.recipe.remark,
-          favorite: responseJson.recipe.favorite,
+          name: responseJson.recipe.name || "",
+          recipeSource: responseJson.recipe.recipeSource || "",
+          servings: responseJson.recipe.servings || "",
+          remark: responseJson.recipe.remark || "",
+          favorite: responseJson.recipe.favorite || false,
           imageSelected: false,
         };
         setRecipe(updateRecipeState);
