@@ -10,6 +10,7 @@ import { IngredientList } from "../recipe/IngredientList";
 import { FormActions } from "../recipe/FormActions";
 import { InstructionList } from "../recipe/InstructionList";
 import { useAuthStore } from "../stores/use-auth-store";
+import { NavigationBar } from "../layout/NavigationBar";
 
 export const RecipeForm = () => {
   // 認証情報
@@ -188,30 +189,33 @@ export const RecipeForm = () => {
   };
 
   return (
-    <Box as="form" onSubmit={handleSubmit}>
-      <VStack spacing={6} align="stretch">
-        <Heading as="h1" size="xl" textAlign="center" mb={4}>
-          {formTitle}
-        </Heading>
+    <>
+      <NavigationBar />
+      <Box as="form" onSubmit={handleSubmit}>
+        <VStack spacing={6} align="stretch">
+          <Heading as="h1" size="xl" textAlign="center" mb={4}>
+            {formTitle}
+          </Heading>
 
-        <RecipeInfo recipe={recipe} onChange={handleRecipeChange} />
+          <RecipeInfo recipe={recipe} onChange={handleRecipeChange} />
 
-        <Divider />
+          <Divider />
 
-        <IngredientList
-          ingredients={ingredients}
-          setIngredients={setIngredients}
-        />
+          <IngredientList
+            ingredients={ingredients}
+            setIngredients={setIngredients}
+          />
 
-        <Divider />
+          <Divider />
 
-        <InstructionList
-          instructions={instructions}
-          setInstructions={setInstructions}
-        />
+          <InstructionList
+            instructions={instructions}
+            setInstructions={setInstructions}
+          />
 
-        <FormActions />
-      </VStack>
-    </Box>
+          <FormActions />
+        </VStack>
+      </Box>
+    </>
   );
 };
