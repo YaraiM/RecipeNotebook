@@ -8,6 +8,7 @@ import { Login } from "./pages/Login";
 import { useAuthStore } from "./stores/use-auth-store";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RecipeDetail } from "./pages/RecipeDetail";
+import { Recipes } from "./pages/Recipes";
 
 const App = () => {
   const { isAuthenticated } = useAuthStore();
@@ -23,7 +24,7 @@ const App = () => {
             }
           />
           <Route element={<ProtectedRoute />}>
-            {/* <Route path="/recipes" element={<Recipes />} /> */}
+            <Route path="/recipes" element={<Recipes />} />
             <Route path="/recipes/new" element={<RecipeForm />} />
             <Route path="/recipes/:id" element={<RecipeDetail />} />
             <Route path="/recipes/:id/update" element={<RecipeForm />} />

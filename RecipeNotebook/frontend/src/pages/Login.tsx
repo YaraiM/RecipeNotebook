@@ -39,7 +39,7 @@ export const Login = () => {
   const hundleGuestLogin = async () => {
     const loginSuccess = await loginUser("user", "user_password");
     if (loginSuccess) {
-      navigate("/recipes/new");
+      navigate("/recipes");
     } else {
       setErrorMessage("ゲストログインに失敗しました。");
     }

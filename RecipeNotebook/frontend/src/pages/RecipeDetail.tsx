@@ -37,8 +37,8 @@ export const RecipeDetail = () => {
     servings: "",
     remark: "",
     favorite: false,
-    createdAt: new Date("2000-01-01"),
-    updatedAt: new Date("2000-01-01"),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
 
   // 材料の状態管理（フォームに基づく項目）
