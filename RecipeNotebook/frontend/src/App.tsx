@@ -9,12 +9,27 @@ import { useAuthStore } from "./stores/use-auth-store";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RecipeDetail } from "./pages/RecipeDetail";
 import { Recipes } from "./pages/Recipes";
+import { useCallback, useEffect } from "react";
+import { ActivityTracker } from "./ActivityTracker";
 
 const App = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { checkSessionExpiry } = useAuthStore();
+
+  // useEffectでcheckSessionExpiraryが何度も再定義されないようメモ化
+  const checkAuth = useCallback(() => {
+    checkSessionExpiry();
+  }, [checkSessionExpiry]);
+
+  useEffect(() => {
+    const interval = setInterval(checkAuth, 1000);
+
+    return () => clearInterval(interval);
+  }, [checkAuth]);
+  const isAuthenticated = useAuthStore((state) => state.checkSessionExpiry());
 
   return (
     <>
+      <ActivityTracker />
       <BrowserRouter>
         <Routes>
           <Route
@@ -28,7 +43,6 @@ const App = () => {
             <Route path="/recipes/new" element={<RecipeForm />} />
             <Route path="/recipes/:id" element={<RecipeDetail />} />
             <Route path="/recipes/:id/update" element={<RecipeForm />} />
-            {/* <Route path="*" element={<NotFound />} /> */}
           </Route>
         </Routes>
       </BrowserRouter>

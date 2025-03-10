@@ -7,17 +7,23 @@ type AuthState = {
   username: string;
   csrfToken: string;
   csrfHeaderName: string;
+  expiryTime: number | null;
 
   // アクション
   setCredentials: (username: string) => void;
   setCsrfInfo: (token: string, headerName: string) => void;
   login: () => void;
   logout: () => void;
+  checkSessionExpiry: () => boolean;
+  resetTimeout: () => void;
 
   // API
   fetchCsrfToken: () => Promise<boolean>;
   loginUser: (username: string, password: string) => Promise<boolean>;
 };
+
+// タイムアウトの時間（ミリ秒）
+const DURATION_TIMEOUT: number = 30 * 60 * 1000;
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -26,18 +32,36 @@ export const useAuthStore = create<AuthState>()(
       username: "",
       csrfToken: "",
       csrfHeaderName: "",
+      expiryTime: null,
 
       setCredentials: (username: string) => set({ username }),
       setCsrfInfo: (token: string, headerName: string) =>
         set({ csrfToken: token, csrfHeaderName: headerName }),
       login: () => set({ isAuthenticated: true }),
-      logout: () =>
+      logout: () => {
         set({
           isAuthenticated: false,
           username: "",
           csrfToken: "",
           csrfHeaderName: "",
-        }),
+          expiryTime: null,
+        });
+      },
+
+      checkSessionExpiry: () => {
+        const { isAuthenticated, expiryTime } = get();
+        if (isAuthenticated && expiryTime && Date.now() > expiryTime) {
+          get().logout();
+          alert("セッションがタイムアウトしました");
+          return false;
+        }
+        return isAuthenticated;
+      },
+
+      resetTimeout: () => {
+        const newExpiryTime = Date.now() + DURATION_TIMEOUT;
+        set({ expiryTime: newExpiryTime });
+      },
 
       fetchCsrfToken: async () => {
         try {
@@ -77,6 +101,7 @@ export const useAuthStore = create<AuthState>()(
 
           get().setCredentials(username);
           get().login();
+          get().resetTimeout();
 
           // ログイン後にCSRFトークンを再取得し、LocalStorageに保存
           const csrfSuccess = await get().fetchCsrfToken();
@@ -96,6 +121,7 @@ export const useAuthStore = create<AuthState>()(
         username: state.username,
         csrfToken: state.csrfToken,
         csrfHeaderName: state.csrfHeaderName,
+        expiryTime: state.expiryTime,
       }),
     },
   ),
