@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Ingredient } from "../types/Ingredient";
 import { Instruction } from "../types/Instruction";
 import {
@@ -25,56 +24,12 @@ import {
 import { CheckCircleIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
 import { NavigationBar } from "../layout/NavigationBar";
-import { useAuthStore } from "../stores/use-auth-store";
-import { RecipeDetail } from "../types/RecipeDetail";
+import { useRecipe } from "../hooks/use-recipe";
 
 export const RecipeDetailPage = () => {
-  const { csrfHeaderName, csrfToken } = useAuthStore();
-
-  const [recipeDetail, setRecipeDetail] = useState<RecipeDetail>({
-    recipe: {
-      id: 0,
-      userId: 0,
-      name: "",
-      imagePath: "",
-      recipeSource: "",
-      servings: "",
-      remark: "",
-      favorite: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    ingredients: [],
-    instructions: [],
-  });
+  const { recipeDetail, deleteRecipe } = useRecipe();
 
   const navigate = useNavigate();
-
-  // 初回マウント時にレシピデータを入力
-  useEffect(() => {
-    (async () => {
-      const url = window.location.pathname;
-      const recipeId = url.split("/")[2];
-
-      const response = await fetch(
-        `http://localhost:8080/api/recipes/${recipeId}`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      const responseJson = await response.json();
-      if (!response.ok) {
-        throw new Error(responseJson.message);
-      }
-
-      setRecipeDetail(responseJson);
-    })();
-  }, []);
 
   return (
     <>
@@ -203,26 +158,9 @@ export const RecipeDetailPage = () => {
             <Button
               colorScheme="red"
               size="md"
-              onClick={(e) => {
-                const recipeId = recipeDetail.recipe.id;
-                fetch(`/api/recipes/${recipeId}`, {
-                  method: "DELETE",
-                  credentials: "include",
-                  headers: {
-                    [csrfHeaderName]: csrfToken,
-                    "Content-Type": "application/json",
-                  },
-                })
-                  .then((response) => {
-                    if (response.ok) {
-                      navigate("/recipes");
-                    }
-                    alert(`レシピ${recipeDetail.recipe.name}を削除しました`);
-                  })
-                  .catch((error) => {
-                    console.error("レシピの削除に失敗しました", error);
-                  });
-                e.stopPropagation();
+              onClick={async () => {
+                await deleteRecipe(recipeDetail);
+                navigate("/recipes");
               }}
             >
               レシピを削除する

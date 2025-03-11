@@ -2,27 +2,35 @@ import { useCallback, useEffect, useState } from "react";
 import { RecipeDetail } from "../types/RecipeDetail";
 import { useAuthStore } from "../stores/use-auth-store";
 import { DateFilter } from "../types/DateFilter";
+import { useParams } from "react-router-dom";
 
 export const useRecipe = () => {
   const { csrfToken, csrfHeaderName } = useAuthStore();
 
-  const [recipeDetails, setRecipeDetails] = useState<RecipeDetail[]>([
-    {
-      recipe: {
-        id: 0,
-        userId: 0,
-        name: "",
-        imagePath: "",
-        recipeSource: "",
-        servings: "",
-        remark: "",
-        favorite: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      ingredients: [],
-      instructions: [],
+  const { id } = useParams();
+
+  const recipeDetailState = {
+    recipe: {
+      id: 0,
+      userId: 0,
+      name: "",
+      imagePath: "",
+      recipeSource: "",
+      servings: "",
+      remark: "",
+      favorite: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
+    ingredients: [],
+    instructions: [],
+  };
+
+  const [recipeDetail, setRecipeDetail] =
+    useState<RecipeDetail>(recipeDetailState);
+
+  const [recipeDetails, setRecipeDetails] = useState<RecipeDetail[]>([
+    recipeDetailState,
   ]);
 
   const [recipeFilterText, setRecipeFilterText] = useState<string>("");
@@ -44,6 +52,7 @@ export const useRecipe = () => {
 
   // レシピ一覧・検索の処理
   useEffect(() => {
+    if (id) return;
     const fetchAllRecipes = async () => {
       const response = await fetch("http://localhost:8080/api/recipes", {
         method: "GET",
@@ -62,7 +71,7 @@ export const useRecipe = () => {
     };
 
     fetchAllRecipes();
-  }, []);
+  }, [id]);
 
   const handleFilterWords = (
     filterText: string,
@@ -186,6 +195,30 @@ export const useRecipe = () => {
     );
   };
 
+  // レシピ詳細画面
+  useEffect(() => {
+    const getRecipeDetail = async () => {
+      if (!id) return;
+
+      const response = await fetch(`http://localhost:8080/api/recipes/${id}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const responseJson = await response.json();
+      if (!response.ok) {
+        throw new Error(responseJson.message);
+      }
+
+      setRecipeDetail(responseJson);
+    };
+
+    getRecipeDetail();
+  }, [id]);
+
   // レシピの削除
   const deleteRecipe = async (recipeDetail: RecipeDetail) => {
     const recipeId = recipeDetail.recipe.id;
@@ -214,6 +247,7 @@ export const useRecipe = () => {
   };
 
   return {
+    recipeDetail,
     recipeDetails,
     recipeFilterText,
     ingredientFilterText,
