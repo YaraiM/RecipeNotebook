@@ -1,33 +1,53 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+// import { useState } from "react";
+// import reactLogo from "./assets/react.svg";
+// import viteLogo from "/vite.svg";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
+import { RecipeForm } from "./pages/RecipeForm";
+import { Login } from "./pages/Login";
+import { useAuthStore } from "./stores/use-auth-store";
+import { ProtectedRoute } from "./ProtectedRoute";
+import { RecipeDetailPage } from "./pages/RecipeDetailPage";
+import { Recipes } from "./pages/Recipes";
+import { useCallback, useEffect } from "react";
+import { ActivityTracker } from "./ActivityTracker";
+import { ScrollToTop } from "./layout/ScrollToTop";
 
 const App = () => {
-  const [count, setCount] = useState(0);
+  const { checkSessionExpiry } = useAuthStore();
+
+  // useEffectでcheckSessionExpiraryが何度も再定義されないようメモ化
+  const checkAuth = useCallback(() => {
+    checkSessionExpiry();
+  }, [checkSessionExpiry]);
+
+  useEffect(() => {
+    const interval = setInterval(checkAuth, 1000);
+
+    return () => clearInterval(interval);
+  }, [checkAuth]);
+  const isAuthenticated = useAuthStore((state) => state.checkSessionExpiry());
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <ActivityTracker />
+      <BrowserRouter>
+        <ScrollToTop />;
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? <Navigate to="/recipes" replace /> : <Login />
+            }
+          />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/recipes" element={<Recipes />} />
+            <Route path="/recipes/new" element={<RecipeForm />} />
+            <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+            <Route path="/recipes/:id/update" element={<RecipeForm />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </>
   );
 };
