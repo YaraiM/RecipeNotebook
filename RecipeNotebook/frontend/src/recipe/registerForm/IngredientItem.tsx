@@ -5,7 +5,7 @@ import {
   IconButton,
   Input,
 } from "@chakra-ui/react";
-import { Ingredient } from "../types/Ingredient";
+import { Ingredient } from "../../types/Ingredient";
 import { DeleteIcon } from "@chakra-ui/icons";
 
 type Props = {

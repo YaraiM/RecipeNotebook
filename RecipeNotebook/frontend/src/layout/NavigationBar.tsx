@@ -14,7 +14,7 @@ export const NavigationBar = () => {
           fontSize="xl"
           fontWeight="bold"
           cursor="pointer"
-          onClick={() => navigate("/recipes")}
+          onClick={() => navigate("/recipes", { replace: true })}
         >
           RecipeNotebook
         </Text>

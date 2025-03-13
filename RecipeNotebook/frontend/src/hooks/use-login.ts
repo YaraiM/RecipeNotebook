@@ -11,7 +11,7 @@ export const useLogin = () => {
   const loginAsUser = async (username: string, password: string) => {
     const loginSuccess = await loginUser(username, password);
     if (loginSuccess) {
-      navigate("/recipes");
+      navigate("/recipes", { replace: true });
     } else {
       setErrorMessage(
         "ログインに失敗しました。ユーザー名またはパスワードを確認してください。",

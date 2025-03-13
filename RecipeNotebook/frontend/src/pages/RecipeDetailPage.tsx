@@ -150,7 +150,9 @@ export const RecipeDetailPage = () => {
               colorScheme="blue"
               size="md"
               onClick={() =>
-                navigate(`/recipes/${recipeDetail.recipe.id}/update`)
+                navigate(`/recipes/${recipeDetail.recipe.id}/update`, {
+                  replace: true,
+                })
               }
             >
               レシピを編集する
@@ -160,7 +162,7 @@ export const RecipeDetailPage = () => {
               size="md"
               onClick={async () => {
                 await deleteRecipe(recipeDetail);
-                navigate("/recipes");
+                navigate("/recipes", { replace: true });
               }}
             >
               レシピを削除する
@@ -168,7 +170,7 @@ export const RecipeDetailPage = () => {
             <Button
               variant="outline"
               size="md"
-              onClick={() => navigate("/recipes")}
+              onClick={() => navigate("/recipes", { replace: true })}
             >
               レシピ一覧に戻る
             </Button>

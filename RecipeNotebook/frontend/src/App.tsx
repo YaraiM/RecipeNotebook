@@ -11,6 +11,7 @@ import { RecipeDetailPage } from "./pages/RecipeDetailPage";
 import { Recipes } from "./pages/Recipes";
 import { useCallback, useEffect } from "react";
 import { ActivityTracker } from "./ActivityTracker";
+import { ScrollToTop } from "./layout/ScrollToTop";
 
 const App = () => {
   const { checkSessionExpiry } = useAuthStore();
@@ -31,6 +32,7 @@ const App = () => {
     <>
       <ActivityTracker />
       <BrowserRouter>
+        <ScrollToTop />;
         <Routes>
           <Route
             path="/login"

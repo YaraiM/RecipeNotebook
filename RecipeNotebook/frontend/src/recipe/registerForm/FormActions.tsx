@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export const FormActions = () => {
   const navigate = useNavigate();
   const toRecipes = () => {
-    navigate("/recipes");
+    navigate("/recipes", { replace: true });
   };
 
   return (

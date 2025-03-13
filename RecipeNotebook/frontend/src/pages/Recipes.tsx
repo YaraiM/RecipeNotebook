@@ -149,7 +149,7 @@ export const Recipes = () => {
           <Button
             colorScheme="green"
             size="md"
-            onClick={() => navigate("/recipes/new")}
+            onClick={() => navigate("/recipes/new", { replace: true })}
           >
             新規作成
           </Button>
@@ -165,7 +165,11 @@ export const Recipes = () => {
               maxWidth="300px"
               height="auto"
               position="relative"
-              onClick={() => navigate(`/recipes/${recipeDetail.recipe.id}`)}
+              onClick={() =>
+                navigate(`/recipes/${recipeDetail.recipe.id}`, {
+                  replace: true,
+                })
+              }
               cursor="pointer"
             >
               <CardHeader py={1}>
@@ -184,7 +188,9 @@ export const Recipes = () => {
                     fontSize="2xl"
                     cursor="pointer"
                     onClick={(e) => {
-                      navigate(`/recipes/${recipeDetail.recipe.id}/update`);
+                      navigate(`/recipes/${recipeDetail.recipe.id}/update`, {
+                        replace: true,
+                      });
                       e.stopPropagation();
                     }}
                   >

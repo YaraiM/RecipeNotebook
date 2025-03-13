@@ -1,40 +1,26 @@
 import { Box, Button, Heading, HStack, VStack } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { IngredientItem } from "./IngredientItem";
-import { Ingredient } from "../types/Ingredient";
+import { Ingredient } from "../../types/Ingredient";
 
 type Props = {
   ingredients: Ingredient[];
   setIngredients: React.Dispatch<React.SetStateAction<Ingredient[]>>;
-};
-
-export const IngredientList = ({ ingredients, setIngredients }: Props) => {
-  const addIngredient = () => {
-    setIngredients([
-      ...ingredients,
-      { name: "", quantity: "", arrange: false },
-    ]);
-  };
-
-  const removeIngredient = (index: number) => {
-    if (ingredients.length === 1) {
-      return alert("材料は最低一つは必要です");
-    }
-    const newIngredients = [...ingredients];
-    newIngredients.splice(index, 1);
-    setIngredients(newIngredients);
-  };
-
-  const handleIngredientsChange = <Key extends keyof Ingredient>(
+  addIngredient: () => void;
+  removeIngredient: (index: number) => void;
+  handleIngredientsChange: <Key extends keyof Ingredient>(
     index: number,
     field: Key,
     value: Ingredient[Key],
-  ) => {
-    const newIngredients = [...ingredients];
-    newIngredients[index][field] = value;
-    setIngredients(newIngredients);
-  };
+  ) => void;
+};
 
+export const IngredientList = ({
+  ingredients,
+  addIngredient,
+  removeIngredient,
+  handleIngredientsChange,
+}: Props) => {
   return (
     <Box>
       <HStack justify="space-between" mb={4}>
@@ -59,7 +45,7 @@ export const IngredientList = ({ ingredients, setIngredients }: Props) => {
             ingredient={ingredient}
             index={index}
             onChange={handleIngredientsChange}
-            onRemove={() => removeIngredient(index)}
+            onRemove={removeIngredient}
           />
         ))}
       </VStack>

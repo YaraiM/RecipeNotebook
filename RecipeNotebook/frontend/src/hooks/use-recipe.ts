@@ -2,12 +2,18 @@ import { useCallback, useEffect, useState } from "react";
 import { RecipeDetail } from "../types/RecipeDetail";
 import { useAuthStore } from "../stores/use-auth-store";
 import { DateFilter } from "../types/DateFilter";
-import { useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { RecipeState } from "../types/RecipeState";
+import { Ingredient } from "../types/Ingredient";
+import { Instruction } from "../types/Instruction";
+import { Recipe } from "../types/Recipe";
+import { RecipeDetailWithImageData } from "../types/RecipeDetailWithImageData";
 
 export const useRecipe = () => {
   const { csrfToken, csrfHeaderName } = useAuthStore();
 
   const { id } = useParams();
+  const pathname = useLocation().pathname;
 
   const recipeDetailState = {
     recipe: {
@@ -25,6 +31,26 @@ export const useRecipe = () => {
     ingredients: [],
     instructions: [],
   };
+
+  const [recipe, setRecipe] = useState<RecipeState>({
+    id: 0,
+    userId: 0,
+    name: "",
+    recipeSource: "",
+    servings: "",
+    remark: "",
+    favorite: false,
+    image: undefined,
+    imageSelected: false,
+  });
+
+  const [ingredients, setIngredients] = useState<Ingredient[]>([
+    { name: "", quantity: "", arrange: false },
+  ]);
+
+  const [instructions, setInstructions] = useState<Instruction[]>([
+    { stepNumber: 1, content: "", arrange: false },
+  ]);
 
   const [recipeDetail, setRecipeDetail] =
     useState<RecipeDetail>(recipeDetailState);
@@ -49,6 +75,8 @@ export const useRecipe = () => {
   });
 
   const [filterFavorite, setFilterFavorite] = useState<boolean>();
+
+  const navigate = useNavigate();
 
   // レシピ一覧・検索の処理
   useEffect(() => {
@@ -195,7 +223,7 @@ export const useRecipe = () => {
     );
   };
 
-  // レシピ詳細画面
+  // レシピ詳細画面およびレシピ更新画面の初期情報取得
   useEffect(() => {
     const getRecipeDetail = async () => {
       if (!id) return;
@@ -213,11 +241,192 @@ export const useRecipe = () => {
         throw new Error(responseJson.message);
       }
 
-      setRecipeDetail(responseJson);
+      if (pathname.includes("update")) {
+        const updateRecipeState: RecipeState = {
+          id: responseJson.recipe.id,
+          userId: responseJson.recipe.userId,
+          name: responseJson.recipe.name || "",
+          recipeSource: responseJson.recipe.recipeSource || "",
+          servings: responseJson.recipe.servings || "",
+          remark: responseJson.recipe.remark || "",
+          favorite: responseJson.recipe.favorite || false,
+          imageSelected: false,
+        };
+        setRecipe(updateRecipeState);
+
+        const updateIngredients = responseJson.ingredients;
+        setIngredients(updateIngredients);
+
+        const updateInstructions = responseJson.instructions;
+        setInstructions(updateInstructions);
+      } else {
+        setRecipeDetail(responseJson);
+      }
     };
 
     getRecipeDetail();
-  }, [id]);
+  }, [id, pathname]);
+
+  // レシピの新規登録・更新
+  const formTitle = window.location.pathname.includes("new")
+    ? "レシピ新規作成フォーム"
+    : "レシピ更新フォーム";
+
+  const handleRecipeChange = <Key extends keyof RecipeState>(
+    field: Key,
+    value: RecipeState[Key],
+  ) => {
+    setRecipe((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleRecipeChange("image", file);
+      handleRecipeChange("imageSelected", true);
+    }
+  };
+
+  const addIngredient = () => {
+    setIngredients([
+      ...ingredients,
+      { name: "", quantity: "", arrange: false },
+    ]);
+  };
+
+  const removeIngredient = (index: number) => {
+    if (ingredients.length === 1) {
+      return alert("材料は最低一つは必要です");
+    }
+    const newIngredients = [...ingredients];
+    newIngredients.splice(index, 1);
+    setIngredients(newIngredients);
+  };
+
+  const handleIngredientsChange = <Key extends keyof Ingredient>(
+    index: number,
+    field: Key,
+    value: Ingredient[Key],
+  ) => {
+    const newIngredients = [...ingredients];
+    newIngredients[index][field] = value;
+    setIngredients(newIngredients);
+  };
+
+  const addIntruction = () => {
+    setInstructions([
+      ...instructions,
+      { stepNumber: instructions.length + 1, content: "", arrange: false },
+    ]);
+  };
+
+  const removeInstruction = (index: number) => {
+    if (instructions.length === 1) {
+      return alert("調理手順は最低一つは必要です");
+    }
+    const newInstructions = [...instructions];
+    newInstructions.splice(index, 1);
+    for (let i: number = 0; i < newInstructions.length; i++)
+      newInstructions[i].stepNumber = i + 1;
+    setInstructions(newInstructions);
+  };
+
+  const handleInstructionsChange = <Key extends keyof Instruction>(
+    index: number,
+    field: Key,
+    value: Instruction[Key],
+  ) => {
+    const newInstructions = [...instructions];
+    newInstructions[index][field] = value;
+    setInstructions(newInstructions);
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const newRecipe: Recipe = {
+      id: recipe.id,
+      userId: recipe.userId,
+      name: recipe.name,
+      recipeSource: recipe.recipeSource,
+      servings: recipe.servings,
+      remark: recipe.remark,
+      favorite: recipe.favorite,
+    };
+
+    const newIngredients: Ingredient[] = ingredients;
+
+    const newInstructions: Instruction[] = instructions;
+
+    // 画像データをBase64に変換
+    const convertToBase64 = (file: File) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+    };
+
+    let base64ImageData = null;
+    if (recipe.image) {
+      base64ImageData = await convertToBase64(recipe.image);
+    }
+
+    const recipeDetailWithImageData: RecipeDetailWithImageData = {
+      recipeDetail: {
+        recipe: newRecipe,
+        ingredients: newIngredients,
+        instructions: newInstructions,
+      },
+      imageData: base64ImageData,
+    };
+
+    try {
+      const uri = pathname.includes("new")
+        ? "http://localhost:8080/api/recipes"
+        : `http://localhost:8080/api/recipes/${id}`;
+
+      const method = pathname.includes("new") ? "POST" : "PATCH";
+
+      const response = await fetch(uri, {
+        method: method,
+        credentials: "include",
+        headers: {
+          [csrfHeaderName]: csrfToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(recipeDetailWithImageData),
+      });
+
+      const responseJson = await response.json();
+      if (!response.ok) {
+        if (
+          responseJson.message &&
+          responseJson.message.includes("バリデーション")
+        ) {
+          throw new Error(responseJson.message);
+        } else if (
+          responseJson.message &&
+          (responseJson.message.includes("不正なデータ形式") ||
+            responseJson.message.includes("ファイルのサイズ") ||
+            responseJson.message.includes("画像ファイルのみ"))
+        ) {
+          throw new Error(responseJson.message);
+        } else {
+          throw new Error("予期しないエラーが発生しました");
+        }
+      }
+
+      const recipeDetail: RecipeDetail = responseJson;
+      navigate(`/recipes/${recipeDetail.recipe.id}`, { replace: true });
+    } catch (error) {
+      alert(error);
+    }
+  };
 
   // レシピの削除
   const deleteRecipe = async (recipeDetail: RecipeDetail) => {
@@ -247,6 +456,11 @@ export const useRecipe = () => {
   };
 
   return {
+    recipe,
+    ingredients,
+    setIngredients,
+    instructions,
+    setInstructions,
     recipeDetail,
     recipeDetails,
     recipeFilterText,
@@ -260,6 +474,16 @@ export const useRecipe = () => {
     removeFilter,
     loadRecipeDetails,
     toggleFavorite,
+    formTitle,
+    handleRecipeChange,
+    handleImageChange,
+    addIngredient,
+    removeIngredient,
+    handleIngredientsChange,
+    addIntruction,
+    removeInstruction,
+    handleInstructionsChange,
+    handleFormSubmit,
     deleteRecipe,
   };
 };

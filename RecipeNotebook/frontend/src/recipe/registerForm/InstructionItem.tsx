@@ -7,7 +7,7 @@ import {
   IconButton,
   Input,
 } from "@chakra-ui/react";
-import { Instruction } from "../types/Instruction";
+import { Instruction } from "../../types/Instruction";
 import { DeleteIcon } from "@chakra-ui/icons";
 
 type Props = {

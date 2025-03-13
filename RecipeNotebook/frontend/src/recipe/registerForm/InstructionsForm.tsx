@@ -1,7 +1,7 @@
 import { Box, HStack, Button } from "@chakra-ui/react";
 import { useRecipeForm } from "../hooks/use-recipe-form";
 import { InstructionItemForm } from "./InstructionItem";
-import { Instruction } from "../types/Instruction";
+import { Instruction } from "../../types/Instruction";
 
 type Props = {
   isUpdate: boolean;

@@ -1,42 +1,26 @@
 import { Box, Button, Heading, HStack, VStack } from "@chakra-ui/react";
-import { Instruction } from "../types/Instruction";
+import { Instruction } from "../../types/Instruction";
 import { AddIcon } from "@chakra-ui/icons";
 import { InstructionItem } from "./InstructionItem";
 
 type Props = {
   instructions: Instruction[];
   setInstructions: React.Dispatch<React.SetStateAction<Instruction[]>>;
-};
-
-export const InstructionList = ({ instructions, setInstructions }: Props) => {
-  const addIntruction = () => {
-    setInstructions([
-      ...instructions,
-      { stepNumber: instructions.length + 1, content: "", arrange: false },
-    ]);
-  };
-
-  const removeInstruction = (index: number) => {
-    if (instructions.length === 1) {
-      return alert("調理手順は最低一つは必要です");
-    }
-    const newInstructions = [...instructions];
-    newInstructions.splice(index, 1);
-    for (let i: number = 0; i < newInstructions.length; i++)
-      newInstructions[i].stepNumber = i + 1;
-    setInstructions(newInstructions);
-  };
-
-  const handleInstructionsChange = <Key extends keyof Instruction>(
+  addIntruction: () => void;
+  removeInstruction: (index: number) => void;
+  handleInstructionsChange: <Key extends keyof Instruction>(
     index: number,
     field: Key,
     value: Instruction[Key],
-  ) => {
-    const newInstructions = [...instructions];
-    newInstructions[index][field] = value;
-    setInstructions(newInstructions);
-  };
+  ) => void;
+};
 
+export const InstructionList = ({
+  instructions,
+  addIntruction,
+  removeInstruction,
+  handleInstructionsChange,
+}: Props) => {
   return (
     <Box>
       <HStack justify="space-between" mb={4}>
